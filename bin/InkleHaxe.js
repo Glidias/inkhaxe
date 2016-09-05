@@ -54,6 +54,8 @@ InkleRuntime.testCommandTypeEnum = function() {
 	var map = new haxe_ds_StringMap();
 	var mapInt = new haxe_ds_IntMap();
 	var mapSet = new ink_runtime_StringHashSet();
+	var dynStrMap = new haxe_ds_ObjectMap();
+	console.log("Std is dynamic:" + Std.string(js_Boot.__instanceof(dynStrMap,haxe_ds_ObjectMap)) + ", " + Std.string(js_Boot.__instanceof({ },haxe_ds_StringMap)));
 	if(__map_reserved.abc != null) mapSet.setReserved("abc",true); else mapSet.h["abc"] = true;
 	var strMapBool_h = { };
 	var value = new ink_runtime_Object();
@@ -2323,11 +2325,117 @@ ink_runtime_Component.prototype = {
 	}
 	,__class__: ink_runtime_Component
 };
-var ink_runtime_SimpleJson = function() {
-};
+var ink_runtime_SimpleJson = function() { };
 ink_runtime_SimpleJson.__name__ = ["ink","runtime","SimpleJson"];
-ink_runtime_SimpleJson.prototype = {
-	__class__: ink_runtime_SimpleJson
+ink_runtime_SimpleJson.DictionaryToText = function(rootObject) {
+	return new ink_runtime_Writer(rootObject).toString();
+};
+ink_runtime_SimpleJson.TextToDictionary = function(text) {
+	return new ink_runtime_Reader(text).ToDictionary();
+};
+var ink_runtime_Reader = function(text) {
+	this._text = text;
+	this._offset = 0;
+	this.SkipWhitespace();
+	this._rootObject = this.ReadObject();
+};
+ink_runtime_Reader.__name__ = ["ink","runtime","Reader"];
+ink_runtime_Reader.prototype = {
+	ToDictionary: function() {
+		return this._rootObject;
+	}
+	,IsNumberChar: function(c) {
+		return Std.parseInt(c) >= 0 && Std.parseInt(c) <= 9 || c == "." || c == "-" || c == "+";
+	}
+	,ReadObject: function() {
+		var currentChar = this._text.charAt(this._offset);
+		throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Unhandled object type in JSON: " + this._text.substring(this._offset,30)));
+	}
+	,TryRead: function(textToRead) {
+		if(this._offset + textToRead.length > this._text.length) return false;
+		var _g1 = 0;
+		var _g = textToRead.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(textToRead.charAt(i) != this._text.charAt(this._offset + i)) return false;
+		}
+		this._offset += textToRead.length;
+		return true;
+	}
+	,Expect: function(expectedStr) {
+		if(!this.TryRead(expectedStr)) this.Expect2(false,expectedStr);
+	}
+	,Expect2: function(condition,message) {
+		if(!condition) {
+			if(message == null) message = "Unexpected token"; else message = "Expected " + message;
+			message += " at offset " + this._offset;
+			throw new js__$Boot_HaxeError(new ink_runtime_SystemException(message));
+		}
+	}
+	,SkipWhitespace: function() {
+		var len = this._text.length;
+		while(this._offset < len) {
+			var c = this._text.charAt(this._offset);
+			if(c == " " || c == "\t" || c == "\n" || c == "\r") this._offset++; else break;
+		}
+	}
+	,__class__: ink_runtime_Reader
+};
+var ink_runtime_Writer = function(rootObject) {
+	this._sb = new StringBuf();
+	this.WriteObject(rootObject);
+};
+ink_runtime_Writer.__name__ = ["ink","runtime","Writer"];
+ink_runtime_Writer.prototype = {
+	WriteObject: function(obj) {
+		if(((obj | 0) === obj)) this._sb.add(Std["int"](obj)); else if(typeof(obj) == "number") {
+			var floatStr = Std.string(obj);
+			if(floatStr == null) this._sb.b += "null"; else this._sb.b += "" + floatStr;
+			if(!(floatStr.indexOf(".") >= 0)) this._sb.b += ".0";
+		} else if(typeof(obj) == "boolean") if(obj == true) this._sb.b += "true"; else this._sb.b += "false"; else if(obj == null) this._sb.b += "null"; else if(typeof(obj) == "string") {
+			var str = Std.string(obj);
+			str = StringTools.replace(str,"\\","\\\\");
+			str = StringTools.replace(str,"\"","\\\"");
+			str = StringTools.replace(str,"\n","\\n");
+			str = StringTools.replace(str,"\r","");
+			this._sb.b += Std.string("\"" + str + "\"");
+		} else if(js_Boot.__instanceof(obj,haxe_ds_StringMap)) this.WriteDictionary(obj); else if(js_Boot.__instanceof(obj,List)) this.WriteList(obj); else throw new js__$Boot_HaxeError(new ink_runtime_SystemException("ink's SimpleJson writer doesn't currently support this object: " + Std.string(obj)));
+	}
+	,WriteDictionary: function(dict) {
+		this._sb.b += "{";
+		var isFirst = true;
+		var $it0 = dict.keys();
+		while( $it0.hasNext() ) {
+			var k = $it0.next();
+			if(!isFirst) this._sb.b += ",";
+			this._sb.b += "\"";
+			if(k == null) this._sb.b += "null"; else this._sb.b += "" + k;
+			this._sb.b += "\":";
+			this.WriteObject(__map_reserved[k] != null?dict.getReserved(k):dict.h[k]);
+			isFirst = false;
+		}
+		this._sb.b += "}";
+	}
+	,WriteList: function(list) {
+		this._sb.b += "[";
+		var isFirst = true;
+		var _g_head = list.h;
+		var _g_val = null;
+		while(_g_head != null) {
+			var obj;
+			_g_val = _g_head[0];
+			_g_head = _g_head[1];
+			obj = _g_val;
+			if(!isFirst) this._sb.b += ",";
+			this.WriteObject(obj);
+			isFirst = false;
+		}
+		this._sb.b += "]";
+	}
+	,toString: function() {
+		return this._sb.b;
+	}
+	,__class__: ink_runtime_Writer
 };
 var ink_runtime_Story = function() {
 };

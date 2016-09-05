@@ -1,5 +1,7 @@
 package;
 
+import haxe.ds.HashMap;
+import haxe.ds.ObjectMap;
 import haxe.ds.StringMap;
 import ink.runtime.*;
 import ink.runtime.Value;
@@ -38,6 +40,11 @@ class InkleRuntime
 		var map:Map<String, Object> = new Map<String, Object>();
 		var mapInt:Map<Int, Object> = new Map<Int, Object>();
 		var mapSet:StringHashSet = new StringHashSet();
+		
+		var dynStrMap:Map<Container, Dynamic> = new  Map<Container,Dynamic>();
+		
+		trace("Std is dynamic:" + Std.is(dynStrMap,ObjectMap) + ", "+Std.is({}, StringMap));
+		
 		mapSet.add("abc");
 		
 		var strMapBool:StringMap<Bool> = new StringMap<Bool>();
