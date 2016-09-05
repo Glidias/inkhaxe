@@ -3,18 +3,108 @@ import ink.runtime.Path;
 import ink.runtime.Path.Component;
 
 /**
- * TODO
+ * Done!
  * @author Glidias
  */
-class Path extends Object
+class Path extends Object implements IEquatable<Path>
 {
-	// todo
-	public var componentsString:String;
-	public var isRelative:Bool;
+	public static var parentId:String = "^";  // should this be inlined as  constant?
+
+	
+	public var index:Int;  //x { get; private set; }
+	public var name:String;  //  { get; private set; }
+	public var isIndex(get, null):Bool;	
+	function get_isIndex():Bool 
+	{
+		return index >=0;
+	}
+	public var isParent(get, null):Bool;
+	function get_isParent():Bool 
+	{
+		return name == Path.parentId;
+	}
+	
+	
+
+	
+	public function PathByAppendingPath(pathToAppend:Path):Path
+	{
+		var p:Path = new Path ();
+
+		var upwardMoves:Int = 0;
+		for (i in 0...pathToAppend.components.length ) {  //int i = 0; i < pathToAppend.components.Count; ++i
+			if (pathToAppend.components[i].isParent) {
+				upwardMoves++;
+			} else {
+				break;
+			}
+		}
+
+		for (i in 0...this.components.length - upwardMoves) {  //int i = 0; i < this.components.Count - upwardMoves; ++i
+			p.components.push(this.components[i]);
+		}
+
+		for (i in upwardMoves...pathToAppend.components.length) {  //int i=upwardMoves; i<pathToAppend.components.Count; ++i
+			p.components.push (pathToAppend.components [i]);
+		}
+
+		return p;
+	}
+
+	
+	
 	public var components:Array<Component>;  //{ get; private set; }
-	public  var tail:Path;
+	public var isRelative:Bool; // { get; private set; }
+	public var head(get, null):Component;
+	function get_head():Component 
+	{
+		if (components.length > 0) {
+			return components[0]; // .First ();
+		} else {
+			return null;
+		}
+	}
+	public var tail(get, null):Path;
+	function get_tail():Path 
+	{
+		
+		if (components.length >= 2) {
+			var tailComps:Array<Component>  = components.slice(1, components.length - 1); //  components.GetRange (1, components.Count - 1);
+			return  Path.createFromComponents(tailComps);
+		} 
+		else {
+			return Path.self;
+		}
+	}
+
+	public var length(get, null):Int;
+	function get_length():Int 
+	{
+		return components.length;
+	}
 	
 	
+	public var  lastComponent(get, null):Component;
+	function get_lastComponent():Component 
+	{
+		if (components.length > 0) {
+			return components[components.length - 1];// components.Last ();
+		} else {
+			return null;
+		}
+	}
+
+	
+	public var containsNamedComponent(get, null):Bool;
+	function get_containsNamedComponent():Bool 
+	{
+	  for( comp in components) {
+			if( !comp.isIndex ) {
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	// Constructors done
 	public function new() 
@@ -47,24 +137,120 @@ class Path extends Object
 		
 	}
 	
-	// ------
+	//----
 	
-	// TODO
-	
-	public function PathByAppendingPath(otherPath:Path):Path
+	public static var self(get, null):Path;
+	static function get_self():Path 
 	{
-		return null;
+		var path = new Path();
+		path.isRelative = true;
+		return path;
 	}
+	
+	public var componentsString(get,  set):String;
+	public function get_componentsString():String 
+	{
+		   var compsStr = StringExt.Join(".", components); //StringExt.Join (".", components);
+			if (isRelative)
+				return "." + compsStr;
+			else
+				return compsStr;
+	}
+	function set_componentsString(value:String ):String 
+	{
+		//components.Clear();
+		#if (js||flash)
+		untyped components.length = 0;
+		#else
+		components.splice(0,arr.length);
+		#end
+		
+		var componentsStr = value;
+
+		// Empty path, empty components
+		// (path is to root, like "/" in file system)
+		if (componentsStr == "" || componentsStr == null)  //string.IsNullOrEmpty(componentsStr)
+			return null;
+
+		// When components start with ".", it indicates a relative path, e.g.
+		//   .^.^.hello.5
+		// is equivalent to file system style path:
+		//  ../../hello/5
+		if (componentsStr.charAt(0) == '.') {
+			this.isRelative = true;
+			componentsStr = componentsStr.substring (1);
+		} else {
+			this.isRelative = false;
+		}
+
+		var componentStrings = componentsStr.split('.');
+		for (str in componentStrings) {
+			var index:Int;
+			index = Std.parseInt(str);
+			if (!Math.isNaN(index)) {  //int.TryParse (str , out index)
+				components.push ( Component.createFromIndex(index));
+			} else {
+				components.push ( Component.createFromName(str));
+			}
+		}
+		
+			
+		return value;// get_componentsString();
+	}
+	
+	
 	public function toString ():String
 	{
-		return null;
+		 return componentsString;
 	}
 	
 	
+	
+	public override function Equals(obj:Dynamic):Bool
+	{
+		return EqualsComponent(LibUtil.as(obj,Component));
+	}
+	
+	public function EqualsComponent(otherComp:Component):Bool {
+		 if (otherComp != null && otherComp.isIndex == this.isIndex) {
+			if (isIndex) {
+				return index == otherComp.index;   
+			} else {
+				return name == otherComp.name;
+			}
+		}
+		return false;
+	}
+	
+	public function EqualsPath(otherPath:Path):Bool
+	{
+		if (otherPath == null)
+			return false;
+
+		if (otherPath.components.length != this.components.length)
+			return false;
+
+		if (otherPath.isRelative != this.isRelative)
+			return false;
+
+		return LibUtil.arraySequenceEquals(otherPath.components, this.components);// otherPath.components.SequenceEqual(this.components);
+	}
+	
+	
+	/*
+	public override function GetHashCode():Int
+	{
+		if (isIndex)
+			return this.index;
+		else
+			return this.name.GetHashCode ();
+	}
+	*/
+
 	
 }
 
-class Component 
+class Component implements IEquatable<Component>
 {
 	public var isParent:Bool;
 	public var index:Int;
@@ -77,8 +263,7 @@ class Component
 	{
 		
 	}
-	
-	
+
 	public static function createFromIndex(index:Int):Component {
 		
 		var me = new Component();
@@ -96,19 +281,43 @@ class Component
 		me.index = -1;
 		return me;
 	}
-	
 
 
 	// -------
 	
-		static public function ToParent() :Component
+	static public function ToParent() :Component
 	{
-			return null;
+		return  Component.createFromName(Path.parentId);
 	}
 	
-	public function Equals(other:Component):Bool {
+	public function toString():String {
+		if (isIndex) {
+			return Std.string(index); // .ToString ();
+		} else {
+			return name;
+		}
+	}
+
+	/* INTERFACE ink.runtime.IEquatable.IEquatable<T> */
+	
+	public function Equals(obj:Dynamic):Bool 
+	{
+		  return EqualsComponent(LibUtil.as(obj,  Component) );
+	}
+	
+	 public function EqualsComponent( otherComp:Component):Bool
+	{
+		if (otherComp != null && otherComp.isIndex == this.isIndex) {
+			if (isIndex) {
+				return index == otherComp.index;   
+			} else {
+				return name == otherComp.name;
+			}
+		}
 		return false;
 	}
+
+
 			
 			
 }

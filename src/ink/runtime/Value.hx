@@ -1,7 +1,8 @@
 package ink.runtime;
+import ink.runtime.Value.IntValue;
 
 /**
- * ...
+ * Done!
  * @author Glidias
  */
 
@@ -78,7 +79,20 @@ class Value<T> extends Object
 		return null;
 	}
 	
-	public function ToString():String
+
+	public override function Copy():Object
+	{
+		return Create(valueObject);
+	}
+
+		
+	public function new(val:T) {
+		super();
+		value = val;
+
+	}
+  
+  	public function ToString():String
 	{
 		return Std.string(value);
 	}
@@ -87,18 +101,8 @@ class Value<T> extends Object
 		return ToString();
 	}
 
-	public override function Copy():Object
-	{
-		return Create(valueObject);
-	}
-
-		
- public function new(val:T) {
-	super();
-	 value = val;
-
-  }
   
+  // absract boilerplate
   function get_valueType():ValueType 
   {
 	  return valueType;
@@ -113,13 +117,39 @@ class Value<T> extends Object
   {
 	  return value;
   }
+  
+  
 }
 
-// todo types
+
 class IntValue extends Value<Int> {
-	public function new(val:Int) {
+	
+	public override function get_valueType():ValueType  { return ValueType.IntType; }
+    public override function get_isTruthy():Bool { return value != 0; }
+
+		
+	public function new(val:Int=0) {
 		super(val);
 	}
+	
+	public override function Cast<T>( newType:ValueType):Value<T>
+	{
+		if (newType == valueType) {
+			return cast this;
+		}
+
+		if (newType == ValueType.IntType) {
+			return cast new IntValue (this.value);
+		}
+
+		if (newType == ValueType.StringType) {
+			return cast new StringValue("" + this.value);
+		}
+
+		throw new SystemException ("Unexpected type cast of Value to new ValueType");
+	}
+	
+
 	
 }
 
@@ -127,6 +157,26 @@ class FloatValue extends Value<Float> {
 	public function new(val:Float) {
 		super(val);
 	}
+
+	
+	public override function Cast<T>( newType:ValueType):Value<T>
+	{
+		if (newType == valueType) {
+			return cast this;
+		}
+
+		if (newType == ValueType.FloatType) {
+			return cast new FloatValue (this.value);
+		}
+
+		if (newType == ValueType.StringType) {
+			return cast new StringValue("" + this.value);
+		}
+
+		throw new SystemException ("Unexpected type cast of Value to new ValueType");
+	}
+	
+	
 }
 
 

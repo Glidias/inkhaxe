@@ -35,6 +35,15 @@ class LibUtil
 		return Reflect.field(obj, prop);  
 	}
 
+	public static function arraySequenceEquals<T>(arr1:Array<T>, arr2:Array<T>):Bool {
+		if (arr1.length != arr2.length) return false;
+		for (i in 0...arr1.length) {
+			if (arr1[i] != arr2[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
 	
 	
 	public static function addRangeForList<T>(list:List<T>, toAdd:List<T>):Void{

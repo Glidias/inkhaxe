@@ -19,6 +19,7 @@ class InkleRuntime
 		Value;
 		VariablesState;
 		NativeFunctionCall;
+		SimpleJson;
 		//trace("A");
 		
 		//testDataTypeClasses();

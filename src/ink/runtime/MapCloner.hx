@@ -1,4 +1,5 @@
-package ink.runtime; //done!
+ //done!
+package ink.runtime;
 import ink.runtime.Cloner;
 import Type.ValueType;
 import Map.IMap;
