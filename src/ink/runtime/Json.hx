@@ -15,15 +15,36 @@ import ink.runtime.VariableReference;
 class Json
 {
 
-	public static function ListToJArray<T:Object>(serialisables:Array<T>):Array<Dynamic> {
+	public static function ListToJArray<T:Object>(serialisables:List<T>):Array<Dynamic> {
 		 var jArray = new Array<Dynamic>();
-		for (s in jArray) {
-			jArray.push(RuntimeObjectToJToken(jArray[s]));
+		for (s in serialisables) {
+			jArray.push(RuntimeObjectToJToken(s));
 		}
 		return jArray;
 	}
 	
-	public static function JArrayToRuntimeObjList(jArray:Array<Dynamic>, skipLast:Bool=false):Array<Object>
+	public static inline function ArrayToJArray<T:Object>(serialisables:Array<T>):Array<Dynamic> {
+		return serialisables.concat([]);
+	}
+	
+	public static function JArrayToRuntimeObjList(jArray:Array<Dynamic>, skipLast:Bool=false):List<Object>
+	{
+		var count:Int = jArray.length;
+		if (skipLast)
+			count--;
+
+		var list = new List<Object>();  //jArray.Count
+
+		for (i in 0...count) {
+			var jTok = jArray[i];
+			var runtimeObj = LibUtil.as( JTokenToRuntimeObject (jTok), Object);
+			list.add(runtimeObj);
+		}
+
+		return list;
+	}
+	
+	public static function JArrayToRuntimeObjArray(jArray:Array<Dynamic>, skipLast:Bool=false):Array<Object>
 	{
 		var count:Int = jArray.length;
 		if (skipLast)
@@ -444,7 +465,7 @@ class Json
 	
 	
 	static function  ContainerToJArray(container:Container):Array<Dynamic> {
-		var jArray = ListToJArray (container.content);
+		var jArray = container.content.concat([]); // ListToJArray (container.content);
 
             // Container is always an array [...]
             // But the final element is always either:
@@ -498,7 +519,7 @@ class Json
 	static function JArrayToContainer(jArray:Array<Dynamic>):Container  //List<object>
 	{
 		 var container = new Container ();
-            container.content = JArrayToRuntimeObjList (jArray, true );  //skipLast:true
+         container.content = JArrayToRuntimeObjArray(jArray, true); // JArrayToRuntimeObjList (jArray, true );  //skipLast:true
 
             // Final object in the array is always a combination of
             //  - named content

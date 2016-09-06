@@ -1,5 +1,6 @@
 package ink.runtime;
 import haxe.ds.StringMap;
+import ink.runtime.Object;
 
 
 /**
@@ -30,9 +31,39 @@ class LibUtil
 		return map.get(prop); 
 	}
 	
+	public static  function listIndexOf<T>(list:List<T>, obj:Dynamic):Int {
+		var count:Int = 0;
+		for (l in list) {
+			if (l == obj) return count;
+			count++;
+		}
+		return -1;
+	}
+	
+	public static inline function getArrayItemAtIndex<T>(arr:Array<T>, index:Int):T {
+		return arr[index];
+	}
+	
+	public static function getListItemAtIndex<T>(list:List<T>, index:Int):T {
+		if (index < 0 || index >= list.length) return null;
+		var iter = list.iterator();
+		for (i in 0...index) {
+			iter.next();
+		}
+		return iter.next();
+	}
+	
 	// for json tokens, you must use this!
 	public static inline function tryGetValueDynamic(obj:Dynamic, prop:String ):Dynamic {
 		return Reflect.field(obj, prop);  
+	}
+	
+	public static inline function clearArray<T>(arr:Array<T>):Void {
+		#if (js||flash)
+		untyped arr.length = 0;
+		#else
+		arr.splice(0,arr.length);
+		#end
 	}
 
 	public static function arraySequenceEquals<T>(arr1:Array<T>, arr2:Array<T>):Bool {
@@ -44,6 +75,8 @@ class LibUtil
 		}
 		return true;
 	}
+	
+
 	
 	
 	public static function addRangeForList<T>(list:List<T>, toAdd:List<T>):Void{
@@ -57,9 +90,8 @@ class LibUtil
 		}
 	}
 	
-	public static function listEquals<T>(list:List<T>, other:List<T>):Bool {
-		return false;
-	}
+	
+	
 	
 	public static function findForList<T>(list:List<T>, f : T -> Bool ):T {
 		for ( i in list) {
@@ -85,6 +117,11 @@ class LibUtil
 	static public inline function maxI_(a:Int, b:Int):Int 
 	{
 		return (a >= b ? a : b);
+	}
+	
+	static public inline function removeArrayItemAtIndex<T>(arr:Array<T>, index:Int) 
+	{
+		arr.splice(index,1);
 	}
 	
 }

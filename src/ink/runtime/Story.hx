@@ -6,6 +6,9 @@ package ink.runtime;
  */
 class Story
 {
+	static public var inkVersionCurrent:Int;
+	public var mainContentContainer:Container;
+	public var rootContentContainer:Container;
 
 	public function new() 
 	{

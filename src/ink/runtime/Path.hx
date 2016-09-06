@@ -159,11 +159,7 @@ class Path extends Object implements IEquatable<Path>
 	function set_componentsString(value:String ):String 
 	{
 		//components.Clear();
-		#if (js||flash)
-		untyped components.length = 0;
-		#else
-		components.splice(0,arr.length);
-		#end
+		LibUtil.clearArray(components);
 		
 		var componentsStr = value;
 
@@ -187,7 +183,7 @@ class Path extends Object implements IEquatable<Path>
 		for (str in componentStrings) {
 			var index:Int;
 			index = Std.parseInt(str);
-			if (!Math.isNaN(index)) {  //int.TryParse (str , out index)
+			if (index != null && !Math.isNaN(index)) {  //int.TryParse (str , out index)
 				components.push ( Component.createFromIndex(index));
 			} else {
 				components.push ( Component.createFromName(str));

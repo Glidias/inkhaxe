@@ -22,6 +22,7 @@ class InkleRuntime
 		VariablesState;
 		NativeFunctionCall;
 		SimpleJson;
+		StoryState;
 		//trace("A");
 		
 		//testDataTypeClasses();

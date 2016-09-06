@@ -2,7 +2,7 @@ package ink.runtime;
 import haxe.ds.StringMap;
 
 /**
- * ...
+ * Done!
  * @author Glidias
  */
 class SimpleJson
@@ -50,7 +50,6 @@ class Reader
 	{
 		var currentChar = _text.charAt(_offset); // [_offset];
 
-		/*  // todo
 		if( currentChar == '{' )
 			return ReadDictionary ();
 		
@@ -71,146 +70,155 @@ class Reader
 
 		else if (TryRead ("null"))
 			return null;
-			*/
+		
 
 		throw new SystemException ("Unhandled object type in JSON: "+_text.substring(_offset, 30));
 	}
 	
-	/* TODO
-	 Dictionary<string, object> ReadDictionary ()
-            {
-                var dict = new Dictionary<string, object> ();
+	
+	function ReadDictionary():Map<String, Dynamic> //Dictionary<string, object>
+	{
+		var dict = new Map<String, Dynamic>();
 
-                Expect ("{");
+		Expect ("{");
 
-                SkipWhitespace ();
+		SkipWhitespace ();
 
-                // Empty dictionary?
-                if (TryRead ("}"))
-                    return dict;
+		// Empty dictionary?
+		if (TryRead ("}"))
+			return dict;
 
-                do {
+		do {
 
-                    SkipWhitespace ();
+			SkipWhitespace ();
 
-                    // Key
-                    var key = ReadString ();
-                    Expect (key != null, "dictionary key");
+			// Key
+			var key = ReadString ();
+			Expect2(key != null, "dictionary key");
 
-                    SkipWhitespace ();
+			SkipWhitespace ();
 
-                    // :
-                    Expect (":");
+			// :
+			Expect (":");
 
-                    SkipWhitespace ();
+			SkipWhitespace ();
 
-                    // Value
-                    var val = ReadObject ();
-                    Expect (val != null, "dictionary value");
+			// Value
+			var val = ReadObject ();
+			Expect2 (val != null, "dictionary value");
 
-                    // Add to dictionary
-                    dict [key] = val;
+			// Add to dictionary
+			dict.set(key, val); // [key] = val;
 
-                    SkipWhitespace ();
+			SkipWhitespace ();
 
-                } while ( TryRead (",") );
+		} while ( TryRead (",") );
 
-                Expect ("}");
+		Expect ("}");
 
-                return dict;
-            }
+		return dict;
+	}
 
-            List<object> ReadArray ()
-            {
-                var list = new List<object> ();
+	function ReadArray ():List<Dynamic>
+		{
+			var list = new List<Dynamic> ();
 
-                Expect ("[");
+			Expect ("[");
 
-                SkipWhitespace ();
+			SkipWhitespace ();
 
-                // Empty list?
-                if (TryRead ("]"))
-                    return list;
+			// Empty list?
+			if (TryRead ("]"))
+				return list;
 
-                do {
+			do {
 
-                    SkipWhitespace ();
+				SkipWhitespace ();
 
-                    // Value
-                    var val = ReadObject ();
+				// Value
+				var val = ReadObject ();
 
-                    // Add to array
-                    list.Add (val);
+				// Add to array
+				list.add (val);
 
-                    SkipWhitespace ();
+				SkipWhitespace ();
 
-                } while (TryRead (","));
+			} while (TryRead (","));
 
-                Expect ("]");
+			Expect ("]");
 
-                return list;
-            }
+			return list;
+		}
 
-            string ReadString ()
-            {
-                Expect ("\"");
+			
+	function ReadString ():String
+		{
+			Expect ("\"");
 
-                var startOffset = _offset;
+			var startOffset = _offset;
 
-                for (; _offset < _text.Length; _offset++) {
-                    var c = _text [_offset];
+			while( _offset < _text.length) { //for (; _offset < _text.Length; _offset++) {
+				var c = _text.charAt(_offset);// [_offset];
 
-                    // Escaping. Escaped character will be skipped over in next loop.
-                    if (c == '\\') {
-                        _offset++;
-                    } else if( c == '"' ) {
-                        break;
-                    }
-                }
+				// Escaping. Escaped character will be skipped over in next loop.
+				if (c == '\\') {
+					_offset++;
+				} else if( c == '"' ) {
+					break;
+				}
+				
+				_offset++;  // loop end statement
+			}
 
-                Expect ("\"");
+			Expect ("\"");
 
-                var str = _text.Substring (startOffset, _offset - startOffset - 1);
-                str = str.Replace ("\\\\", "\\");
-                str = str.Replace ("\\\"", "\"");
-                str = str.Replace ("\\r", "");
-                str = str.Replace ("\\n", "\n");
-                return str;
-            }
+			var str = _text.substring(startOffset, _offset - startOffset - 1);
+			str = StringTools.replace(str, "\\\\", "\\");
+			str = StringTools.replace (str,"\\\"", "\"");
+			str = StringTools.replace (str,"\\r", "");
+			str = StringTools.replace (str,"\\n", "\n");
+			return str;
+		}
 
-            object ReadNumber ()
-            {
-                var startOffset = _offset;
+		
+	function ReadNumber ():Dynamic
+		{
+			var startOffset:Int = _offset;
 
-                bool isFloat = false;
-                for (; _offset < _text.Length; _offset++) {
-                    var c = _text [_offset];
-                    if (c == '.') isFloat = true;
-                    if (IsNumberChar (c))
-                        continue;
-                    else
-                        break;
-                }
+			var isFloat = false;
+			while (_offset < _text.length) {  //; _offset < _text.Length; _offset++
+				var c = _text.charAt(_offset);// [_offset];
+				if (c == '.') isFloat = true;
+				if (IsNumberChar (c)) {
+					_offset++;  // continuing...
+					continue;
+				}
+				else
+					break;
+				_offset++; // continuing...
+			}
 
-                string numStr = _text.Substring (startOffset, _offset - startOffset);
+			var numStr:String = _text.substring (startOffset, _offset - startOffset);
 
-                if (isFloat) {
-                    float f;
-                    if (float.TryParse (numStr, out f)) {
-                        return f;
-                    }
-                } else {
-                    int i;
-                    if (int.TryParse (numStr, out i)) {
-                        return i;
-                    }
-                }
+			if (isFloat) {
+				var f:Float;
+				f = Std.parseFloat(numStr);
+				if (!Math.isNaN(f)) {  //float.TryParse (numStr, out f)
+					return f;
+				}
+			} else {
+				var i:Int;
+				i =  Std.parseInt(numStr);
+				if (i != null && !Math.isNaN(i) ) {  //int.TryParse (numStr, out i)
+					return i;
+				}
+			}
 
-                throw new System.Exception ("Failed to parse number value");
-            }
-	*/
+			throw new SystemException ("Failed to parse number value");
+		}
 
-			function TryRead (textToRead:String):Bool
+
+	function TryRead (textToRead:String):Bool
 		{
 			if (_offset + textToRead.length > _text.length)
 				return false;
@@ -225,13 +233,13 @@ class Reader
 			return true;
 		}
 
-		function Expect ( expectedStr:String):Void
+	function Expect ( expectedStr:String):Void
 		{
 			if (!TryRead (expectedStr))
 				Expect2 (false, expectedStr);
 		}
 
-		function Expect2( condition:Bool,  message:String = null)
+	function Expect2( condition:Bool,  message:String = null)
 		{
 		if (!condition) {
 			if (message == null) {

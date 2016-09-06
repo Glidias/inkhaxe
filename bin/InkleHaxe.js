@@ -42,6 +42,7 @@ InkleRuntime.main = function() {
 	ink_runtime_VariablesState;
 	ink_runtime_NativeFunctionCall;
 	ink_runtime_SimpleJson;
+	ink_runtime_StoryState;
 	InkleRuntime.testCommandTypeEnum();
 };
 InkleRuntime.testCommandTypeEnum = function() {
@@ -405,6 +406,62 @@ haxe_ds_StringMap.prototype = {
 	}
 	,__class__: haxe_ds_StringMap
 };
+var ink_random_RNG = function() {
+	this._seed = 0;
+};
+ink_random_RNG.__name__ = ["ink","random","RNG"];
+ink_random_RNG.prototype = {
+	getSeed: function() {
+		return this._seed;
+	}
+	,setSeed: function(seed) {
+		this._seed = seed;
+	}
+	,random: function() {
+		throw new js__$Boot_HaxeError("override for implementation");
+	}
+	,randomFloat: function() {
+		throw new js__$Boot_HaxeError("override for implementation");
+	}
+	,randomRange: function(min,max) {
+		var l = min - .4999;
+		var h = max + .4999;
+		return Math.round(l + (h - l) * this.randomFloat());
+	}
+	,randomFloatRange: function(min,max) {
+		return min + (max - min) * this.randomFloat();
+	}
+	,randomSym: function(range) {
+		return this.randomRange(-range,range);
+	}
+	,randomFloatSym: function(range) {
+		return this.randomFloatRange(-range,range);
+	}
+	,__class__: ink_random_RNG
+};
+var ink_random_ParkMiller = function(seed) {
+	if(seed == null) seed = 1;
+	ink_random_RNG.call(this);
+	this.setSeed(seed);
+};
+ink_random_ParkMiller.__name__ = ["ink","random","ParkMiller"];
+ink_random_ParkMiller.__super__ = ink_random_RNG;
+ink_random_ParkMiller.prototype = $extend(ink_random_RNG.prototype,{
+	setSeed: function(seed) {
+		ink_random_RNG.prototype.setSeed.call(this,seed);
+		this._fseed = seed;
+	}
+	,random: function() {
+		this._fseed = this._fseed * 16807. % 2147483647.;
+		return this._fseed;
+	}
+	,randomFloat: function() {
+		return this.random() / 2147483647.;
+	}
+	,__class__: ink_random_ParkMiller
+});
+var ink_random_Limits = function() { };
+ink_random_Limits.__name__ = ["ink","random","Limits"];
 var ink_runtime_Assert = function() { };
 ink_runtime_Assert.__name__ = ["ink","runtime","Assert"];
 ink_runtime_Assert.bool = function(result,error) {
@@ -480,7 +537,7 @@ ink_runtime_CallStack.prototype = {
 		}
 		this._threadCounter = Reflect.field(jObject,"threadCounter");
 	}
-	,sGetJsonToken: function() {
+	,GetJsonToken: function() {
 		var jObject = { };
 		var jThreads = [];
 		var i_head = this._threads.h;
@@ -1436,15 +1493,39 @@ var ink_runtime_Json = function() {
 ink_runtime_Json.__name__ = ["ink","runtime","Json"];
 ink_runtime_Json.ListToJArray = function(serialisables) {
 	var jArray = [];
-	var _g = 0;
-	while(_g < jArray.length) {
-		var s = jArray[_g];
-		++_g;
-		jArray.push(ink_runtime_Json.RuntimeObjectToJToken(jArray[s]));
+	var _g_head = serialisables.h;
+	var _g_val = null;
+	while(_g_head != null) {
+		var s;
+		s = (function($this) {
+			var $r;
+			_g_val = _g_head[0];
+			_g_head = _g_head[1];
+			$r = _g_val;
+			return $r;
+		}(this));
+		jArray.push(ink_runtime_Json.RuntimeObjectToJToken(s));
 	}
 	return jArray;
 };
+ink_runtime_Json.ArrayToJArray = function(serialisables) {
+	return serialisables.concat([]);
+};
 ink_runtime_Json.JArrayToRuntimeObjList = function(jArray,skipLast) {
+	if(skipLast == null) skipLast = false;
+	var count = jArray.length;
+	if(skipLast) count--;
+	var list = new List();
+	var _g = 0;
+	while(_g < count) {
+		var i = _g++;
+		var jTok = jArray[i];
+		var runtimeObj = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(jTok),ink_runtime_Object);
+		list.add(runtimeObj);
+	}
+	return list;
+};
+ink_runtime_Json.JArrayToRuntimeObjArray = function(jArray,skipLast) {
 	if(skipLast == null) skipLast = false;
 	var count = jArray.length;
 	if(skipLast) count--;
@@ -1690,7 +1771,7 @@ ink_runtime_Json.RuntimeObjectToJToken = function(obj) {
 	throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to convert runtime object to Json token: " + Std.string(obj)));
 };
 ink_runtime_Json.ContainerToJArray = function(container) {
-	var jArray = ink_runtime_Json.ListToJArray(container._content);
+	var jArray = container._content.concat([]);
 	var namedOnlyContent = container.get_namedOnlyContent();
 	var countFlags = container.get_countFlags();
 	if(namedOnlyContent != null && new haxe_ds__$StringMap_StringMapIterator(namedOnlyContent,namedOnlyContent.arrayKeys()).hasNext() || countFlags > 0 || container.name != null) {
@@ -1721,7 +1802,7 @@ ink_runtime_Json.ContainerToJArray = function(container) {
 };
 ink_runtime_Json.JArrayToContainer = function(jArray) {
 	var container = new ink_runtime_Container();
-	container.set_content(ink_runtime_Json.JArrayToRuntimeObjList(jArray,true));
+	container.set_content(ink_runtime_Json.JArrayToRuntimeObjArray(jArray,true));
 	var terminatingObj = jArray[jArray.length - 1];
 	if(terminatingObj != null) {
 		var namedOnlyContent = new haxe_ds_StringMap();
@@ -1780,8 +1861,53 @@ ink_runtime_LibUtil.tryGetValue = function(map,prop) {
 ink_runtime_LibUtil.tryGetValueINamedContent = function(map,prop) {
 	return __map_reserved[prop] != null?map.getReserved(prop):map.h[prop];
 };
+ink_runtime_LibUtil.listIndexOf = function(list,obj) {
+	var count = 0;
+	var _g_head = list.h;
+	var _g_val = null;
+	while(_g_head != null) {
+		var l;
+		l = (function($this) {
+			var $r;
+			_g_val = _g_head[0];
+			_g_head = _g_head[1];
+			$r = _g_val;
+			return $r;
+		}(this));
+		if(l == obj) return count;
+		count++;
+	}
+	return -1;
+};
+ink_runtime_LibUtil.getArrayItemAtIndex = function(arr,index) {
+	return arr[index];
+};
+ink_runtime_LibUtil.getListItemAtIndex = function(list,index) {
+	if(index < 0 || index >= list.length) return null;
+	var iter_head = list.h;
+	var iter_val = null;
+	var _g = 0;
+	while(_g < index) {
+		var i = _g++;
+		{
+			iter_val = iter_head[0];
+			iter_head = iter_head[1];
+			iter_val;
+		}
+	}
+	return (function($this) {
+		var $r;
+		iter_val = iter_head[0];
+		iter_head = iter_head[1];
+		$r = iter_val;
+		return $r;
+	}(this));
+};
 ink_runtime_LibUtil.tryGetValueDynamic = function(obj,prop) {
 	return Reflect.field(obj,prop);
+};
+ink_runtime_LibUtil.clearArray = function(arr) {
+	arr.length = 0;
 };
 ink_runtime_LibUtil.arraySequenceEquals = function(arr1,arr2) {
 	if(arr1.length != arr2.length) return false;
@@ -1816,9 +1942,6 @@ ink_runtime_LibUtil.addRangeForArray = function(list,toAdd) {
 		list.push(toAdd[i]);
 	}
 };
-ink_runtime_LibUtil.listEquals = function(list,other) {
-	return false;
-};
 ink_runtime_LibUtil.findForList = function(list,f) {
 	var _g_head = list.h;
 	var _g_val = null;
@@ -1846,6 +1969,9 @@ ink_runtime_LibUtil.minI_ = function(a,b) {
 };
 ink_runtime_LibUtil.maxI_ = function(a,b) {
 	if(a >= b) return a; else return b;
+};
+ink_runtime_LibUtil.removeArrayItemAtIndex = function(arr,index) {
+	arr.splice(index,1);
 };
 var ink_runtime_MapCloner = function(cloner,type) {
 	this.cloner = cloner;
@@ -2264,7 +2390,7 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 			++_g;
 			var index;
 			index = Std.parseInt(str);
-			if(!isNaN(index)) this.components.push(ink_runtime_Component.createFromIndex(index)); else this.components.push(ink_runtime_Component.createFromName(str));
+			if(index != null && !isNaN(index)) this.components.push(ink_runtime_Component.createFromIndex(index)); else this.components.push(ink_runtime_Component.createFromName(str));
 		}
 		return value;
 	}
@@ -2349,7 +2475,82 @@ ink_runtime_Reader.prototype = {
 	}
 	,ReadObject: function() {
 		var currentChar = this._text.charAt(this._offset);
+		if(currentChar == "{") return this.ReadDictionary(); else if(currentChar == "[") return this.ReadArray(); else if(currentChar == "\"") return this.ReadString(); else if(this.IsNumberChar(currentChar)) return this.ReadNumber(); else if(this.TryRead("true")) return true; else if(this.TryRead("false")) return false; else if(this.TryRead("null")) return null;
 		throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Unhandled object type in JSON: " + this._text.substring(this._offset,30)));
+	}
+	,ReadDictionary: function() {
+		var dict = new haxe_ds_StringMap();
+		this.Expect("{");
+		this.SkipWhitespace();
+		if(this.TryRead("}")) return dict;
+		do {
+			this.SkipWhitespace();
+			var key = this.ReadString();
+			this.Expect2(key != null,"dictionary key");
+			this.SkipWhitespace();
+			this.Expect(":");
+			this.SkipWhitespace();
+			var val = this.ReadObject();
+			this.Expect2(val != null,"dictionary value");
+			if(__map_reserved[key] != null) dict.setReserved(key,val); else dict.h[key] = val;
+			this.SkipWhitespace();
+		} while(this.TryRead(","));
+		this.Expect("}");
+		return dict;
+	}
+	,ReadArray: function() {
+		var list = new List();
+		this.Expect("[");
+		this.SkipWhitespace();
+		if(this.TryRead("]")) return list;
+		do {
+			this.SkipWhitespace();
+			var val = this.ReadObject();
+			list.add(val);
+			this.SkipWhitespace();
+		} while(this.TryRead(","));
+		this.Expect("]");
+		return list;
+	}
+	,ReadString: function() {
+		this.Expect("\"");
+		var startOffset = this._offset;
+		while(this._offset < this._text.length) {
+			var c = this._text.charAt(this._offset);
+			if(c == "\\") this._offset++; else if(c == "\"") break;
+			this._offset++;
+		}
+		this.Expect("\"");
+		var str = this._text.substring(startOffset,this._offset - startOffset - 1);
+		str = StringTools.replace(str,"\\\\","\\");
+		str = StringTools.replace(str,"\\\"","\"");
+		str = StringTools.replace(str,"\\r","");
+		str = StringTools.replace(str,"\\n","\n");
+		return str;
+	}
+	,ReadNumber: function() {
+		var startOffset = this._offset;
+		var isFloat = false;
+		while(this._offset < this._text.length) {
+			var c = this._text.charAt(this._offset);
+			if(c == ".") isFloat = true;
+			if(this.IsNumberChar(c)) {
+				this._offset++;
+				continue;
+			} else break;
+			this._offset++;
+		}
+		var numStr = this._text.substring(startOffset,this._offset - startOffset);
+		if(isFloat) {
+			var f;
+			f = parseFloat(numStr);
+			if(!isNaN(f)) return f;
+		} else {
+			var i;
+			i = Std.parseInt(numStr);
+			if(i != null && !isNaN(i)) return i;
+		}
+		throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to parse number value"));
 	}
 	,TryRead: function(textToRead) {
 		if(this._offset + textToRead.length > this._text.length) return false;
@@ -2472,6 +2673,441 @@ ink_runtime_SystemNotImplementedException.__super__ = ink_runtime_SystemExceptio
 ink_runtime_SystemNotImplementedException.prototype = $extend(ink_runtime_SystemException.prototype,{
 	__class__: ink_runtime_SystemNotImplementedException
 });
+var ink_runtime_StoryState = function(story) {
+	this.story = story;
+	this._outputStream = [];
+	this.evaluationStack = [];
+	this.callStack = ink_runtime_CallStack.createCallStack(story.rootContentContainer);
+	this.variablesState = new ink_runtime_VariablesState(this.callStack);
+	this.visitCounts = new haxe_ds_StringMap();
+	this.turnIndices = new haxe_ds_StringMap();
+	this.currentTurnIndex = -1;
+	var timeSeed = Std["int"](new Date().getTime());
+	var storySeed = Std["int"](new ink_random_ParkMiller(timeSeed).random()) % 100;
+	this.currentChoices = new List();
+	this.GoToStart();
+};
+ink_runtime_StoryState.__name__ = ["ink","runtime","StoryState"];
+ink_runtime_StoryState.prototype = {
+	ToJson: function() {
+		return ink_runtime_SimpleJson.DictionaryToText(this.get_jsonToken());
+	}
+	,LoadJson: function(json) {
+		this.set_jsonToken(ink_runtime_SimpleJson.TextToDictionary(json));
+	}
+	,VisitCountAtPathString: function(pathString) {
+		var visitCountOut;
+		visitCountOut = this.visitCounts.get(pathString);
+		if(visitCountOut != null) return visitCountOut;
+		return 0;
+	}
+	,get_outputStream: function() {
+		return this._outputStream;
+	}
+	,get_currentPath: function() {
+		if(this.get_currentContentObject() == null) return null;
+		return this.get_currentContentObject().get_path();
+	}
+	,set_currentPath: function(value) {
+		if(value != null) this.set_currentContentObject(this.story.ContentAtPath(value)); else this.set_currentContentObject(null);
+		return value;
+	}
+	,get_currentContentObject: function() {
+		return this.callStack.get_currentElement().get_currentObject();
+	}
+	,set_currentContentObject: function(value) {
+		this.callStack.get_currentElement().set_currentObject(value);
+		return value;
+	}
+	,get_currentContainer: function() {
+		return this.callStack.get_currentElement().currentContainer;
+	}
+	,get_previousContentObject: function() {
+		return this.callStack.get_currentThread().previousContentObject;
+	}
+	,set_previousContentObject: function(value) {
+		this.callStack.get_currentThread().previousContentObject = value;
+		return value;
+	}
+	,get_hasError: function() {
+		return this.currentErrors != null && this.currentErrors.length > 0;
+	}
+	,get_currentText: function() {
+		var sb_b = "";
+		var _g = 0;
+		var _g1 = this._outputStream;
+		while(_g < _g1.length) {
+			var outputObj = _g1[_g];
+			++_g;
+			var textContent;
+			textContent = js_Boot.__instanceof(outputObj,ink_runtime_StringValue)?outputObj:null;
+			if(textContent != null) if(textContent.value == null) sb_b += "null"; else sb_b += "" + textContent.value;
+		}
+		return sb_b;
+	}
+	,get_inExpressionEvaluation: function() {
+		return this.callStack.get_currentElement().inExpressionEvaluation;
+	}
+	,set_inExpressionEvaluation: function(value) {
+		this.callStack.get_currentElement().inExpressionEvaluation = value;
+		return value;
+	}
+	,GoToStart: function() {
+		this.callStack.get_currentElement().currentContainer = this.story.mainContentContainer;
+		this.callStack.get_currentElement().currentContentIndex = 0;
+	}
+	,Copy: function() {
+		var copy = new ink_runtime_StoryState(this.story);
+		ink_runtime_LibUtil.addRangeForArray(copy.get_outputStream(),this._outputStream);
+		ink_runtime_LibUtil.addRangeForList(copy.currentChoices,this.currentChoices);
+		if(this.get_hasError()) {
+			copy.currentErrors = new List();
+			ink_runtime_LibUtil.addRangeForList(copy.currentErrors,this.currentErrors);
+		}
+		copy.callStack = ink_runtime_CallStack.createCallStack2(this.callStack);
+		copy._currentRightGlue = this._currentRightGlue;
+		copy.variablesState = new ink_runtime_VariablesState(copy.callStack);
+		copy.variablesState.CopyFrom(this.variablesState);
+		ink_runtime_LibUtil.addRangeForArray(copy.evaluationStack,this.evaluationStack);
+		if(this.divertedTargetObject != null) copy.divertedTargetObject = this.divertedTargetObject;
+		copy.set_previousContentObject(this.get_previousContentObject());
+		var cloner = new ink_runtime_Cloner();
+		copy.visitCounts = cloner.clone(this.visitCounts);
+		copy.turnIndices = cloner.clone(this.turnIndices);
+		copy.currentTurnIndex = this.currentTurnIndex;
+		copy.storySeed = this.storySeed;
+		copy.didSafeExit = this.didSafeExit;
+		return copy;
+	}
+	,get_jsonToken: function() {
+		var obj = { };
+		var choiceThreads = null;
+		var _g_head = this.currentChoices.h;
+		var _g_val = null;
+		while(_g_head != null) {
+			var c;
+			c = (function($this) {
+				var $r;
+				_g_val = _g_head[0];
+				_g_head = _g_head[1];
+				$r = _g_val;
+				return $r;
+			}(this));
+			c.originalChoicePath = c.choicePoint.get_path().get_componentsString();
+			c.originalThreadIndex = c.threadAtGeneration.threadIndex;
+			if(this.callStack.ThreadWithIndex(c.originalThreadIndex) == null) {
+				if(choiceThreads == null) choiceThreads = new haxe_ds_StringMap();
+				var v = c.threadAtGeneration.get_jsonToken();
+				choiceThreads.set(c.originalThreadIndex == null?"null":"" + c.originalThreadIndex,v);
+				v;
+			}
+		}
+		if(choiceThreads != null) obj.choiceThreads = choiceThreads;
+		Reflect.setField(obj,"callstackThreads",this.callStack.GetJsonToken());
+		Reflect.setField(obj,"variablesState",this.variablesState.get_jsonToken());
+		Reflect.setField(obj,"evalStack",this.evaluationStack.concat([]));
+		Reflect.setField(obj,"outputStream",this._outputStream.concat([]));
+		Reflect.setField(obj,"currentChoices",ink_runtime_Json.ListToJArray(this.currentChoices));
+		if(this._currentRightGlue != null) {
+			var rightGluePos = HxOverrides.indexOf(this._outputStream,this._currentRightGlue,0);
+			if(rightGluePos != -1) obj.currRightGlue = rightGluePos;
+		}
+		if(this.divertedTargetObject != null) Reflect.setField(obj,"currentDivertTarget",this.divertedTargetObject.get_path().get_componentsString());
+		Reflect.setField(obj,"visitCounts",ink_runtime_Json.IntDictionaryToJObject(this.visitCounts));
+		Reflect.setField(obj,"turnIndices",ink_runtime_Json.IntDictionaryToJObject(this.turnIndices));
+		obj.turnIdx = this.currentTurnIndex;
+		obj.storySeed = this.storySeed;
+		obj.inkSaveVersion = 4;
+		obj.inkFormatVersion = ink_runtime_Story.inkVersionCurrent;
+		return obj;
+	}
+	,set_jsonToken: function(value) {
+		var jObject = value;
+		var jSaveVersion = null;
+		jSaveVersion = Reflect.field(jObject,"inkSaveVersion");
+		if(jSaveVersion == null) throw new js__$Boot_HaxeError(new ink_runtime_StoryException("ink save format incorrect, can't load.")); else if(Std["int"](jSaveVersion) < ink_runtime_StoryState.kMinCompatibleLoadVersion) throw new js__$Boot_HaxeError(new ink_runtime_StoryException("Ink save format isn't compatible with the current version (saw '" + Std.string(jSaveVersion) + "', but minimum is " + ink_runtime_StoryState.kMinCompatibleLoadVersion + "), so can't load."));
+		this.callStack.SetJsonToken(Reflect.field(jObject,"callstackThreads"),this.story);
+		this.variablesState.set_jsonToken(Reflect.field(jObject,"variablesState"));
+		this.evaluationStack = ink_runtime_Json.JArrayToRuntimeObjArray(Reflect.field(jObject,"evalStack"));
+		this._outputStream = ink_runtime_Json.JArrayToRuntimeObjArray(Reflect.field(jObject,"outputStream"));
+		this.currentChoices = ink_runtime_Json.JArrayToRuntimeObjList(Reflect.field(jObject,"currentChoices"));
+		var propValue;
+		propValue = Reflect.field(jObject,"currRightGlue");
+		if(propValue != null) {
+			var gluePos = Std["int"](propValue);
+			if(gluePos >= 0) this._currentRightGlue = ink_runtime_LibUtil["as"](this._outputStream[gluePos],ink_runtime_Glue);
+		}
+		var currentDivertTargetPath;
+		currentDivertTargetPath = Reflect.field(jObject,"currRightGlue");
+		if(currentDivertTargetPath != null) {
+			var divertPath = ink_runtime_Path.createFromString(Std.string(currentDivertTargetPath));
+			this.divertedTargetObject = this.story.ContentAtPath(divertPath);
+		}
+		this.visitCounts = ink_runtime_Json.JObjectToIntDictionary(Reflect.field(jObject,"visitCounts"));
+		this.turnIndices = ink_runtime_Json.JObjectToIntDictionary(Reflect.field(jObject,"turnIndices"));
+		this.currentTurnIndex = Std["int"](Reflect.field(jObject,"turnIdx"));
+		this.storySeed = Std["int"](Reflect.field(jObject,"storySeed"));
+		var jChoiceThreadsObj = null;
+		jChoiceThreadsObj = Reflect.field(jObject,"choiceThreads");
+		var jChoiceThreads = jChoiceThreadsObj;
+		var _g_head = this.currentChoices.h;
+		var _g_val = null;
+		while(_g_head != null) {
+			var c;
+			c = (function($this) {
+				var $r;
+				_g_val = _g_head[0];
+				_g_head = _g_head[1];
+				$r = _g_val;
+				return $r;
+			}(this));
+			c.choicePoint = this.story.ContentAtPath(ink_runtime_Path.createFromString(c.originalChoicePath));
+			var foundActiveThread = this.callStack.ThreadWithIndex(c.originalThreadIndex);
+			if(foundActiveThread != null) c.threadAtGeneration = foundActiveThread; else {
+				var jSavedChoiceThread = Reflect.field(jChoiceThreads,c.originalThreadIndex == null?"null":"" + c.originalThreadIndex);
+				c.threadAtGeneration = ink_runtime_Thread.create(jSavedChoiceThread,this.story);
+			}
+		}
+		return value;
+	}
+	,ResetErrors: function() {
+		this.currentErrors = null;
+	}
+	,ResetOutput: function() {
+		this._outputStream.length = 0;
+	}
+	,PushToOutputStream: function(obj) {
+		var text;
+		text = js_Boot.__instanceof(obj,ink_runtime_StringValue)?obj:null;
+		if(text != null) {
+			var listText = this.TrySplittingHeadTailWhitespace(text);
+			if(listText != null) {
+				var _g_head = listText.h;
+				var _g_val = null;
+				while(_g_head != null) {
+					var textObj;
+					textObj = (function($this) {
+						var $r;
+						_g_val = _g_head[0];
+						_g_head = _g_head[1];
+						$r = _g_val;
+						return $r;
+					}(this));
+					this.PushToOutputStreamIndividual(textObj);
+				}
+				return;
+			}
+		}
+		this.PushToOutputStreamIndividual(obj);
+	}
+	,TrySplittingHeadTailWhitespace: function(single) {
+		var str = single.value;
+		var headFirstNewlineIdx = -1;
+		var headLastNewlineIdx = -1;
+		var _g1 = 0;
+		var _g = str.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var c = str.charAt(i);
+			if(c == "\n") {
+				if(headFirstNewlineIdx == -1) headFirstNewlineIdx = i;
+				headLastNewlineIdx = i;
+			} else if(c == " " || c == "\t") continue; else break;
+		}
+		var tailLastNewlineIdx = -1;
+		var tailFirstNewlineIdx = -1;
+		var _g11 = 0;
+		var _g2 = str.length;
+		while(_g11 < _g2) {
+			var i1 = _g11++;
+			var c1 = str.charAt(i1);
+			if(c1 == "\n") {
+				if(tailLastNewlineIdx == -1) tailLastNewlineIdx = i1;
+				tailFirstNewlineIdx = i1;
+			} else if(c1 == " " || c1 == "\t") continue; else break;
+		}
+		if(headFirstNewlineIdx == -1 && tailLastNewlineIdx == -1) return null;
+		var listTexts = new List();
+		var innerStrStart = 0;
+		var innerStrEnd = str.length;
+		if(headFirstNewlineIdx != -1) {
+			if(headFirstNewlineIdx > 0) {
+				var leadingSpaces = new ink_runtime_StringValue(str.substring(0,headFirstNewlineIdx));
+				listTexts.add(leadingSpaces);
+			}
+			listTexts.add(new ink_runtime_StringValue("\n"));
+			innerStrStart = headLastNewlineIdx + 1;
+		}
+		if(tailLastNewlineIdx != -1) innerStrEnd = tailFirstNewlineIdx;
+		if(innerStrEnd > innerStrStart) {
+			var innerStrText = str.substring(innerStrStart,innerStrEnd - innerStrStart);
+			listTexts.add(new ink_runtime_StringValue(innerStrText));
+		}
+		if(tailLastNewlineIdx != -1 && tailFirstNewlineIdx > headLastNewlineIdx) {
+			listTexts.add(new ink_runtime_StringValue("\n"));
+			if(tailLastNewlineIdx < str.length - 1) {
+				var numSpaces = str.length - tailLastNewlineIdx - 1;
+				var trailingSpaces = new ink_runtime_StringValue(str.substring(tailLastNewlineIdx + 1,numSpaces));
+				listTexts.add(trailingSpaces);
+			}
+		}
+		return listTexts;
+	}
+	,PushToOutputStreamIndividual: function(obj) {
+		var glue;
+		glue = js_Boot.__instanceof(obj,ink_runtime_Glue)?obj:null;
+		var text;
+		text = js_Boot.__instanceof(obj,ink_runtime_StringValue)?obj:null;
+		var includeInOutput = true;
+		if(glue != null) {
+			var foundMatchingLeftGlue = glue.get_isLeft() && this._currentRightGlue != null && glue.parent == this._currentRightGlue.parent;
+			if(foundMatchingLeftGlue) this._currentRightGlue = null;
+			if(glue.get_isLeft() || glue.get_isBi()) this.TrimNewlinesFromOutputStream(foundMatchingLeftGlue);
+			var isNewRightGlue = glue.get_isRight() && this._currentRightGlue == null;
+			if(isNewRightGlue) this._currentRightGlue = glue;
+			includeInOutput = glue.get_isBi() || isNewRightGlue;
+		} else if(text != null) {
+			if(this.get_currentGlueIndex() != -1) {
+				if(text.isNewline) {
+					this.TrimFromExistingGlue();
+					includeInOutput = false;
+				} else if(text.get_isNonWhitespace()) {
+					this.RemoveExistingGlue();
+					this._currentRightGlue = null;
+				}
+			} else if(text.isNewline) {
+				if(this.get_outputStreamEndsInNewline() || !this.get_outputStreamContainsContent()) includeInOutput = false;
+			}
+		}
+		if(includeInOutput) this._outputStream.push(obj);
+	}
+	,TrimNewlinesFromOutputStream: function(stopAndRemoveRightGlue) {
+		var removeWhitespaceFrom = -1;
+		var rightGluePos = -1;
+		var foundNonWhitespace = false;
+		var i = this._outputStream.length - 1;
+		while(i >= 0) {
+			var obj = this._outputStream[i];
+			var cmd;
+			cmd = js_Boot.__instanceof(obj,ink_runtime_ControlCommand)?obj:null;
+			var txt;
+			txt = js_Boot.__instanceof(obj,ink_runtime_StringValue)?obj:null;
+			var glue;
+			glue = js_Boot.__instanceof(obj,ink_runtime_Glue)?obj:null;
+			if(cmd != null || txt != null && txt.get_isNonWhitespace()) {
+				foundNonWhitespace = true;
+				if(!stopAndRemoveRightGlue) break;
+			} else if(stopAndRemoveRightGlue && glue != null && glue.get_isRight()) {
+				rightGluePos = i;
+				break;
+			} else if(txt != null && txt.isNewline && !foundNonWhitespace) removeWhitespaceFrom = i;
+			i--;
+		}
+		if(removeWhitespaceFrom >= 0) {
+			i = removeWhitespaceFrom;
+			while(i < this._outputStream.length) {
+				var text = ink_runtime_LibUtil["as"](this._outputStream[i],ink_runtime_StringValue);
+				if(text != null) this._outputStream.splice(i,1); else i++;
+			}
+		}
+		if(stopAndRemoveRightGlue && rightGluePos > -1) ink_runtime_LibUtil.removeArrayItemAtIndex(this.get_outputStream(),rightGluePos);
+	}
+	,TrimFromExistingGlue: function() {
+		var i = this.get_currentGlueIndex();
+		while(i < this._outputStream.length) {
+			var txt = ink_runtime_LibUtil["as"](this._outputStream[i],ink_runtime_StringValue);
+			if(txt != null && !txt.get_isNonWhitespace()) this._outputStream.splice(i,1); else i++;
+		}
+	}
+	,RemoveExistingGlue: function() {
+		var i = this.get_outputStream().length;
+		while(i >= 0) {
+			var c = this._outputStream[i];
+			if(js_Boot.__instanceof(c,ink_runtime_Glue)) ink_runtime_LibUtil.removeArrayItemAtIndex(this.get_outputStream(),i); else if(js_Boot.__instanceof(c,ink_runtime_ControlCommand)) break;
+			i--;
+		}
+	}
+	,get_currentGlueIndex: function() {
+		var i = this._outputStream.length - 1;
+		while(i >= 0) {
+			var c = this._outputStream[i];
+			var glue;
+			glue = js_Boot.__instanceof(c,ink_runtime_Glue)?c:null;
+			if(glue != null) return i; else if(js_Boot.__instanceof(c,ink_runtime_ControlCommand)) break;
+			i--;
+		}
+		return -1;
+	}
+	,get_outputStreamEndsInNewline: function() {
+		if(this._outputStream.length > 0) {
+			var i = this._outputStream.length - 1;
+			while(i >= 0) {
+				var obj = this._outputStream[i];
+				if(js_Boot.__instanceof(obj,ink_runtime_ControlCommand)) break;
+				var text = ink_runtime_LibUtil["as"](this._outputStream[i],ink_runtime_StringValue);
+				if(text != null) {
+					if(text.isNewline) return true; else if(text.get_isNonWhitespace()) break;
+				}
+				i--;
+			}
+		}
+		return false;
+	}
+	,get_outputStreamContainsContent: function() {
+		var _g = 0;
+		var _g1 = this._outputStream;
+		while(_g < _g1.length) {
+			var content = _g1[_g];
+			++_g;
+			if(js_Boot.__instanceof(content,ink_runtime_StringValue)) return true;
+		}
+		return false;
+	}
+	,get_inStringEvaluation: function() {
+		var i = this._outputStream.length - 1;
+		while(i >= 0) {
+			var cmd = ink_runtime_LibUtil["as"](this._outputStream[i],ink_runtime_ControlCommand);
+			if(cmd != null && cmd.commandType == 7) return true;
+			i--;
+		}
+		return false;
+	}
+	,PushEvaluationStack: function(obj) {
+		this.evaluationStack.push(obj);
+	}
+	,PopEvaluationStack: function() {
+		var obj = this.evaluationStack[this.evaluationStack.length - 1];
+		this.evaluationStack.pop();
+		return obj;
+	}
+	,PeekEvaluationStack: function() {
+		return this.evaluationStack[this.evaluationStack.length - 1];
+	}
+	,PopEvaluationStack1: function(numberOfObjects) {
+		if(numberOfObjects > this.evaluationStack.length) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("trying to pop too many objects"));
+		var popped = this.evaluationStack.slice(this.evaluationStack.length - numberOfObjects,this.evaluationStack.length - numberOfObjects + numberOfObjects);
+		this.evaluationStack.splice(this.evaluationStack.length - numberOfObjects,numberOfObjects);
+		return popped;
+	}
+	,ForceEndFlow: function() {
+		this.set_currentContentObject(null);
+		while(this.callStack.get_canPopThread()) this.callStack.PopThread();
+		while(this.callStack.get_canPop()) this.callStack.Pop();
+		this.currentChoices.clear();
+		this.didSafeExit = true;
+	}
+	,SetChosenPath: function(path) {
+		this.currentChoices.clear();
+		this.set_currentPath(path);
+		this.currentTurnIndex++;
+	}
+	,AddError: function(message) {
+		if(this.currentErrors == null) this.currentErrors = new List();
+		this.currentErrors.add(message);
+	}
+	,__class__: ink_runtime_StoryState
+	,__properties__: {get_inStringEvaluation:"get_inStringEvaluation",get_outputStreamContainsContent:"get_outputStreamContainsContent",get_outputStreamEndsInNewline:"get_outputStreamEndsInNewline",get_currentGlueIndex:"get_currentGlueIndex",set_jsonToken:"set_jsonToken",get_jsonToken:"get_jsonToken",set_inExpressionEvaluation:"set_inExpressionEvaluation",get_inExpressionEvaluation:"get_inExpressionEvaluation",get_currentText:"get_currentText",get_hasError:"get_hasError",set_previousContentObject:"set_previousContentObject",get_previousContentObject:"get_previousContentObject",get_currentContainer:"get_currentContainer",set_currentContentObject:"set_currentContentObject",get_currentContentObject:"get_currentContentObject",set_currentPath:"set_currentPath",get_currentPath:"get_currentPath",get_outputStream:"get_outputStream"}
+};
 var ink_runtime_StringExt = function() { };
 ink_runtime_StringExt.__name__ = ["ink","runtime","StringExt"];
 ink_runtime_StringExt.Join = function(separator,objects) {
@@ -3000,6 +3636,8 @@ if(Array.prototype.indexOf) HxOverrides.indexOf = function(a,o,i) {
 String.prototype.__class__ = String;
 String.__name__ = ["String"];
 Array.__name__ = ["Array"];
+Date.prototype.__class__ = Date;
+Date.__name__ = ["Date"];
 var Int = { __name__ : ["Int"]};
 var Dynamic = { __name__ : ["Dynamic"]};
 var Float = Number;
@@ -3010,6 +3648,20 @@ var Class = { __name__ : ["Class"]};
 var Enum = { };
 var __map_reserved = {}
 haxe_ds_ObjectMap.count = 0;
+ink_random_Limits.INT8_MIN = -128;
+ink_random_Limits.INT8_MAX = 127;
+ink_random_Limits.UINT8_MAX = 255;
+ink_random_Limits.INT16_MIN = -32768;
+ink_random_Limits.INT16_MAX = 32767;
+ink_random_Limits.UINT16_MAX = 65535;
+ink_random_Limits.INT32_MIN = -2147483648;
+ink_random_Limits.INT32_MAX = 2147483647;
+ink_random_Limits.UINT32_MAX = -1;
+ink_random_Limits.INT_BITS = 32;
+ink_random_Limits.FLOAT_MAX = 3.4028234663852886e+38;
+ink_random_Limits.FLOAT_MIN = -3.4028234663852886e+38;
+ink_random_Limits.DOUBLE_MAX = 1.7976931348623157e+308;
+ink_random_Limits.DOUBLE_MIN = -1.7976931348623157e+308;
 ink_runtime_CountFlags.Visits = 1;
 ink_runtime_CountFlags.Turns = 2;
 ink_runtime_CountFlags.CountStartOnly = 4;
@@ -3031,6 +3683,8 @@ ink_runtime_NativeFunctionCall.Or = "||";
 ink_runtime_NativeFunctionCall.Min = "MIN";
 ink_runtime_NativeFunctionCall.Max = "MAX";
 ink_runtime_Path.parentId = "^";
+ink_runtime_StoryState.kInkSaveStateVersion = 4;
+ink_runtime_StoryState.kMinCompatibleLoadVersion = 4;
 js_Boot.__toStr = {}.toString;
 InkleRuntime.main();
 })(typeof console != "undefined" ? console : {log:function(){}}, typeof window != "undefined" ? window : typeof global != "undefined" ? global : typeof self != "undefined" ? self : this);

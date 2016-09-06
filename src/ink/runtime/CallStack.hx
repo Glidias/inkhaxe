@@ -104,7 +104,7 @@ class CallStack
 	}
 		
 	// See above for why we can't implement jsonToken
-	public function sGetJsonToken():Dynamic {  //Dictionary<string, object> 
+	public function GetJsonToken():Dynamic {  //Dictionary<string, object> 
 
 		var jObject = {}; // new Dictionary<string, object> ();
 
