@@ -175,7 +175,7 @@ class Object
 		
 	}
 	
-	var  rootContentContainer(get, null):Container;
+	public var  rootContentContainer(get, null):Container;
 	function get_rootContentContainer():Container  // done
 	{
 			var ancestor:Object = this;

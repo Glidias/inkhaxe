@@ -83,6 +83,7 @@ class Json
 		
 		for (k in Reflect.fields(jObject)) {
 			dict.set(k, JTokenToRuntimeObject(Reflect.field(jObject, k)));
+		
 		}
 
 		return dict;
@@ -295,7 +296,7 @@ class Json
 				isGlobalVar = false;
 			}
 			if (isVarAss) {
-				var varName = propValue.ToString ();
+				var varName = Std.string(propValue); // .ToString ();
 				var isNewDecl = (propValue=LibUtil.tryGetValueDynamic(obj, "re") ) ==null  ;   //!obj.TryGetValue("re", out propValue)
 				var varAss = new VariableAssignment (varName, isNewDecl);
 				varAss.isGlobal = isGlobalVar;
@@ -580,8 +581,9 @@ class Json
 	}
 		
 	 
-	public function new() 
-	{
+
+	
+	 static var _controlCommandNames:Array<String> = {
 		 _controlCommandNames = new Array<String>(); // [CommandType.TOTAL_VALUES];
 		//	 _controlCommandNames.length
 		_controlCommandNames[cast CommandType.EvalStart] = "ev";
@@ -609,8 +611,7 @@ class Json
                     throw new SystemException("Control command not accounted for in serialisation");
 		}
 		
-	}
-	
-	 static var _controlCommandNames:Array<String>;
+		_controlCommandNames;
+	 }
 	
 }

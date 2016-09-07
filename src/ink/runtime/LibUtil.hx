@@ -31,6 +31,14 @@ class LibUtil
 		return map.get(prop); 
 	}
 	
+	public static function jTokenToStringMap(token:Dynamic):StringMap<Dynamic> {
+		var strMap = new StringMap<Dynamic>();
+		for (f in Reflect.fields(token)) {
+			strMap.set( f, Reflect.field(token, f));
+		}
+		return strMap;
+	}
+	
 	public static  function listIndexOf<T>(list:List<T>, obj:Dynamic):Int {
 		var count:Int = 0;
 		for (l in list) {
@@ -38,6 +46,14 @@ class LibUtil
 			count++;
 		}
 		return -1;
+	}
+	
+	public static function arrayToList<T>(arr:Array<T>):List<T> {
+		var list:List<T> = new List<T>();
+		for (val in arr) {
+			list.add(val);
+		}
+		return list;
 	}
 	
 	public static inline function getArrayItemAtIndex<T>(arr:Array<T>, index:Int):T {

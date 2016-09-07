@@ -31,11 +31,14 @@ class VariablesState //implements IEnumberable<String>
 				});
 				*/
 				for (cb in variableChangedEventCallbacks) {
+					
 					cb(variableName, newValue);
 				}
 			};
+			
+			
 		}
-		
+	
 		this.variableChangedEventCallbacks.push(callback);
 	}
 	
@@ -49,7 +52,7 @@ class VariablesState //implements IEnumberable<String>
 	{
 		_batchObservingVariableChanges = value;
 		if (value) {
-			_changedVariables = new StringHashSet();
+			_changedVariables = new HashSet<String>();
 		} 
 
 		// Finished observing variables in a batch - now send 
@@ -83,7 +86,7 @@ class VariablesState //implements IEnumberable<String>
 			if (value == null) {
 				throw new StoryException ("Cannot pass null to VariableState");
 			} else {
-				throw new StoryException ("Invalid value passed to VariableState: "+value.ToString());
+				throw new StoryException ("Invalid value passed to VariableState: "+Std.string(value)); //.toString()
 			}
 		}
 
@@ -140,8 +143,13 @@ class VariablesState //implements IEnumberable<String>
 	{
 		return (_globalVariables = Json.JObjectToDictionaryRuntimeObjs (value));
 	}
+	
+	public function GetVariableWithName( name:String):Object {
 		
-	function GetVariableWithName( name:String,  contextIndex:Int):Object
+		return _GetVariableWithName(name, -1);
+	}
+		
+	 function _GetVariableWithName( name:String,  contextIndex:Int):Object
 	{
 	   var varValue:Object = GetRawVariableWithName (name, contextIndex);
 
@@ -160,8 +168,12 @@ class VariablesState //implements IEnumberable<String>
 
 		// 0 context = global
 		if (contextIndex == 0 || contextIndex == -1) {
-			if ( (varValue=LibUtil.tryGetValue(_globalVariables,  name) )  != null )
+			if ( (varValue=LibUtil.tryGetValue(_globalVariables,  name) )  != null ) {
 				return varValue;
+			}
+			else {
+				trace("Global context search not found...Should exit out??", _globalVariables);
+			}
 		} 
 
 		// Temporary
@@ -176,7 +188,7 @@ class VariablesState //implements IEnumberable<String>
 		
 	public function ValueAtVariablePointer( pointer:VariablePointerValue):Object
 	{
-		return GetVariableWithName (pointer.variableName, pointer.contextIndex);
+		return _GetVariableWithName (pointer.variableName, pointer.contextIndex);
 	}
 
 		
@@ -294,5 +306,5 @@ class VariablesState //implements IEnumberable<String>
 		
    // Used for accessing temporary variables
 	var _callStack:CallStack;
-	var _changedVariables:StringHashSet;
+	var _changedVariables:HashSet<String>;
 }

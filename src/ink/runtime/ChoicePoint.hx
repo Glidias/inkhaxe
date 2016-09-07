@@ -14,7 +14,7 @@ class ChoicePoint extends Object
     /// </summary>
 	public var pathOnChoice:Path; // { get; set; }
 	
-	var  choiceTarget(get, null):Container;
+	public var  choiceTarget(get, null):Container;
 	function get_choiceTarget():Container 
 	{
 		return LibUtil.asNoInline(this.ResolvePath(pathOnChoice), Container);

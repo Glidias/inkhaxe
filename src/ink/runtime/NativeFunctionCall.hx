@@ -303,7 +303,7 @@ class NativeFunctionCall extends Object
 	{
 		var nativeFunc:NativeFunctionCall = null;
 		nativeFunc = _nativeFunctions.get(name);
-		if ( nativeFunc!=null) {  //!_nativeFunctions.TryGetValue (name, out nativeFunc)
+		if ( !(nativeFunc!=null)) {  //!_nativeFunctions.TryGetValue (name, out nativeFunc)
 			nativeFunc =  NativeFunctionCall.createFromNameAndNumParams(name, args);
 			_nativeFunctions.set( name, nativeFunc);
 		}

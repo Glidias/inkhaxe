@@ -200,7 +200,7 @@ class StoryState
 	// Runtime.Objects are treated as immutable after they've been set up.
 	// (e.g. we don't edit a Runtime.Text after it's been created an added.)
 	// I wonder if there's a sensible way to enforce that..??
-	function Copy():StoryState
+	public function Copy():StoryState
 	{
 		var copy = new StoryState(story);
 		
@@ -243,7 +243,7 @@ class StoryState
 	/// But it may be useful to get the object representation so that you
 	//// can integrate it into your own serialisation system.
 	/// </summary>
-	public var jsonToken(get, set):Dynamic; // Dictionary<string, object> 
+	 var jsonToken(get, set):Dynamic; // Dictionary<string, object> 
 	function get_jsonToken():Dynamic 
 	{
 		var obj = {};// new Dictionary<string, object> ();
@@ -310,7 +310,9 @@ class StoryState
 			throw new StoryException("Ink save format isn't compatible with the current version (saw '"+jSaveVersion+"', but minimum is "+kMinCompatibleLoadVersion+"), so can't load.");
 		}
 
-		callStack.SetJsonToken( Reflect.field(jObject,"callstackThreads"), story);  // ((Dictionary < string, object > )j
+		callStack.SetJsonToken( Reflect.field(jObject, "callstackThreads"), story);  // ((Dictionary < string, object > )j
+		
+		
 		variablesState.jsonToken = Reflect.field(jObject, "variablesState");  //(Dictionary < string, object> )
 
 		evaluationStack = Json.JArrayToRuntimeObjArray( Reflect.field(jObject,"evalStack"));  //((List<object>)
@@ -635,7 +637,7 @@ class StoryState
 	}
 	
 	
-	var  outputStreamEndsInNewline(get, null):Bool;
+	public var  outputStreamEndsInNewline(get, null):Bool;
 	function get_outputStreamEndsInNewline():Bool {
 		if (_outputStream.length > 0) {
 			//int i = _outputStream.Count - 1; i >= 0; i--
@@ -669,7 +671,7 @@ class StoryState
 	}
 
 
-	var  inStringEvaluation(get, null):Bool; 
+	public var  inStringEvaluation(get, null):Bool; 
 	function get_inStringEvaluation():Bool {
 		
 		//int i = _outputStream.Count - 1; i >= 0; i--
@@ -731,7 +733,7 @@ class StoryState
 	}
 
 	// Don't make public since the method need to be wrapped in Story for visit counting
-	 function  SetChosenPath( path:Path):Void
+	public function  SetChosenPath( path:Path):Void
 	{
 		// Changing direction, assume we need to clear current set of choices
 		currentChoices.clear();

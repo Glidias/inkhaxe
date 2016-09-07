@@ -2,6 +2,7 @@ package ink.runtime;
 import haxe.ds.StringMap;
 
 /**
+ * Likely going to depreciate this since got own haxe json  library
  * Done!
  * @author Glidias
  */

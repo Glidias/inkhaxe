@@ -7,7 +7,7 @@ package ink.runtime;
 class StoryException extends SystemException
 {
 
-	var  useEndLineNumber:Bool;
+	public var  useEndLineNumber:Bool;
 
 	/// <summary>
 	/// Constructs a default instance of a StoryException without a message.

@@ -6,7 +6,7 @@ package ink.runtime;
  */
 class SystemException
 {
-	var msg:String;
+	public var msg:String;
 
 	public function new(msg:String) 
 	{
