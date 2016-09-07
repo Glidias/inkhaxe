@@ -24,6 +24,7 @@ class InkleRuntime
 		SimpleJson;
 		StoryState;
 		Story;
+		Path;
 		//trace("A");
 		
 		//testDataTypeClasses();

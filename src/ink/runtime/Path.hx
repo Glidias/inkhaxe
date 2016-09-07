@@ -204,19 +204,10 @@ class Path extends Object implements IEquatable<Path>
 	
 	public override function Equals(obj:Dynamic):Bool
 	{
-		return EqualsComponent(LibUtil.as(obj,Component));
+		return EqualsPath(LibUtil.as(obj,Path));
 	}
 	
-	public function EqualsComponent(otherComp:Component):Bool {
-		 if (otherComp != null && otherComp.isIndex == this.isIndex) {
-			if (isIndex) {
-				return index == otherComp.index;   
-			} else {
-				return name == otherComp.name;
-			}
-		}
-		return false;
-	}
+	
 	
 	public function EqualsPath(otherPath:Path):Bool
 	{
@@ -300,6 +291,7 @@ class Component implements IEquatable<Component>
 	{
 		  return EqualsComponent(LibUtil.as(obj,  Component) );
 	}
+
 	
 	 public function EqualsComponent( otherComp:Component):Bool
 	{

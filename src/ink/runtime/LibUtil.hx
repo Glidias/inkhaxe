@@ -66,10 +66,10 @@ class LibUtil
 		#end
 	}
 
-	public static function arraySequenceEquals<T>(arr1:Array<T>, arr2:Array<T>):Bool {
+	public static function arraySequenceEquals<T:IEquatable<T>>(arr1:Array<T>, arr2:Array<T>):Bool {
 		if (arr1.length != arr2.length) return false;
 		for (i in 0...arr1.length) {
-			if (arr1[i] != arr2[i]) {
+			if (arr1[i].Equals(arr2[i])) {  // enforced IEquatable constraint
 				return false;
 			}
 		}

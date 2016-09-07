@@ -44,6 +44,7 @@ InkleRuntime.main = function() {
 	ink_runtime_SimpleJson;
 	ink_runtime_StoryState;
 	ink_runtime_Story;
+	ink_runtime_Path;
 	InkleRuntime.testCommandTypeEnum();
 };
 InkleRuntime.testCommandTypeEnum = function() {
@@ -1916,7 +1917,7 @@ ink_runtime_LibUtil.arraySequenceEquals = function(arr1,arr2) {
 	var _g = arr1.length;
 	while(_g1 < _g) {
 		var i = _g1++;
-		if(arr1[i] != arr2[i]) return false;
+		if(arr1[i].Equals(arr2[i])) return false;
 	}
 	return true;
 };
@@ -2399,13 +2400,7 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 		return this.get_componentsString();
 	}
 	,Equals: function(obj) {
-		return this.EqualsComponent(js_Boot.__instanceof(obj,ink_runtime_Component)?obj:null);
-	}
-	,EqualsComponent: function(otherComp) {
-		if(otherComp != null && otherComp.isIndex == this.get_isIndex()) {
-			if(this.get_isIndex()) return this.index == otherComp.index; else return this.name == otherComp.name;
-		}
-		return false;
+		return this.EqualsPath(js_Boot.__instanceof(obj,ink_runtime_Path)?obj:null);
 	}
 	,EqualsPath: function(otherPath) {
 		if(otherPath == null) return false;
