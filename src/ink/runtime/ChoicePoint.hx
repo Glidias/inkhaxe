@@ -12,7 +12,7 @@ class ChoicePoint extends Object
     /// a Choice instance gets generated. The distinction is made
     /// because the text of the Choice can be dynamically generated.
     /// </summary>
-	var pathOnChoice:Path; // { get; set; }
+	public var pathOnChoice:Path; // { get; set; }
 	
 	var  choiceTarget(get, null):Container;
 	function get_choiceTarget():Container 
@@ -31,11 +31,11 @@ class ChoicePoint extends Object
 	}
 	
 	
-	var  hasCondition:Bool; //{ get; set; }
-    var  hasStartContent:Bool; //{ get; set; }
-    var  hasChoiceOnlyContent:Bool; //{ get; set; }
-	var  onceOnly:Bool;  //{ get; set; }
-    var  isInvisibleDefault:Bool;// { get; set; }
+	public var  hasCondition:Bool; //{ get; set; }
+    public var  hasStartContent:Bool; //{ get; set; }
+    public var  hasChoiceOnlyContent:Bool; //{ get; set; }
+	public var  onceOnly:Bool;  //{ get; set; }
+    public var  isInvisibleDefault:Bool;// { get; set; }
 	
 	public var flags(get, set):Int;
 	function get_flags():Int 

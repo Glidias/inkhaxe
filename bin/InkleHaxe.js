@@ -43,6 +43,7 @@ InkleRuntime.main = function() {
 	ink_runtime_NativeFunctionCall;
 	ink_runtime_SimpleJson;
 	ink_runtime_StoryState;
+	ink_runtime_Story;
 	InkleRuntime.testCommandTypeEnum();
 };
 InkleRuntime.testCommandTypeEnum = function() {
@@ -2638,14 +2639,107 @@ ink_runtime_Writer.prototype = {
 	}
 	,__class__: ink_runtime_Writer
 };
-var ink_runtime_Story = function() {
+var ink_runtime_Story = function(jsonString) {
+	this._mainContentContainer = null;
+	this._externals = new haxe_ds_StringMap();
+	var rootObject = ink_runtime_SimpleJson.TextToDictionary(jsonString);
+	var versionObj;
+	versionObj = __map_reserved.inkVersion != null?rootObject.getReserved("inkVersion"):rootObject.h["inkVersion"];
+	if(versionObj == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("ink version number not found. Are you sure it's a valid .ink.json file?"));
+	var formatFromFile = Std["int"](versionObj);
+	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) console.log("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.");
+	var rootToken;
+	rootToken = __map_reserved.root != null?rootObject.getReserved("root"):rootObject.h["root"];
+	if(rootToken == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Root node for ink not found. Are you sure it's a valid .ink.json file?"));
+	this._mainContentContainer = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(rootToken),ink_runtime_Container);
+	this.ResetState();
 };
 ink_runtime_Story.__name__ = ["ink","runtime","Story"];
+ink_runtime_Story.createFromContainer = function(contentContainer) {
+	var me = Type.createEmptyInstance(ink_runtime_Story);
+	me._mainContentContainer = contentContainer;
+	me._externals = new haxe_ds_StringMap();
+	return me;
+};
 ink_runtime_Story.prototype = {
-	ContentAtPath: function(path) {
+	get_currentChoices: function() {
+		var choices = new List();
+		var _g_head = this._state.currentChoices.h;
+		var _g_val = null;
+		while(_g_head != null) {
+			var c;
+			c = (function($this) {
+				var $r;
+				_g_val = _g_head[0];
+				_g_head = _g_head[1];
+				$r = _g_val;
+				return $r;
+			}(this));
+			if(!c.choicePoint.isInvisibleDefault) {
+				c.index = choices.length;
+				choices.add(c);
+			}
+		}
+		return choices;
+	}
+	,get_currentText: function() {
+		return this.get_state().get_currentText();
+	}
+	,get_currentErrors: function() {
+		return this.get_state().currentErrors;
+	}
+	,get_hasError: function() {
+		return this.get_state().get_hasError();
+	}
+	,get_variablesState: function() {
+		return this.get_state().variablesState;
+	}
+	,get_state: function() {
+		return this._state;
+	}
+	,setupFromContainer: function(contentContainer) {
+		this._mainContentContainer = contentContainer;
+		this._externals = new haxe_ds_StringMap();
+	}
+	,ToJsonString: function() {
+		var rootContainerJsonList = ink_runtime_Json.RuntimeObjectToJToken(this._mainContentContainer);
+		var rootObject = new haxe_ds_StringMap();
+		if(__map_reserved.inkVersion != null) rootObject.setReserved("inkVersion",12); else rootObject.h["inkVersion"] = 12;
+		if(__map_reserved.root != null) rootObject.setReserved("root",rootContainerJsonList); else rootObject.h["root"] = rootContainerJsonList;
+		return ink_runtime_SimpleJson.DictionaryToText(rootObject);
+	}
+	,ResetState: function() {
+		this._state = new ink_runtime_StoryState(this);
+		this._state.variablesState.ObserveVariableChange($bind(this,this.VariableStateDidChangeEvent));
+		this.ResetGlobals();
+	}
+	,ResetErrors: function() {
+		this._state.ResetErrors();
+	}
+	,ResetCallstack: function() {
+		this._state.ForceEndFlow();
+	}
+	,ResetGlobals: function() {
+	}
+	,get_mainContentContainer: function() {
+		if(this._temporaryEvaluationContainer != null) return this._temporaryEvaluationContainer; else return this._mainContentContainer;
+	}
+	,VariableStateDidChangeEvent: function(variableName,newValueObj) {
+		if(this._variableObservers == null) return;
+		var observers = null;
+		observers = this._variableObservers.get(variableName);
+		if(observers != null) {
+			if(!js_Boot.__instanceof(newValueObj,ink_runtime_Value)) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Tried to get the value of a variable that isn't a standard type"));
+			var val;
+			val = js_Boot.__instanceof(newValueObj,ink_runtime_Value)?newValueObj:null;
+			observers(variableName,val.get_valueObject());
+		}
+	}
+	,ContentAtPath: function(path) {
 		return null;
 	}
 	,__class__: ink_runtime_Story
+	,__properties__: {get_mainContentContainer:"get_mainContentContainer",get_state:"get_state",get_variablesState:"get_variablesState",get_hasError:"get_hasError",get_currentErrors:"get_currentErrors",get_currentText:"get_currentText",get_currentChoices:"get_currentChoices"}
 };
 var ink_runtime_SystemException = function(msg) {
 	this.msg = msg;
@@ -2753,7 +2847,7 @@ ink_runtime_StoryState.prototype = {
 		return value;
 	}
 	,GoToStart: function() {
-		this.callStack.get_currentElement().currentContainer = this.story.mainContentContainer;
+		this.callStack.get_currentElement().currentContainer = this.story.get_mainContentContainer();
 		this.callStack.get_currentElement().currentContentIndex = 0;
 	}
 	,Copy: function() {
@@ -2818,7 +2912,7 @@ ink_runtime_StoryState.prototype = {
 		obj.turnIdx = this.currentTurnIndex;
 		obj.storySeed = this.storySeed;
 		obj.inkSaveVersion = 4;
-		obj.inkFormatVersion = ink_runtime_Story.inkVersionCurrent;
+		obj.inkFormatVersion = 12;
 		return obj;
 	}
 	,set_jsonToken: function(value) {
@@ -3354,12 +3448,26 @@ ink_runtime_VariableReference.prototype = $extend(ink_runtime_Object.prototype,{
 	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{set_pathStringForCount:"set_pathStringForCount",get_pathStringForCount:"get_pathStringForCount",get_containerForCount:"get_containerForCount"})
 });
 var ink_runtime_VariablesState = function(callStack) {
+	this.variableChangedEventCallbacks = [];
 	this._globalVariables = new haxe_ds_StringMap();
 	this._callStack = callStack;
 };
 ink_runtime_VariablesState.__name__ = ["ink","runtime","VariablesState"];
 ink_runtime_VariablesState.prototype = {
-	get_batchObservingVariableChanges: function() {
+	ObserveVariableChange: function(callback) {
+		var _g = this;
+		if(this.variableChangedEvent == null) this.variableChangedEvent = function(variableName,newValue) {
+			var _g1 = 0;
+			var _g2 = _g.variableChangedEventCallbacks;
+			while(_g1 < _g2.length) {
+				var cb = _g2[_g1];
+				++_g1;
+				cb(variableName,newValue);
+			}
+		};
+		this.variableChangedEventCallbacks.push(callback);
+	}
+	,get_batchObservingVariableChanges: function() {
 		return this._batchObservingVariableChanges;
 	}
 	,set_batchObservingVariableChanges: function(value) {
@@ -3683,6 +3791,8 @@ ink_runtime_NativeFunctionCall.Or = "||";
 ink_runtime_NativeFunctionCall.Min = "MIN";
 ink_runtime_NativeFunctionCall.Max = "MAX";
 ink_runtime_Path.parentId = "^";
+ink_runtime_Story.inkVersionCurrent = 12;
+ink_runtime_Story.inkVersionMinimumCompatible = 12;
 ink_runtime_StoryState.kInkSaveStateVersion = 4;
 ink_runtime_StoryState.kMinCompatibleLoadVersion = 4;
 js_Boot.__toStr = {}.toString;

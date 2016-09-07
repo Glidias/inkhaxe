@@ -17,6 +17,27 @@ class VariablesState //implements IEnumberable<String>
 	//internal delegate void VariableChanged(string variableName, Runtime.Object newValue);
 	//internal event VariableChanged variableChangedEvent;
 	public var variableChangedEvent:String->Object->Void;
+	public var variableChangedEventCallbacks:Array<String->Object->Void> = [];
+	/**
+	 * This function is specific to the haxe/js version of ink. It allows to register a callback that will be called when a variable changes. The original code uses `state.variableChangedEvent += callback` instead.
+	 * @param {function} callback 
+	 */
+	public function ObserveVariableChange(callback:String->Object->Void){
+		if (this.variableChangedEvent == null){
+			this.variableChangedEvent = function(variableName:String, newValue:Object):Void  {
+				/*
+				this.variableChangedEventCallbacks.forEach(cb => {
+					cb(variableName, newValue);
+				});
+				*/
+				for (cb in variableChangedEventCallbacks) {
+					cb(variableName, newValue);
+				}
+			};
+		}
+		
+		this.variableChangedEventCallbacks.push(callback);
+	}
 	
 	
 	public var batchObservingVariableChanges(get, set):Bool;
