@@ -23,7 +23,7 @@ class CountFlags {
 	public static inline var CountStartOnly:Int = 4;
 }
 
-class Container extends Object
+class Container extends Object implements INamedContent
 {
 
 	public var name:String;
@@ -96,7 +96,6 @@ class Container extends Object
 	function get_countFlags():Int 
 	{
 		var  flags:Int = 0;
-		var flagged:Int = CountFlags.Visits;
 		
 		if (visitsShouldBeCounted)    flags |= CountFlags.Visits;
 		if (turnIndexShouldBeCounted) flags |= CountFlags.Turns;
@@ -119,7 +118,7 @@ class Container extends Object
 		if ((flag & CountFlags.Visits) > 0) visitsShouldBeCounted = true;
 		if ((flag & CountFlags.Turns) > 0)  turnIndexShouldBeCounted = true;
 		if ((flag & CountFlags.CountStartOnly) > 0) countingAtStartOnly = true;
-		return get_countFlags();
+		return value;// get_countFlags();
 	}
 	
 	public var hasValidName(get, null):Bool;
@@ -156,6 +155,15 @@ class Container extends Object
 	public function new() 
 	{
 		super();
+		
+		/*
+		this.name = '';
+		this._pathToFirstLeafContent = null;
+		this.visitsShouldBeCounted = false;
+		this.turnIndexShouldBeCounted = false;
+		this.countingAtStartOnly = false;
+		*/
+		
 		_content = new Array<Object>();
 		namedContent = new Map<String, INamedContent>();
 	}

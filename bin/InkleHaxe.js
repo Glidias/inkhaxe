@@ -57,7 +57,7 @@ InkleRuntime.testCommandTypeEnum = function() {
 	haxe_Log.trace(Std.string(cmdTypeE),{ fileName : "InkleRuntime.hx", lineNumber : 41, className : "InkleRuntime", methodName : "testCommandTypeEnum"});
 	var map = new haxe_ds_StringMap();
 	var mapInt = new haxe_ds_IntMap();
-	var mapSet = new ink_runtime_HashSet();
+	var mapSet = new ink_runtime_HashSetString();
 	var dynStrMap = new haxe_ds_ObjectMap();
 	haxe_Log.trace("Std is dynamic:" + Std.string(js_Boot.__instanceof(dynStrMap,haxe_ds_ObjectMap)) + ", " + Std.string(js_Boot.__instanceof({ },haxe_ds_StringMap)),{ fileName : "InkleRuntime.hx", lineNumber : 49, className : "InkleRuntime", methodName : "testCommandTypeEnum"});
 	mapSet.add("abc");
@@ -314,7 +314,10 @@ var haxe_ds_GenericStack = function() {
 };
 haxe_ds_GenericStack.__name__ = ["haxe","ds","GenericStack"];
 haxe_ds_GenericStack.prototype = {
-	iterator: function() {
+	add: function(item) {
+		this.head = new haxe_ds_GenericCell(item,this.head);
+	}
+	,iterator: function() {
 		var l = this.head;
 		return { hasNext : function() {
 			return l != null;
@@ -701,7 +704,7 @@ ink_runtime_Element.prototype = {
 		if(currentObj == null) {
 			this.currentContainer = null;
 			this.currentContentIndex = 0;
-			return this.currentContainer._content[this.currentContentIndex];
+			return null;
 		}
 		this.currentContainer = ink_runtime_LibUtil["as"](currentObj.parent,ink_runtime_Container);
 		if(this.currentContainer != null) this.currentContentIndex = HxOverrides.indexOf(this.currentContainer._content,currentObj,0);
@@ -837,17 +840,17 @@ ink_runtime_Object.prototype = {
 	,get_path: function() {
 		if(this._path == null) {
 			if(this.parent == null) this._path = new ink_runtime_Path(); else {
-				var comps = [];
+				var comps = new haxe_ds_GenericStack();
 				var child = this;
 				var container = ink_runtime_LibUtil["as"](child.parent,ink_runtime_Container);
 				while(container != null) {
 					var namedChild;
 					namedChild = js_Boot.__instanceof(child,ink_runtime_INamedContent)?child:null;
-					if(namedChild != null && namedChild.hasValidName) comps.push(ink_runtime_Component.createFromName(namedChild.name)); else comps.push(ink_runtime_Component.createFromIndex(HxOverrides.indexOf(container._content,child,0)));
+					if(namedChild != null && namedChild.get_hasValidName()) comps.add(ink_runtime_Component.createFromName(namedChild.name)); else comps.add(ink_runtime_Component.createFromIndex(HxOverrides.indexOf(container._content,child,0)));
 					child = container;
 					container = ink_runtime_LibUtil["as"](container.parent,ink_runtime_Container);
 				}
-				this._path = ink_runtime_Path.createFromComponents(comps);
+				this._path = ink_runtime_Path.createFromComponentStack(comps);
 			}
 		}
 		return this._path;
@@ -860,7 +863,7 @@ ink_runtime_Object.prototype = {
 				ink_runtime_Assert.bool(this.parent != null,"Can't resolve relative path because we don't have a parent");
 				nearestContainer = ink_runtime_LibUtil["as"](this.parent,ink_runtime_Container);
 				ink_runtime_Assert.bool(nearestContainer != null,"Expected parent to be a container");
-				ink_runtime_Assert.bool(path.components[0].isParent,"Is parent assertion failed");
+				ink_runtime_Assert.bool(path.components[0].get_isParent(),"Is parent assertion failed");
 				path = path.get_tail();
 			}
 			return nearestContainer.ContentAtPath(path);
@@ -1092,12 +1095,19 @@ ink_runtime_Cloner.prototype = {
 };
 var ink_runtime_CountFlags = function() { };
 ink_runtime_CountFlags.__name__ = ["ink","runtime","CountFlags"];
+var ink_runtime_INamedContent = function() { };
+ink_runtime_INamedContent.__name__ = ["ink","runtime","INamedContent"];
+ink_runtime_INamedContent.prototype = {
+	__class__: ink_runtime_INamedContent
+	,__properties__: {get_hasValidName:"get_hasValidName"}
+};
 var ink_runtime_Container = function() {
 	ink_runtime_Object.call(this);
 	this._content = [];
 	this.namedContent = new haxe_ds_StringMap();
 };
 ink_runtime_Container.__name__ = ["ink","runtime","Container"];
+ink_runtime_Container.__interfaces__ = [ink_runtime_INamedContent];
 ink_runtime_Container.__super__ = ink_runtime_Object;
 ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 	get_content: function() {
@@ -1122,7 +1132,7 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 			var c = this._content[i];
 			var named;
 			named = js_Boot.__instanceof(c,ink_runtime_INamedContent)?c:null;
-			if(named != null && named.hasValidName) namedOnlyContent.remove(named.name);
+			if(named != null && named.get_hasValidName()) namedOnlyContent.remove(named.name);
 		}
 		if(!new haxe_ds__$StringMap_StringMapIterator(namedOnlyContent,namedOnlyContent.arrayKeys()).hasNext()) namedOnlyContent = null;
 		return namedOnlyContent;
@@ -1147,7 +1157,6 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 	}
 	,get_countFlags: function() {
 		var flags = 0;
-		var flagged = 1;
 		if(this.visitsShouldBeCounted) flags |= 1;
 		if(this.turnIndexShouldBeCounted) flags |= 2;
 		if(this.countingAtStartOnly) flags |= 4;
@@ -1159,7 +1168,7 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 		if((flag & 1) > 0) this.visitsShouldBeCounted = true;
 		if((flag & 2) > 0) this.turnIndexShouldBeCounted = true;
 		if((flag & 4) > 0) this.countingAtStartOnly = true;
-		return this.get_countFlags();
+		return value;
 	}
 	,get_hasValidName: function() {
 		return this.name != null && this.name.length > 0;
@@ -1206,7 +1215,7 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 	,TryAddNamedContent: function(contentObj) {
 		var namedContentObj;
 		namedContentObj = js_Boot.__instanceof(contentObj,ink_runtime_INamedContent)?contentObj:null;
-		if(namedContentObj != null && namedContentObj.hasValidName) this.AddToNamedContentOnly(namedContentObj);
+		if(namedContentObj != null && namedContentObj.get_hasValidName()) this.AddToNamedContentOnly(namedContentObj);
 	}
 	,AddContentsOfContainer: function(otherContainer) {
 		ink_runtime_LibUtil.addRangeForArray(this._content,otherContainer._content);
@@ -1220,9 +1229,9 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 		}
 	}
 	,ContentWithPathComponent: function(component) {
-		if(component.isIndex) {
+		if(component.get_isIndex()) {
 			if(component.index >= 0 && component.index < this._content.length) return this._content[component.index]; else return null;
-		} else if(component.isParent) return this.parent; else {
+		} else if(component.get_isParent()) return this.parent; else {
 			var foundContent = null;
 			foundContent = ink_runtime_LibUtil.tryGetValueINamedContent(this.namedContent,component.name);
 			if(foundContent != null) return foundContent; else throw new js__$Boot_HaxeError(new ink_runtime_StoryException("Content '" + component.name + "' not found at path: '" + Std.string(this.get_path()) + "'"));
@@ -1532,15 +1541,31 @@ ink_runtime_HashSet.prototype = {
 	}
 	,__class__: ink_runtime_HashSet
 };
+var ink_runtime_HashSetString = function() {
+	this.map = new haxe_ds_StringMap();
+};
+ink_runtime_HashSetString.__name__ = ["ink","runtime","HashSetString"];
+ink_runtime_HashSetString.prototype = {
+	add: function(key) {
+		this.map.set(key,true);
+	}
+	,keys: function() {
+		return this.map.keys();
+	}
+	,contains: function(key) {
+		return this.map.get(key);
+	}
+	,__class__: ink_runtime_HashSetString
+};
 var ink_runtime_IEquatable = function() { };
 ink_runtime_IEquatable.__name__ = ["ink","runtime","IEquatable"];
 ink_runtime_IEquatable.prototype = {
 	__class__: ink_runtime_IEquatable
 };
-var ink_runtime_INamedContent = function() { };
-ink_runtime_INamedContent.__name__ = ["ink","runtime","INamedContent"];
-ink_runtime_INamedContent.prototype = {
-	__class__: ink_runtime_INamedContent
+var ink_runtime_IProxy = function() { };
+ink_runtime_IProxy.__name__ = ["ink","runtime","IProxy"];
+ink_runtime_IProxy.prototype = {
+	__class__: ink_runtime_IProxy
 };
 var ink_runtime_SystemException = function(msg) {
 	this.msg = msg;
@@ -1649,8 +1674,7 @@ ink_runtime_Json.IntDictionaryToJObject = function(dict) {
 	return jObj;
 };
 ink_runtime_Json.JTokenToRuntimeObject = function(token) {
-	if(((token | 0) === token) || typeof(token) == "number") return ink_runtime_Value.Create(token);
-	if(typeof(token) == "string") {
+	if(((token | 0) === token) || typeof(token) == "number") return ink_runtime_Value.Create(token); else if(typeof(token) == "string") {
 		var str = token;
 		var firstChar = str.charAt(0);
 		if(firstChar == "^") return new ink_runtime_StringValue(str.substring(1)); else if(firstChar == "\n" && str.length == 1) return new ink_runtime_StringValue("\n");
@@ -1665,8 +1689,7 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 		if(ink_runtime_NativeFunctionCall.CallExistsWithName(str)) return ink_runtime_NativeFunctionCall.CallWithName(str);
 		if(str == "->->") return ink_runtime_ControlCommand.PopTunnel(); else if(str == "~ret") return ink_runtime_ControlCommand.PopFunction();
 		if(str == "void") return new ink_runtime_VoidObj();
-	}
-	if(js_Boot.__instanceof(token,Dynamic)) {
+	} else if((token instanceof Array) && token.__enum__ == null) return ink_runtime_Json.JArrayToContainer(token); else if(js_Boot.__instanceof(token,Dynamic)) {
 		var obj = token;
 		var propValue;
 		propValue = Reflect.field(obj,"^->");
@@ -1738,7 +1761,6 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 		}
 		if(Reflect.field(obj,"originalChoicePath") != null) return ink_runtime_Json.JObjectToChoice(obj);
 	}
-	if((token instanceof Array) && token.__enum__ == null) return ink_runtime_Json.JArrayToContainer(token);
 	if(token == null) return null;
 	throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to convert token to runtime object: " + Std.string(token)));
 };
@@ -2386,6 +2408,17 @@ ink_runtime_Path.createFromComponents = function(components,relative) {
 	me.isRelative = relative;
 	return me;
 };
+ink_runtime_Path.createFromComponentStack = function(components,relative) {
+	if(relative == null) relative = false;
+	var me = new ink_runtime_Path();
+	var $it0 = components.iterator();
+	while( $it0.hasNext() ) {
+		var c = $it0.next();
+		me.components.push(c);
+	}
+	me.isRelative = relative;
+	return me;
+};
 ink_runtime_Path.createFromString = function(componentsString) {
 	var me = new ink_runtime_Path();
 	me.set_componentsString(componentsString);
@@ -2398,20 +2431,14 @@ ink_runtime_Path.get_self = function() {
 };
 ink_runtime_Path.__super__ = ink_runtime_Object;
 ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
-	get_isIndex: function() {
-		return this.index >= 0;
-	}
-	,get_isParent: function() {
-		return this.name == ink_runtime_Path.parentId;
-	}
-	,PathByAppendingPath: function(pathToAppend) {
+	PathByAppendingPath: function(pathToAppend) {
 		var p = new ink_runtime_Path();
 		var upwardMoves = 0;
 		var _g1 = 0;
 		var _g = pathToAppend.components.length;
 		while(_g1 < _g) {
 			var i = _g1++;
-			if(pathToAppend.components[i].isParent) upwardMoves++; else break;
+			if(pathToAppend.components[i].get_isParent()) upwardMoves++; else break;
 		}
 		var _g11 = 0;
 		var _g2 = this.components.length - upwardMoves;
@@ -2448,18 +2475,18 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 		while(_g < _g1.length) {
 			var comp = _g1[_g];
 			++_g;
-			if(!comp.isIndex) return true;
+			if(!comp.get_isIndex()) return true;
 		}
 		return false;
 	}
 	,get_componentsString: function() {
-		var compsStr = ink_runtime_StringExt.Join(".",this.components);
+		var compsStr = this.components.join(".");
 		if(this.isRelative) return "." + compsStr; else return compsStr;
 	}
 	,set_componentsString: function(value) {
 		this.components.length = 0;
 		var componentsStr = value;
-		if(componentsStr == "" || componentsStr == null) return null;
+		if(componentsStr == "" || componentsStr == null) return value;
 		if(componentsStr.charAt(0) == ".") {
 			this.isRelative = true;
 			componentsStr = componentsStr.substring(1);
@@ -2488,7 +2515,7 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 		return ink_runtime_LibUtil.arraySequenceEquals(otherPath.components,this.components);
 	}
 	,__class__: ink_runtime_Path
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{set_componentsString:"set_componentsString",get_componentsString:"get_componentsString",get_containsNamedComponent:"get_containsNamedComponent",get_lastComponent:"get_lastComponent",get_length:"get_length",get_tail:"get_tail",get_head:"get_head",get_isParent:"get_isParent",get_isIndex:"get_isIndex"})
+	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{set_componentsString:"set_componentsString",get_componentsString:"get_componentsString",get_containsNamedComponent:"get_containsNamedComponent",get_lastComponent:"get_lastComponent",get_length:"get_length",get_tail:"get_tail",get_head:"get_head"})
 });
 var ink_runtime_Component = function() {
 };
@@ -2512,19 +2539,26 @@ ink_runtime_Component.ToParent = function() {
 	return ink_runtime_Component.createFromName(ink_runtime_Path.parentId);
 };
 ink_runtime_Component.prototype = {
-	toString: function() {
-		if(this.isIndex) return Std.string(this.index); else return this.name;
+	get_isIndex: function() {
+		return this.index >= 0;
+	}
+	,get_isParent: function() {
+		return this.name == ink_runtime_Path.parentId;
+	}
+	,toString: function() {
+		if(this.get_isIndex()) return Std.string(this.index); else return this.name;
 	}
 	,Equals: function(obj) {
 		return this.EqualsComponent(js_Boot.__instanceof(obj,ink_runtime_Component)?obj:null);
 	}
 	,EqualsComponent: function(otherComp) {
-		if(otherComp != null && otherComp.isIndex == this.isIndex) {
-			if(this.isIndex) return this.index == otherComp.index; else return this.name == otherComp.name;
+		if(otherComp != null && otherComp.get_isIndex() == this.get_isIndex()) {
+			if(this.get_isIndex()) return this.index == otherComp.index; else return this.name == otherComp.name;
 		}
 		return false;
 	}
 	,__class__: ink_runtime_Component
+	,__properties__: {get_isParent:"get_isParent",get_isIndex:"get_isIndex"}
 };
 var ink_runtime_SimpleJson = function() { };
 ink_runtime_SimpleJson.__name__ = ["ink","runtime","SimpleJson"];
@@ -2814,7 +2848,10 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			this.get_state().set_currentContentObject(this.get_state().divertedTargetObject);
 			this.get_state().divertedTargetObject = null;
 			this.VisitChangedContainersDueToDivert();
-			if(this.get_state().get_currentContentObject() != null) return;
+			if(this.get_state().get_currentContentObject() != null) {
+				haxe_Log.trace("Divert location:" + this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + this.get_state().get_previousContentObject().get_path().get_componentsString(),{ fileName : "Story.hx", lineNumber : 203, className : "ink.runtime.Story", methodName : "NextContent"});
+				return;
+			}
 		}
 		var successfulPointerIncrement = this.IncrementContentPointer();
 		if(!successfulPointerIncrement) {
@@ -2829,6 +2866,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			}
 			if(didPop && this.get_state().get_currentContentObject() != null) this.NextContent();
 		}
+		haxe_Log.trace(this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + this.get_state().get_previousContentObject().get_path().get_componentsString(),{ fileName : "Story.hx", lineNumber : 251, className : "ink.runtime.Story", methodName : "NextContent"});
 	}
 	,IncrementContentPointer: function() {
 		var successfulIncrement = true;
@@ -2878,8 +2916,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			count++;
 			var this2 = this.get_state().visitCounts;
 			this2.set(containerPathStr,count);
-			count;
-		} else haxe_Log.trace("Warning, couldn't find containerPath for: state.visitCounts.get(containerPathStr)",{ fileName : "Story.hx", lineNumber : 321, className : "ink.runtime.Story", methodName : "IncrementVisitCountForContainer"});
+		} else haxe_Log.trace("Warning, can't find visit count for containerPath:" + containerPathStr + " for container.name:" + container.name,{ fileName : "Story.hx", lineNumber : 337, className : "ink.runtime.Story", methodName : "IncrementVisitCountForContainer"});
 	}
 	,RecordTurnIndexVisitToContainer: function(container) {
 		var containerPathStr = container.get_path().toString();
@@ -3003,7 +3040,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					if(stateAtLastNewline != null) {
 						var currText = this.get_currentText();
 						var prevTextLength = stateAtLastNewline.get_currentText().length;
-						if(currText != stateAtLastNewline.get_currentText()) {
+						if(!(currText == stateAtLastNewline.get_currentText())) {
 							if(currText.length >= prevTextLength && currText.charAt(prevTextLength - 1) == "\n") {
 								this.RestoreStateSnapshot(stateAtLastNewline);
 								break;
@@ -3335,10 +3372,9 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(this._temporaryEvaluationContainer != null) return this._temporaryEvaluationContainer; else return this._mainContentContainer;
 	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1261, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
+		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1291, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
 	}
 	,ValidateExternalBindings: function() {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1264, className : "ink.runtime.Story", methodName : "ValidateExternalBindings"});
 	}
 	,__class__: ink_runtime_Story
 	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_mainContentContainer:"get_mainContentContainer",get_canContinue:"get_canContinue",get_currentDebugMetadata:"get_currentDebugMetadata",get_state:"get_state",get_variablesState:"get_variablesState",get_hasError:"get_hasError",get_currentErrors:"get_currentErrors",get_currentText:"get_currentText",get_currentChoices:"get_currentChoices"})
@@ -3396,7 +3432,7 @@ ink_runtime_StoryState.prototype = {
 	}
 	,set_currentPath: function(value) {
 		if(value != null) this.set_currentContentObject(this.story.ContentAtPath(value)); else this.set_currentContentObject(null);
-		return value;
+		if(this.get_currentContentObject() != null) return this.get_currentContentObject().get_path(); else return null;
 	}
 	,get_currentContentObject: function() {
 		return this.callStack.get_currentElement().get_currentObject();
@@ -3794,21 +3830,6 @@ ink_runtime_StoryState.prototype = {
 	,__class__: ink_runtime_StoryState
 	,__properties__: {get_inStringEvaluation:"get_inStringEvaluation",get_outputStreamContainsContent:"get_outputStreamContainsContent",get_outputStreamEndsInNewline:"get_outputStreamEndsInNewline",get_currentGlueIndex:"get_currentGlueIndex",set_jsonToken:"set_jsonToken",get_jsonToken:"get_jsonToken",set_inExpressionEvaluation:"set_inExpressionEvaluation",get_inExpressionEvaluation:"get_inExpressionEvaluation",get_currentText:"get_currentText",get_hasError:"get_hasError",set_previousContentObject:"set_previousContentObject",get_previousContentObject:"get_previousContentObject",get_currentContainer:"get_currentContainer",set_currentContentObject:"set_currentContentObject",get_currentContentObject:"get_currentContentObject",set_currentPath:"set_currentPath",get_currentPath:"get_currentPath",get_outputStream:"get_outputStream"}
 };
-var ink_runtime_StringExt = function() { };
-ink_runtime_StringExt.__name__ = ["ink","runtime","StringExt"];
-ink_runtime_StringExt.Join = function(separator,objects) {
-	var sb_b = "";
-	var isFirst = true;
-	var _g = 0;
-	while(_g < objects.length) {
-		var o = objects[_g];
-		++_g;
-		if(!isFirst) if(separator == null) sb_b += "null"; else sb_b += "" + separator;
-		sb_b += Std.string(Std.string(o));
-		isFirst = false;
-	}
-	return sb_b;
-};
 var ink_runtime_Value = function(val) {
 	ink_runtime_Object.call(this);
 	this.value = val;
@@ -4034,6 +4055,7 @@ var ink_runtime_VariablesState = function(callStack) {
 	this._callStack = callStack;
 };
 ink_runtime_VariablesState.__name__ = ["ink","runtime","VariablesState"];
+ink_runtime_VariablesState.__interfaces__ = [ink_runtime_IProxy];
 ink_runtime_VariablesState.prototype = {
 	ObserveVariableChange: function(callback) {
 		var _g = this;
@@ -4046,7 +4068,6 @@ ink_runtime_VariablesState.prototype = {
 				cb(variableName,newValue);
 			}
 		};
-		haxe_Log.trace("PUSHING",{ fileName : "VariablesState.hx", lineNumber : 38, className : "ink.runtime.VariablesState", methodName : "ObserveVariableChange"});
 		this.variableChangedEventCallbacks.push(callback);
 	}
 	,get_batchObservingVariableChanges: function() {
@@ -4054,7 +4075,7 @@ ink_runtime_VariablesState.prototype = {
 	}
 	,set_batchObservingVariableChanges: function(value) {
 		this._batchObservingVariableChanges = value;
-		if(value) this._changedVariables = new ink_runtime_HashSet(); else {
+		if(value) this._changedVariables = new ink_runtime_HashSetString(); else {
 			if(this._changedVariables != null) {
 				var $it0 = this._changedVariables.keys();
 				while( $it0.hasNext() ) {
@@ -4111,7 +4132,7 @@ ink_runtime_VariablesState.prototype = {
 	,GetRawVariableWithName: function(name,contextIndex) {
 		var varValue = null;
 		if(contextIndex == 0 || contextIndex == -1) {
-			if((varValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,name)) != null) return varValue; else haxe_Log.trace("Global context search not found...Should exit out??",{ fileName : "VariablesState.hx", lineNumber : 172, className : "ink.runtime.VariablesState", methodName : "GetRawVariableWithName", customParams : [this._globalVariables]});
+			if((varValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,name)) != null) return varValue; else haxe_Log.trace("Global context search not found...Should exit out??",{ fileName : "VariablesState.hx", lineNumber : 179, className : "ink.runtime.VariablesState", methodName : "GetRawVariableWithName", customParams : [this._globalVariables]});
 		}
 		varValue = this._callStack.GetTemporaryVariableWithName(name,contextIndex);
 		if(varValue == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("RUNTIME ERROR: Variable '" + name + "' could not be found in context '" + contextIndex + "'. This shouldn't be possible so is a bug in the ink engine. Please try to construct a minimal story that reproduces the problem and report to inkle, thank you!"));
@@ -4148,7 +4169,7 @@ ink_runtime_VariablesState.prototype = {
 	,SetGlobal: function(variableName,value) {
 		var oldValue = null;
 		oldValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,variableName);
-		this._globalVariables.set(variableName,oldValue);
+		this._globalVariables.set(variableName,value);
 		if(this.variableChangedEvent != null && !value.Equals(oldValue)) {
 			if(this.get_batchObservingVariableChanges()) this._changedVariables.add(variableName); else this.variableChangedEvent(variableName,value);
 		}

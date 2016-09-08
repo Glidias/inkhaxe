@@ -27,7 +27,7 @@ class LibUtil
 	public static inline function tryGetValue<V:Object>(map:StringMap<V>, prop:String ):V {
 		return map.get(prop); 
 	}
-	public static inline function tryGetValueINamedContent<V:INamedContent>(map:StringMap<V>, prop:String ):V {
+	public static inline function tryGetValueINamedContent<V:INamedContent>(map:StringMap<V>, prop:String ):INamedContent {
 		return map.get(prop); 
 	}
 	

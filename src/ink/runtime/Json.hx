@@ -55,6 +55,7 @@ class Json
 		for (i in 0...count) {
 			var jTok = jArray[i];
 			var runtimeObj = LibUtil.as( JTokenToRuntimeObject (jTok), Object);
+	
 			list.push(runtimeObj);
 		}
 
@@ -153,10 +154,10 @@ class Json
         //       
 	public static function JTokenToRuntimeObject(token:Dynamic):Object {
 		if (Std.is(token, Int) || Std.is(token, Float)) {
+			
 			return Value.Create(token);
 		}
-		
-		if (Std.is(token, String)) {
+		else  if (Std.is(token, String)) {
 			var str:String =  token;
 
 			// String value
@@ -196,9 +197,12 @@ class Json
 			if (str == "void")
 				return new VoidObj();
 		}
-
-		if (Std.is(token, Dynamic)) {   //token is Dictionary<string, object>
-
+		// Array is always a Runtime.Container
+		else if (Std.is(token, Array )) {  //(List<object>
+			return JArrayToContainer( token);
+		}
+		else if (Std.is(token, Dynamic)) {   //token is Dictionary<string, object>
+		
 			var obj = token;  //(Dictionary < string, object> )
 			var propValue:Dynamic;
 
@@ -288,7 +292,7 @@ class Json
 			// Variable assignment
 			var isVarAss = false;
 			var isGlobalVar = false;
-			if ( (propValue=LibUtil.tryGetValueDynamic(obj, "VAR=") )!=null ) {  //obj.TryGetValue ("VAR=", out propValue)
+			if ( (propValue = LibUtil.tryGetValueDynamic(obj, "VAR=") ) != null ) {  //obj.TryGetValue ("VAR=", out propValue)
 				isVarAss = true;
 				isGlobalVar = true;
 			} else if ( (propValue=LibUtil.tryGetValueDynamic(obj, "temp=") )!=null ) {   // obj.TryGetValue ("temp=", out propValue)
@@ -307,13 +311,9 @@ class Json
 				return JObjectToChoice(obj);
 		}
 
-		// Array is always a Runtime.Container
-		if (Std.is(token, Array )) {  //(List<object>
-			return JArrayToContainer( token);
-		}
-
-		if (token == null)
+		if (token == null) {
 			return null;
+		}
 
 		throw new SystemException ("Failed to convert token to runtime object: " + token);
 		

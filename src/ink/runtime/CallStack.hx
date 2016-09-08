@@ -265,10 +265,11 @@ class Element
 	public var currentObject(get, set):Object;
 	function get_currentObject():Object 
 	{
-		 if (currentContainer!=null && currentContentIndex < currentContainer.content.length) {
+		 if (currentContainer != null && currentContentIndex < currentContainer.content.length) {
+			// trace("Returning:"+currentContainer.content[currentContentIndex].path + ", at:"+currentContainer.name);
 			return currentContainer.content[currentContentIndex];
 		}
-
+		//trace("Returning null..");
 		return null;
 	}
 	function set_currentObject(value:Object):Object 
@@ -277,7 +278,7 @@ class Element
 		if (currentObj == null) {
 			currentContainer = null;
 			currentContentIndex = 0;
-			return currentContainer.content[currentContentIndex];
+			return null;  
 		}
 
 		currentContainer = LibUtil.as( currentObj.parent, Container);

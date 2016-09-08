@@ -5,7 +5,7 @@ import ink.runtime.Value.VariablePointerValue;
  * Done!
  * @author Glidias
  */
-class VariablesState //implements IEnumberable<String>
+class VariablesState implements IProxy //implements IEnumberable<String>
 {
   /// <summary>
     /// Encompasses all the global variables in an ink Story, and
@@ -52,7 +52,7 @@ class VariablesState //implements IEnumberable<String>
 	{
 		_batchObservingVariableChanges = value;
 		if (value) {
-			_changedVariables = new HashSet<String>();
+			_changedVariables = new HashSetString();
 		} 
 
 		// Finished observing variables in a batch - now send 
@@ -72,7 +72,7 @@ class VariablesState //implements IEnumberable<String>
 	var _batchObservingVariableChanges:Bool;
 	
 	
-	
+	// TODO: Link this! 
 	public function field(variableName:String):Dynamic {
 		var varContents:Dynamic;
 		if ( (varContents=LibUtil.tryGetValue(_globalVariables, variableName)) != null )
@@ -117,8 +117,10 @@ class VariablesState //implements IEnumberable<String>
 
 	public function CopyFrom( varState:VariablesState):Void  
 	{
+	
 		var cloner:Cloner = new Cloner();
 		_globalVariables = cloner.clone( varState._globalVariables );
+		
 		variableChangedEvent = varState.variableChangedEvent;
 
 		if (varState.batchObservingVariableChanges != batchObservingVariableChanges) {
@@ -141,6 +143,7 @@ class VariablesState //implements IEnumberable<String>
 	
 	function set_jsonToken(value:Dynamic):Dynamic 
 	{
+		
 		return (_globalVariables = Json.JObjectToDictionaryRuntimeObjs (value));
 	}
 	
@@ -168,6 +171,7 @@ class VariablesState //implements IEnumberable<String>
 
 		// 0 context = global
 		if (contextIndex == 0 || contextIndex == -1) {
+		
 			if ( (varValue=LibUtil.tryGetValue(_globalVariables,  name) )  != null ) {
 				return varValue;
 			}
@@ -205,6 +209,8 @@ class VariablesState //implements IEnumberable<String>
 		} else {
 			setGlobal = _globalVariables.exists (name);
 		}
+		
+	
 
 		// Constructing new variable pointer reference
 		if (varAss.isNewDeclaration) {
@@ -248,9 +254,9 @@ class VariablesState //implements IEnumberable<String>
 		
 		oldValue = LibUtil.tryGetValue(_globalVariables, variableName);
 		//_globalVariables.TryGetValue (variableName, out oldValue);
-
-		_globalVariables.set(variableName, oldValue);
-
+		
+		_globalVariables.set(variableName, value);
+		
 		if (variableChangedEvent != null && !value.Equals (oldValue)) {
 
 			if (batchObservingVariableChanges) {
@@ -306,5 +312,5 @@ class VariablesState //implements IEnumberable<String>
 		
    // Used for accessing temporary variables
 	var _callStack:CallStack;
-	var _changedVariables:HashSet<String>;
+	var _changedVariables:HashSetString;
 }

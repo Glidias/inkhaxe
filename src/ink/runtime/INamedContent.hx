@@ -7,5 +7,5 @@ package ink.runtime;
 interface INamedContent 
 {
 	var name:String;  //{ get; }
-	var hasValidName:Bool;  //{ get; }
+	var hasValidName(get, null):Bool;  //{ get; }
 }

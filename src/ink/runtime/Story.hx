@@ -101,11 +101,12 @@ class Story extends Object
 		if (rootToken == null)
 			throw new SystemException ("Root node for ink not found. Are you sure it's a valid .ink.json file?");
 		
+		
+		
 	
-			
 		_mainContentContainer = LibUtil.as(Json.JTokenToRuntimeObject(rootToken) , Container);
 
-		ResetState (); 
+		ResetState ();
 	}
 	
 	public static function createFromContainer(contentContainer:Container):Story {
@@ -138,7 +139,7 @@ class Story extends Object
 		//_state.variablesState.variableChangedEvent += VariableStateDidChangeEvent;  // C_sharp version
 		//this._state.variablesState.ObserveVariableChange(this.VariableStateDidChangeEvent.bind(this));  // inkjs version
 		_state.variablesState.ObserveVariableChange(VariableStateDidChangeEvent);  // haxe version (same as inkjs version)
-		
+
 		
 		ResetGlobals ();
 	
@@ -156,8 +157,9 @@ class Story extends Object
 		
 	public function ResetGlobals():Void
 	{
-		
+
 		   if (_mainContentContainer.namedContent.exists ("global decl")) {
+			   
 			var originalPath = state.currentPath;
 
 			ChoosePathString ("global decl");
@@ -167,7 +169,7 @@ class Story extends Object
 			ContinueInternal ();
 
 			state.currentPath = originalPath;
-			
+					
 		}
 	
 	}
@@ -197,6 +199,8 @@ class Story extends Object
 
                 // Diverted location has valid content?
                 if (state.currentContentObject != null) {
+				
+					trace("Divert location:"+state.currentContentObject.path.componentsString  + "  ::  "+ state.previousContentObject.path.componentsString);
                     return;
                 }
 				
@@ -205,8 +209,11 @@ class Story extends Object
                 // This can happen if the diverted path is intentionally jumping
                 // to the end of a container - e.g. a Conditional that's re-joining
 			}
+			
+			
 
             var successfulPointerIncrement:Bool = IncrementContentPointer ();
+		
 
             // Ran out of content? Try to auto-exit from a function,
             // or finish evaluating the content of a thread
@@ -236,9 +243,13 @@ class Story extends Object
 
                 // Step past the point where we last called out
                 if (didPop && state.currentContentObject != null) {
+					
                     NextContent ();
                 }
 			}
+			
+			trace(state.currentContentObject.path.componentsString+ "  ::  "+  state.previousContentObject.path.componentsString);
+				
 		}
 
         function IncrementContentPointer():Bool
@@ -269,7 +280,9 @@ class Story extends Object
 
                 successfulIncrement = true;
             }
-
+			
+			
+		
             if (!successfulIncrement)
                 currEl.currentContainer = null;
 
@@ -311,15 +324,21 @@ class Story extends Object
         {
             var count = 0;
             var containerPathStr = container.path.toString();
+
 			count = state.visitCounts.get(containerPathStr);  //state.visitCounts.TryGetValue (containerPathStr, out count);
            
 			if (count != null && !Math.isNaN(count)) {  // sanity check added for haxe
 				count++;
-				state.visitCounts [containerPathStr] = count;
+				state.visitCounts.set(containerPathStr, count);// [containerPathStr] = count;
+				
 			}
 			else {
-				trace("Warning, couldn't find containerPath for: state.visitCounts.get(containerPathStr)");
+				// ??
+				trace("Warning, can't find visit count for containerPath:" + containerPathStr + " for container.name:"+container.name);
 			}
+			
+			
+		
         }
 
         function RecordTurnIndexVisitToContainer( container:Container):Void
@@ -434,6 +453,7 @@ class Story extends Object
 	{
 		var dm:DebugMetadata;
 
+		
 		// Try to get from the current path first
 		var currentContent = state.currentContentObject;
 		if (currentContent!=null) {
@@ -523,7 +543,7 @@ class Story extends Object
 		_state.didSafeExit = false;
 
 		_state.variablesState.batchObservingVariableChanges = true;
-
+	
 		//_previousContainer = null;
 
 		try {
@@ -565,7 +585,7 @@ class Story extends Object
 						var prevTextLength:Int = stateAtLastNewline.currentText.length;
 
 						// Output has been extended?
-						if( currText != stateAtLastNewline.currentText ) {  // !currText.Equals(stateAtLastNewline.currentText) 
+						if( !(currText == stateAtLastNewline.currentText) ) {  // !currText.Equals(stateAtLastNewline.currentText) 
 
 							// Original newline still exists?
 							if( currText.length >= prevTextLength && currText.charAt(prevTextLength-1) == '\n' ) {
@@ -633,7 +653,8 @@ class Story extends Object
 			}
 
 
-		} catch( e:StoryException) {
+		} catch ( e:StoryException) {
+			
 			AddError (e.msg, e.useEndLineNumber);
 			
 			
@@ -715,6 +736,7 @@ class Story extends Object
 
 			currentContainer = LibUtil.as(currentContentObj , Container);
 		}
+	
 		currentContainer = state.callStack.currentElement.currentContainer;
 
 		// Is the current content object:
@@ -789,6 +811,7 @@ class Story extends Object
 	// Mark a container as having been visited
 	function VisitContainer( container:Container,  atStart:Bool)
 	{
+
 		if ( !container.countingAtStartOnly || atStart ) {
 			if( container.visitsShouldBeCounted )
 				IncrementVisitCountForContainer (container);
@@ -873,6 +896,7 @@ class Story extends Object
 	
 	function PerformLogicAndFlowControl( contentObj:Object):Bool
 	{
+		
 		if( contentObj == null ) {
 			return false;
 		}
@@ -881,7 +905,7 @@ class Story extends Object
 		if ( Std.is(contentObj ,Divert) ) {
 			
 			var currentDivert:Divert = cast contentObj; //(Divert)
-
+			
 			if (currentDivert.isConditional) {
 				var conditionValue = state.PopEvaluationStack ();
 
@@ -892,7 +916,7 @@ class Story extends Object
 
 			if (currentDivert.hasVariableTarget) {
 				var varName = currentDivert.variableDivertName;
-
+				
 				var varContents = state.variablesState.GetVariableWithName (varName);
 
 				if (!( Std.is(varContents , DivertTargetValue))) {
@@ -924,7 +948,7 @@ class Story extends Object
 			}
 
 			if (state.divertedTargetObject == null && !currentDivert.isExternal) {
-
+				
 				// Human readable name available - runtime divert is part of a hard-written divert that to missing content
 				if (currentDivert!= null && currentDivert.debugMetadata.sourceName != null) {
 					Error ("Divert target doesn't exist: " + currentDivert.debugMetadata.sourceName);
@@ -939,7 +963,7 @@ class Story extends Object
 		// Start/end an expression evaluation? Or print out the result?
 		else if( Std.is(contentObj , ControlCommand) ) {
 			var evalCommand:ControlCommand = cast contentObj; //(ControlCommand)
-
+			
 			switch (evalCommand.commandType) {
 
 			case ControlCommand.CommandType.EvalStart:
@@ -1120,9 +1144,10 @@ class Story extends Object
 
 			return true;
 		}
-
+		
 		// Variable assignment
-		else if( Std.is(contentObj , VariableAssignment) ) {
+		else if ( Std.is(contentObj , VariableAssignment) ) {
+			
 			var varAss:VariableAssignment= cast contentObj;  //(VariableAssignment)
 			var assignedVal = state.PopEvaluationStack();
 
@@ -1136,7 +1161,8 @@ class Story extends Object
 		}
 
 		// Variable reference
-		else if( Std.is( contentObj , VariableReference) ) {
+		else if ( Std.is( contentObj , VariableReference) ) {
+			
 			var varRef:VariableReference = cast contentObj; //(VariableReference)
 			var foundValue:Object = null;
 
@@ -1147,19 +1173,20 @@ class Story extends Object
 				var container = varRef.containerForCount;
 				var count:Int = VisitCountForContainer (container);
 				foundValue = new IntValue (count);
+				
 			}
 
 			// Normal variable reference
 			else {
-
+	
 				foundValue = state.variablesState.GetVariableWithName (varRef.name);
-
+				
 				if (foundValue == null) {
 					Error("Uninitialised variable: " + varRef.name);
 					foundValue = new IntValue (0);
 				}
 			}
-
+			
 			state.evaluationStack.push( foundValue );
 
 			return true;
@@ -1174,7 +1201,7 @@ class Story extends Object
 			state.evaluationStack.push(result);
 			return true;
 		}
-
+	
 		// No control content, must be ordinary content
 		return false;
 	}
@@ -1186,6 +1213,7 @@ class Story extends Object
 		
 	public function  ChoosePath( path:Path):Void
 	{
+	
 		state.SetChosenPath (path);
 
 		// Take a note of newly visited containers for read counts etc
@@ -1204,8 +1232,10 @@ class Story extends Object
             var prevContainerSet = new HashSet<Container>();
             if (previousContentObject!=null) {
                 var prevAncestor:Container = Std.is(previousContentObject , Container) ? LibUtil.as(previousContentObject, Container) : LibUtil.as(previousContentObject.parent, Container);
+				
                 while (prevAncestor!=null) {
                     prevContainerSet.add (prevAncestor);
+				
                     prevAncestor = LibUtil.as( prevAncestor.parent, Container);
                 }
             }
@@ -1261,7 +1291,7 @@ class Story extends Object
 		trace( "This is a stub. Will be added soon!");
 	}
 	function ValidateExternalBindings() {
-		trace( "This is a stub. Will be added soon!");
+		//trace( "This is a stub. Will be added soon!");
 	}
 /*
  /// <summary>

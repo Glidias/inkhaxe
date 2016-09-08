@@ -42,7 +42,7 @@ class InkleRuntime
 		
 		var map:Map<String, Object> = new Map<String, Object>();
 		var mapInt:Map<Int, Object> = new Map<Int, Object>();
-		var mapSet:HashSet<String> = new HashSet<String>();
+		var mapSet:HashSetString = new HashSetString();
 		
 		var dynStrMap:Map<Container, Dynamic> = new  Map<Container,Dynamic>();
 		

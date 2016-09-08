@@ -93,6 +93,7 @@ class StoryState
 		if (currentContentObject == null)
 			return null;
 
+	
 		return currentContentObject.path;
 	}
 	function set_currentPath(value:Path):Path 
@@ -101,7 +102,7 @@ class StoryState
 			currentContentObject = story.ContentAtPath (value);
 		else
 			currentContentObject = null;
-		return value;
+		return currentContentObject != null ? currentContentObject.path : null;
 	}
 	
 	public var  currentContentObject(get, set):Object;
@@ -176,6 +177,7 @@ class StoryState
 
 		callStack =  CallStack.createCallStack(story.rootContentContainer);
 		variablesState = new VariablesState (callStack);
+	
 
 		visitCounts = new Map<String, Int> ();
 		turnIndices = new Map<String, Int> ();
@@ -313,6 +315,7 @@ class StoryState
 		callStack.SetJsonToken( Reflect.field(jObject, "callstackThreads"), story);  // ((Dictionary < string, object > )j
 		
 		
+	
 		variablesState.jsonToken = Reflect.field(jObject, "variablesState");  //(Dictionary < string, object> )
 
 		evaluationStack = Json.JArrayToRuntimeObjArray( Reflect.field(jObject,"evalStack"));  //((List<object>)

@@ -124,7 +124,7 @@ table{
 <body>
 	<div id="selection">
 		<h1>
-			inkjs demo
+			inkhaxe js demo
 			<a class="github-button" href="https://github.com/y-lohse/inkjs" data-icon="octicon-star" aria-label="Star y-lohse/inkjs on GitHub">Star</a>
 		</h1>
 		
@@ -181,12 +181,15 @@ table{
 
 			myStory = new ink.runtime.Story(inkFile);
 			
+		
+			
 			continueToNextChoice();
 		}
 		
 		
 		function continueToNextChoice(){
 			while (myStory.get_canContinue()){
+			
 				var grafs = myStory.Continue().split("\n");
 				
 				grafs.forEach(function(text){

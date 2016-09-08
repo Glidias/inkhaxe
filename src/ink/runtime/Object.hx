@@ -65,7 +65,7 @@ class Object
 				// Maintain a Stack so that the order of the components
 				// is reversed when they're added to the Path.
 				// We're iterating up the hierarchy from the leaves/children to the root.
-				var comps = new Array<Component> ();
+				var comps = new GenericStack<Component>();// Array<Component> ();
 
 				var child = this;
 				var container = LibUtil.as(child.parent, Container);
@@ -74,16 +74,19 @@ class Object
 
 					var namedChild = LibUtil.as(child, INamedContent);
 					if (namedChild != null && namedChild.hasValidName) {
-						comps.push( Component.createFromName (namedChild.name));
+						comps.add( Component.createFromName (namedChild.name));
 					} else {
-						comps.push(Component.createFromIndex(container.content.indexOf(child)));
+						comps.add(Component.createFromIndex(container.content.indexOf(child)));
 					}
+					
+					
 
 					child = container;
 					container = LibUtil.as(container.parent , Container);
 				}
 
-				_path =  Path.createFromComponents(comps);
+				_path =  Path.createFromComponentStack(comps);
+				
 			}
 
 		}

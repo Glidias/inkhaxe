@@ -1,4 +1,5 @@
 package ink.runtime;
+import haxe.ds.GenericStack;
 import ink.runtime.Path;
 import ink.runtime.Path.Component;
 
@@ -11,19 +12,7 @@ class Path extends Object implements IEquatable<Path>
 	public static var parentId:String = "^";  // should this be inlined as  constant?
 
 	
-	public var index:Int;  //x { get; private set; }
-	public var name:String;  //  { get; private set; }
-	public var isIndex(get, null):Bool;	
-	function get_isIndex():Bool 
-	{
-		return index >=0;
-	}
-	public var isParent(get, null):Bool;
-	function get_isParent():Bool 
-	{
-		return name == Path.parentId;
-	}
-	
+
 	
 
 	
@@ -122,10 +111,26 @@ class Path extends Object implements IEquatable<Path>
 	}
 	
 	//IEnumerable<Component>
+	
 	public static function createFromComponents(components:Array<Component>,  relative:Bool = false):Path
 	{
 		var me = new Path();
 		LibUtil.addRangeForArray(me.components, components); //me.components.AddRange(components);
+		me.isRelative = relative;
+		return me;
+	}
+	
+	
+	public static function createFromComponentStack(components:GenericStack<Component>,  relative:Bool = false):Path
+	{
+		var me = new Path();
+
+		 //me.components.AddRange(components);
+		for (c in components) {
+			
+			me.components.push(c);
+		}
+	
 		me.isRelative = relative;
 		return me;
 	}
@@ -150,7 +155,7 @@ class Path extends Object implements IEquatable<Path>
 	public var componentsString(get,  set):String;
 	public function get_componentsString():String 
 	{
-		   var compsStr = StringExt.Join(".", components); //StringExt.Join (".", components);
+		   var compsStr = components.join("."); // StringExt.Join(".", components); //StringExt.Join (".", components);
 			if (isRelative)
 				return "." + compsStr;
 			else
@@ -165,8 +170,9 @@ class Path extends Object implements IEquatable<Path>
 
 		// Empty path, empty components
 		// (path is to root, like "/" in file system)
-		if (componentsStr == "" || componentsStr == null)  //string.IsNullOrEmpty(componentsStr)
-			return null;
+		if (componentsStr == "" || componentsStr == null)  { //string.IsNullOrEmpty(componentsStr)
+			return value;
+		}
 
 		// When components start with ".", it indicates a relative path, e.g.
 		//   .^.^.hello.5
@@ -189,8 +195,9 @@ class Path extends Object implements IEquatable<Path>
 				components.push ( Component.createFromName(str));
 			}
 		}
-		
-			
+	
+		//value = get_componentsString();
+
 		return value;// get_componentsString();
 	}
 	
@@ -239,10 +246,20 @@ class Path extends Object implements IEquatable<Path>
 
 class Component implements IEquatable<Component>
 {
-	public var isParent:Bool;
-	public var index:Int;
-	public var name:String;
-	public var isIndex:Bool;
+
+	public var index:Int;  //x { get; private set; }
+	public var name:String;  //  { get; private set; }
+
+	public var isIndex(get, null):Bool;	
+	function get_isIndex():Bool 
+	{
+		return index >=0;
+	}
+	public var isParent(get, null):Bool;
+	function get_isParent():Bool 
+	{
+		return name == Path.parentId;
+	}
 	
 	
 	// constructors done only
