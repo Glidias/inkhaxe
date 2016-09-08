@@ -610,8 +610,11 @@ class Story extends Object
 						// Create a snapshot in case we need to rewind.
 						// We're going to continue stepping in case we see glue or some
 						// non-text content such as choices.
-						if( canContinue ) {
+						if ( canContinue ) {
+							
 							stateAtLastNewline = StateSnapshot();
+							
+							
 						} 
 
 						// Can't continue, so we're about to exit - make sure we

@@ -1555,6 +1555,15 @@ ink_runtime_HashSetString.prototype = {
 	,contains: function(key) {
 		return this.map.get(key);
 	}
+	,clone: function() {
+		var c = new ink_runtime_HashSetString();
+		var $it0 = this.keys();
+		while( $it0.hasNext() ) {
+			var p = $it0.next();
+			c.add(p);
+		}
+		return c;
+	}
 	,__class__: ink_runtime_HashSetString
 };
 var ink_runtime_IEquatable = function() { };
@@ -3372,7 +3381,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(this._temporaryEvaluationContainer != null) return this._temporaryEvaluationContainer; else return this._mainContentContainer;
 	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1291, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
+		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1294, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
 	}
 	,ValidateExternalBindings: function() {
 	}
@@ -3489,6 +3498,7 @@ ink_runtime_StoryState.prototype = {
 		copy.callStack = ink_runtime_CallStack.createCallStack2(this.callStack);
 		copy._currentRightGlue = this._currentRightGlue;
 		copy.variablesState = new ink_runtime_VariablesState(copy.callStack);
+		haxe_Log.trace("xxx SNAPPING: .. problems?" + Std.string(this.get_hasError()),{ fileName : "StoryState.hx", lineNumber : 223, className : "ink.runtime.StoryState", methodName : "Copy"});
 		copy.variablesState.CopyFrom(this.variablesState);
 		ink_runtime_LibUtil.addRangeForArray(copy.evaluationStack,this.evaluationStack);
 		if(this.divertedTargetObject != null) copy.divertedTargetObject = this.divertedTargetObject;
@@ -4099,14 +4109,24 @@ ink_runtime_VariablesState.prototype = {
 		}
 		this.SetGlobal(variableName,val);
 	}
+	,_cloneMap: function(map) {
+		var cMap = new haxe_ds_StringMap();
+		var $it0 = map.keys();
+		while( $it0.hasNext() ) {
+			var c = $it0.next();
+			var value;
+			value = __map_reserved[c] != null?map.getReserved(c):map.h[c];
+			if(__map_reserved[c] != null) cMap.setReserved(c,value); else cMap.h[c] = value;
+		}
+		return cMap;
+	}
 	,CopyFrom: function(varState) {
-		var cloner = new ink_runtime_Cloner();
-		this._globalVariables = cloner.clone(varState._globalVariables);
+		this._globalVariables = this._cloneMap(this._globalVariables);
 		this.variableChangedEvent = varState.variableChangedEvent;
 		if(varState.get_batchObservingVariableChanges() != this.get_batchObservingVariableChanges()) {
 			if(varState.get_batchObservingVariableChanges()) {
 				this._batchObservingVariableChanges = true;
-				this._changedVariables = cloner.clone(varState._changedVariables);
+				this._changedVariables = varState._changedVariables.clone();
 			} else {
 				this._batchObservingVariableChanges = false;
 				this._changedVariables = null;
@@ -4132,7 +4152,7 @@ ink_runtime_VariablesState.prototype = {
 	,GetRawVariableWithName: function(name,contextIndex) {
 		var varValue = null;
 		if(contextIndex == 0 || contextIndex == -1) {
-			if((varValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,name)) != null) return varValue; else haxe_Log.trace("Global context search not found...Should exit out??",{ fileName : "VariablesState.hx", lineNumber : 179, className : "ink.runtime.VariablesState", methodName : "GetRawVariableWithName", customParams : [this._globalVariables]});
+			if((varValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,name)) != null) return varValue; else haxe_Log.trace("Global context search not found...Should exit out??",{ fileName : "VariablesState.hx", lineNumber : 189, className : "ink.runtime.VariablesState", methodName : "GetRawVariableWithName", customParams : [this._globalVariables]});
 		}
 		varValue = this._callStack.GetTemporaryVariableWithName(name,contextIndex);
 		if(varValue == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("RUNTIME ERROR: Variable '" + name + "' could not be found in context '" + contextIndex + "'. This shouldn't be possible so is a bug in the ink engine. Please try to construct a minimal story that reproduces the problem and report to inkle, thank you!"));

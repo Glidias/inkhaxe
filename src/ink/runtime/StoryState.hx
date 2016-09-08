@@ -213,12 +213,14 @@ class StoryState
 			copy.currentErrors = new List<String> ();
 			LibUtil.addRangeForList(copy.currentErrors, currentErrors); // copy.currentErrors.AddRange (currentErrors); 
 		}
-
+		
 		copy.callStack =  CallStack.createCallStack2 (callStack);
 
 		copy._currentRightGlue = _currentRightGlue;
 
 		copy.variablesState = new VariablesState (copy.callStack);
+		
+		trace("xxx SNAPPING: .. problems?"+hasError);
 		copy.variablesState.CopyFrom (variablesState);
 
 		LibUtil.addRangeForArray(copy.evaluationStack, evaluationStack); // copy.evaluationStack.AddRange (evaluationStack);
@@ -230,7 +232,9 @@ class StoryState
 
 		var cloner:Cloner = new Cloner();
 		copy.visitCounts = cloner.clone(visitCounts );
-		copy.turnIndices =cloner.clone( turnIndices);
+		
+		copy.turnIndices = cloner.clone( turnIndices);
+	
 		copy.currentTurnIndex = currentTurnIndex;
 		copy.storySeed = storySeed;
 

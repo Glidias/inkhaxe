@@ -1,4 +1,5 @@
 package ink.runtime;
+import ink.runtime.MapCloner;
 import ink.runtime.Value.VariablePointerValue;
 
 /**
@@ -114,12 +115,19 @@ class VariablesState implements IProxy //implements IEnumberable<String>
         _callStack = callStack;
 	}
 
+	function _cloneMap(map:Map<String,Dynamic>):Map<String, Object> {
+		var cMap = new Map<String, Object>();
+		for (c in map.keys()) {
+			cMap.set(c, map.get(c) );
+		}
+		
+		return cMap;
+	}
 
 	public function CopyFrom( varState:VariablesState):Void  
 	{
-	
-		var cloner:Cloner = new Cloner();
-		_globalVariables = cloner.clone( varState._globalVariables );
+			
+		_globalVariables = _cloneMap (_globalVariables); // cloner.clone( varState._globalVariables );
 		
 		variableChangedEvent = varState.variableChangedEvent;
 
@@ -127,7 +135,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 
 			if (varState.batchObservingVariableChanges) {
 				_batchObservingVariableChanges = true;
-				_changedVariables =cloner.clone( varState._changedVariables);  //varState._changedVariables
+				_changedVariables =   varState._changedVariables.clone(); // cloner.clone( varState._changedVariables);  //varState._changedVariables
 			} else {
 				_batchObservingVariableChanges = false;
 				_changedVariables = null;

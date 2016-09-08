@@ -29,5 +29,13 @@ class HashSetString
 		return map.get(key);
 	}
 	
+	public function clone():HashSetString {
+		var c:HashSetString = new HashSetString();
+		for ( p in this.keys()) {
+			c.add(p);
+		}
+		return c;
+	}
+	
 	
 }

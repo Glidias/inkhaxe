@@ -29,10 +29,12 @@ class Cloner {
         cache = new ObjectMap<Dynamic,Dynamic>();
         var outcome:T = _clone(v);
         cache = null;
+		
         return outcome;
     }
 
     public function _clone <T> (v:T):T {
+	
         if(Type.getClassName(cast v) != null)
             return v;
         switch(Type.typeof(v)){
