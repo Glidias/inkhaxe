@@ -124,11 +124,12 @@ class Story extends Object
 	{
 		var rootContainerJsonList:Array<Dynamic> = cast Json.RuntimeObjectToJToken(_mainContentContainer);   // (List<object>) 
 
-		var rootObject = new Map<String, Dynamic>();
-		rootObject.set ("inkVersion", inkVersionCurrent);
-		rootObject.set ("root", rootContainerJsonList);
-
-		return SimpleJson.DictionaryToText (rootObject);
+		//var rootObject = new Map<String, Dynamic>();
+	//	rootObject.set ("inkVersion", inkVersionCurrent);
+		//rootObject.set ("root", rootContainerJsonList);
+		//SimpleJson.DictionaryToText(rootObject);   //
+		
+		return  haxe.Json.stringify({ inkVersion:inkVersionCurrent, root:rootContainerJsonList});
 	}
 		
 
@@ -200,9 +201,10 @@ class Story extends Object
                 // Diverted location has valid content?
                 if (state.currentContentObject != null) {
 				
-					trace("Divert location:"+state.currentContentObject.path.componentsString  + "  ::  "+ state.previousContentObject.path.componentsString);
+					trace("Divert location:"+state.currentContentObject.path.componentsString  + "  ::  "+ (state.previousContentObject!= null ? state.previousContentObject.path.componentsString : "No previousContentObject ..") );
                     return;
                 }
+				
 				
                 // Otherwise, if diverted location doesn't have valid content,
                 // drop down and attempt to increment.
@@ -248,7 +250,7 @@ class Story extends Object
                 }
 			}
 			
-			trace(state.currentContentObject.path.componentsString+ "  ::  "+  state.previousContentObject.path.componentsString);
+			if (state.currentContentObject!= null) trace("location:"+state.currentContentObject.path.componentsString  + "  ::  "+ (state.previousContentObject!= null ? state.previousContentObject.path.componentsString : "No previousContentObject ..") );
 				
 		}
 
@@ -314,9 +316,10 @@ class Story extends Object
 
             var count:Int = 0;
             var containerPathStr = container.path.toString();
-            count = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
-			
-			if (count == null) count = 0;  // added for Haxe...sanity statement for return value type?
+            var tryCount:Int = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
+			if (tryCount != null && !Math.isNaN(tryCount)) {
+				count = tryCount;
+			}
             return count;
         }
 
@@ -324,21 +327,13 @@ class Story extends Object
         {
             var count = 0;
             var containerPathStr = container.path.toString();
+			 var tryCount:Int = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
+			if (tryCount != null && !Math.isNaN(tryCount)) {
+				count = tryCount;
+			}
+			count++;
+			state.visitCounts.set(containerPathStr, count);// [containerPathStr] = count;
 
-			count = state.visitCounts.get(containerPathStr);  //state.visitCounts.TryGetValue (containerPathStr, out count);
-           
-			if (count != null && !Math.isNaN(count)) {  // sanity check added for haxe
-				count++;
-				state.visitCounts.set(containerPathStr, count);// [containerPathStr] = count;
-				
-			}
-			else {
-				// ??
-				trace("Warning, can't find visit count for containerPath:" + containerPathStr + " for container.name:"+container.name);
-			}
-			
-			
-		
         }
 
         function RecordTurnIndexVisitToContainer( container:Container):Void
@@ -562,9 +557,12 @@ class Story extends Object
 			// and rewind if necessary.
 			// This code is slightly fragile :-/ 
 			//
-
+			var limit:Int = 512;
+			var count:Int = 0;
 			do {
-
+				count++;
+				if (count > limit) throw "Count iteration limit reached";
+				
 				// Run main step function (walks through content)
 				Step();
 
@@ -575,7 +573,7 @@ class Story extends Object
 
 				// Don't save/rewind during string evaluation, which is e.g. used for choices
 				if( !state.inStringEvaluation ) {
-
+						
 					// We previously found a newline, but were we just double checking that
 					// it wouldn't immediately be removed by glue?
 					if( stateAtLastNewline != null ) {
@@ -605,7 +603,6 @@ class Story extends Object
 
 					// Current content ends in a newline - approaching end of our evaluation
 					if( state.outputStreamEndsInNewline ) {
-
 						// If we can continue evaluation for a bit:
 						// Create a snapshot in case we need to rewind.
 						// We're going to continue stepping in case we see glue or some
@@ -630,7 +627,7 @@ class Story extends Object
 			} while(canContinue);
 
 			// Need to rewind, due to evaluating further than we should?
-			if( stateAtLastNewline != null ) {
+			if ( stateAtLastNewline != null ) {
 				RestoreStateSnapshot(stateAtLastNewline);
 			}
 
@@ -778,7 +775,8 @@ class Story extends Object
 
 		// Content to add to evaluation stack or the output stream
 		if (shouldAddToStream) {
-
+				
+			
 			// If we're pushing a variable pointer onto the evaluation stack, ensure that it's specific
 			// to our current (possibly temporary) context index. And make a copy of the pointer
 			// so that we're not editing the original runtime object.
@@ -916,7 +914,7 @@ class Story extends Object
 				if (!IsTruthy (conditionValue))
 					return true;
 			}
-
+			
 			if (currentDivert.hasVariableTarget) {
 				var varName = currentDivert.variableDivertName;
 				
@@ -943,10 +941,12 @@ class Story extends Object
 				CallExternalFunction (currentDivert.targetPathString, currentDivert.externalArgs);
 				return true;
 			} else {
+				trace("ADDING divertedTargetObject to state..");
 				state.divertedTargetObject = currentDivert.targetContent;
 			}
 
 			if (currentDivert.pushesToStack) {
+				trace("ADDING currentDivert to callstacke.."+currentDivert.stackPushType);
 				state.callStack.Push (currentDivert.stackPushType);
 			}
 
@@ -966,7 +966,7 @@ class Story extends Object
 		// Start/end an expression evaluation? Or print out the result?
 		else if( Std.is(contentObj , ControlCommand) ) {
 			var evalCommand:ControlCommand = cast contentObj; //(ControlCommand)
-			
+			trace( "COMMAND:"+evalCommand.commandType);
 			switch (evalCommand.commandType) {
 
 			case ControlCommand.CommandType.EvalStart:
@@ -1124,6 +1124,7 @@ class Story extends Object
 				// We may exist in the context of the initial
 				// act of creating the thread, or in the context of
 				// evaluating the content.
+				
 				if (state.callStack.canPopThread) {
 					state.callStack.PopThread ();
 				} 

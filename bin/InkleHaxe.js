@@ -970,7 +970,8 @@ ink_runtime_ChoicePoint.prototype = $extend(ink_runtime_Object.prototype,{
 		return this.CompactPathString(this.pathOnChoice);
 	}
 	,set_pathStringOnChoice: function(value) {
-		return this.CompactPathString(this.pathOnChoice = ink_runtime_Path.createFromString(value));
+		this.pathOnChoice = ink_runtime_Path.createFromString(value);
+		return value;
 	}
 	,get_flags: function() {
 		var flags = 0;
@@ -1172,19 +1173,6 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 	,get_hasValidName: function() {
 		return this.name != null && this.name.length > 0;
 	}
-	,get_pathToFirstLeafContent: function() {
-		if(this._pathToFirstLeafContent == null) this._pathToFirstLeafContent = this.get_path().PathByAppendingPath(this.get_internalPathToFirstLeafContent());
-		return this._pathToFirstLeafContent;
-	}
-	,get_internalPathToFirstLeafContent: function() {
-		var path = new ink_runtime_Path();
-		var container = this;
-		while(container != null) if(container._content.length > 0) {
-			path.components.push(ink_runtime_Component.createFromIndex(0));
-			container = ink_runtime_LibUtil["as"](container._content[0],ink_runtime_Container);
-		}
-		return path;
-	}
 	,AddToNamedContentOnly: function(namedContentObj) {
 		ink_runtime_Assert.bool(js_Boot.__instanceof(namedContentObj,ink_runtime_Object),"Can only add Runtime.Objects to a Runtime.Container");
 		var runtimeObj = namedContentObj;
@@ -1325,7 +1313,7 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 		return sb.b;
 	}
 	,__class__: ink_runtime_Container
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_internalPathToFirstLeafContent:"get_internalPathToFirstLeafContent",get_pathToFirstLeafContent:"get_pathToFirstLeafContent",get_hasValidName:"get_hasValidName",set_countFlags:"set_countFlags",get_countFlags:"get_countFlags",set_namedOnlyContent:"set_namedOnlyContent",get_namedOnlyContent:"get_namedOnlyContent",set_content:"set_content",get_content:"get_content"})
+	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_hasValidName:"get_hasValidName",set_countFlags:"set_countFlags",get_countFlags:"get_countFlags",set_namedOnlyContent:"set_namedOnlyContent",get_namedOnlyContent:"get_namedOnlyContent",set_content:"set_content",get_content:"get_content"})
 });
 var ink_runtime_ControlCommand = function() {
 	ink_runtime_Object.call(this);
@@ -1605,7 +1593,14 @@ ink_runtime_Json.ListToJArray = function(serialisables) {
 	return jArray;
 };
 ink_runtime_Json.ArrayToJArray = function(serialisables) {
-	return serialisables.concat([]);
+	var jArray = [];
+	var _g = 0;
+	while(_g < serialisables.length) {
+		var s = serialisables[_g];
+		++_g;
+		jArray.push(ink_runtime_Json.RuntimeObjectToJToken(s));
+	}
+	return jArray;
 };
 ink_runtime_Json.JArrayToRuntimeObjList = function(jArray,skipLast) {
 	if(skipLast == null) skipLast = false;
@@ -1636,15 +1631,12 @@ ink_runtime_Json.JArrayToRuntimeObjArray = function(jArray,skipLast) {
 	return list;
 };
 ink_runtime_Json.DictionaryRuntimeObjsToJObject = function(dictionary) {
-	var jsonObj = new haxe_ds_StringMap();
+	var jsonObj = { };
 	var $it0 = dictionary.keys();
 	while( $it0.hasNext() ) {
 		var k = $it0.next();
 		var runtimeObj = ink_runtime_LibUtil["as"](__map_reserved[k] != null?dictionary.getReserved(k):dictionary.h[k],ink_runtime_Object);
-		if(runtimeObj != null) {
-			var value = ink_runtime_Json.RuntimeObjectToJToken(runtimeObj);
-			jsonObj.set(k,value);
-		}
+		if(runtimeObj != null) Reflect.setField(jsonObj,k,ink_runtime_Json.RuntimeObjectToJToken(runtimeObj));
 	}
 	return jsonObj;
 };
@@ -1734,7 +1726,7 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 			divert.isExternal = external;
 			var target = Std.string(propValue);
 			if((propValue = Reflect.field(obj,"var")) != null) divert.variableDivertName = target; else divert.set_targetPathString(target);
-			divert.isConditional = propValue = Reflect.field(obj,"c");
+			divert.isConditional = (propValue = Reflect.field(obj,"c")) != null;
 			if(external) {
 				if((propValue = Reflect.field(obj,"exArgs")) != null) divert.externalArgs = Std["int"](propValue);
 			}
@@ -1864,7 +1856,7 @@ ink_runtime_Json.RuntimeObjectToJToken = function(obj) {
 	throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to convert runtime object to Json token: " + Std.string(obj)));
 };
 ink_runtime_Json.ContainerToJArray = function(container) {
-	var jArray = container._content.concat([]);
+	var jArray = ink_runtime_Json.ArrayToJArray(container._content);
 	var namedOnlyContent = container.get_namedOnlyContent();
 	var countFlags = container.get_countFlags();
 	if(namedOnlyContent != null && new haxe_ds__$StringMap_StringMapIterator(namedOnlyContent,namedOnlyContent.arrayKeys()).hasNext() || countFlags > 0 || container.name != null) {
@@ -2749,7 +2741,7 @@ ink_runtime_Writer.prototype = {
 			str = StringTools.replace(str,"\n","\\n");
 			str = StringTools.replace(str,"\r","");
 			this._sb.b += Std.string("\"" + str + "\"");
-		} else if(js_Boot.__instanceof(obj,haxe_ds_StringMap)) this.WriteDictionary(obj); else if(js_Boot.__instanceof(obj,List)) this.WriteList(obj); else throw new js__$Boot_HaxeError(new ink_runtime_SystemException("ink's SimpleJson writer doesn't currently support this object: " + Std.string(obj)));
+		} else if(js_Boot.__instanceof(obj,haxe_ds_StringMap)) this.WriteDictionary(obj); else if(js_Boot.__instanceof(obj,List)) this.WriteList(obj); else if((obj instanceof Array) && obj.__enum__ == null) this.WriteArray(obj); else throw new js__$Boot_HaxeError(new ink_runtime_SystemException("ink's SimpleJson writer doesn't currently support this object: " + Std.string(obj) + " ...type:" + Std.string(Type.getClass(obj))));
 	}
 	,WriteDictionary: function(dict) {
 		this._sb.b += "{";
@@ -2782,6 +2774,19 @@ ink_runtime_Writer.prototype = {
 		}
 		this._sb.b += "]";
 	}
+	,WriteArray: function(list) {
+		this._sb.b += "[";
+		var isFirst = true;
+		var _g = 0;
+		while(_g < list.length) {
+			var obj = list[_g];
+			++_g;
+			if(!isFirst) this._sb.b += ",";
+			this.WriteObject(obj);
+			isFirst = false;
+		}
+		this._sb.b += "]";
+	}
 	,toString: function() {
 		return this._sb.b;
 	}
@@ -2796,7 +2801,7 @@ var ink_runtime_Story = $hx_exports.ink.runtime.Story = function(jsonString) {
 	versionObj = __map_reserved.inkVersion != null?rootObject.getReserved("inkVersion"):rootObject.h["inkVersion"];
 	if(versionObj == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("ink version number not found. Are you sure it's a valid .ink.json file?"));
 	var formatFromFile = Std["int"](versionObj);
-	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) haxe_Log.trace("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.",{ fileName : "Story.hx", lineNumber : 98, className : "ink.runtime.Story", methodName : "new"});
+	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) haxe_Log.trace("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.",{ fileName : "Story.hx", lineNumber : 97, className : "ink.runtime.Story", methodName : "new"});
 	var rootToken;
 	rootToken = __map_reserved.root != null?rootObject.getReserved("root"):rootObject.h["root"];
 	if(rootToken == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Root node for ink not found. Are you sure it's a valid .ink.json file?"));
@@ -2853,10 +2858,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	}
 	,ToJsonString: function() {
 		var rootContainerJsonList = ink_runtime_Json.RuntimeObjectToJToken(this._mainContentContainer);
-		var rootObject = new haxe_ds_StringMap();
-		if(__map_reserved.inkVersion != null) rootObject.setReserved("inkVersion",12); else rootObject.h["inkVersion"] = 12;
-		if(__map_reserved.root != null) rootObject.setReserved("root",rootContainerJsonList); else rootObject.h["root"] = rootContainerJsonList;
-		return ink_runtime_SimpleJson.DictionaryToText(rootObject);
+		return JSON.stringify({ inkVersion : 12, root : rootContainerJsonList});
 	}
 	,ResetState: function() {
 		this._state = new ink_runtime_StoryState(this);
@@ -2889,27 +2891,24 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			this.get_state().divertedTargetObject = null;
 			this.VisitChangedContainersDueToDivert();
 			if(this.get_state().get_currentContentObject() != null) {
-				haxe_Log.trace("Divert location:" + this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + Std.string(this.get_state().divertedTargetObject != null),{ fileName : "Story.hx", lineNumber : 204, className : "ink.runtime.Story", methodName : "NextContent"});
+				haxe_Log.trace("Divert location:" + this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + (this.get_state().get_previousContentObject() != null?this.get_state().get_previousContentObject().get_path().get_componentsString():"No previousContentObject .."),{ fileName : "Story.hx", lineNumber : 204, className : "ink.runtime.Story", methodName : "NextContent"});
 				return;
 			}
 		}
 		var successfulPointerIncrement = this.IncrementContentPointer();
 		if(!successfulPointerIncrement) {
 			var didPop = false;
-			haxe_Log.trace("Consideriing run out of content case..",{ fileName : "Story.hx", lineNumber : 224, className : "ink.runtime.Story", methodName : "NextContent"});
 			if(this.get_state().callStack.CanPop(1)) {
-				haxe_Log.trace("case 1",{ fileName : "Story.hx", lineNumber : 226, className : "ink.runtime.Story", methodName : "NextContent"});
 				this.get_state().callStack.Pop(1);
 				if(this.get_state().get_inExpressionEvaluation()) this.get_state().PushEvaluationStack(new ink_runtime_VoidObj());
 				didPop = true;
 			} else if(this.get_state().callStack.get_canPopThread()) {
-				haxe_Log.trace("case 2",{ fileName : "Story.hx", lineNumber : 240, className : "ink.runtime.Story", methodName : "NextContent"});
 				this.get_state().callStack.PopThread();
 				didPop = true;
 			}
 			if(didPop && this.get_state().get_currentContentObject() != null) this.NextContent();
 		}
-		haxe_Log.trace(this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + this.get_state().get_previousContentObject().get_path().get_componentsString(),{ fileName : "Story.hx", lineNumber : 253, className : "ink.runtime.Story", methodName : "NextContent"});
+		if(this.get_state().get_currentContentObject() != null) haxe_Log.trace("location:" + this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + (this.get_state().get_previousContentObject() != null?this.get_state().get_previousContentObject().get_path().get_componentsString():"No previousContentObject .."),{ fileName : "Story.hx", lineNumber : 253, className : "ink.runtime.Story", methodName : "NextContent"});
 	}
 	,IncrementContentPointer: function() {
 		var successfulIncrement = true;
@@ -2918,15 +2917,9 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		while(currEl.currentContentIndex >= currEl.currentContainer._content.length) {
 			successfulIncrement = false;
 			var nextAncestor = ink_runtime_LibUtil["as"](currEl.currentContainer.parent,ink_runtime_Container);
-			if(!(nextAncestor != null)) {
-				haxe_Log.trace("Goodbreak!",{ fileName : "Story.hx", lineNumber : 272, className : "ink.runtime.Story", methodName : "IncrementContentPointer"});
-				break;
-			}
+			if(!(nextAncestor != null)) break;
 			var indexInAncestor = HxOverrides.indexOf(nextAncestor._content,currEl.currentContainer,0);
-			if(indexInAncestor == -1) {
-				haxe_Log.trace("Goodbreak22!",{ fileName : "Story.hx", lineNumber : 278, className : "ink.runtime.Story", methodName : "IncrementContentPointer"});
-				break;
-			}
+			if(indexInAncestor == -1) break;
 			currEl.currentContainer = nextAncestor;
 			currEl.currentContentIndex = indexInAncestor + 1;
 			successfulIncrement = true;
@@ -2951,26 +2944,22 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		}
 		var count = 0;
 		var containerPathStr = container.get_path().toString();
+		var tryCount;
 		var this1 = this.get_state().visitCounts;
-		count = this1.get(containerPathStr);
-		if(count == null) count = 0;
+		tryCount = this1.get(containerPathStr);
+		if(tryCount != null && !isNaN(tryCount)) count = tryCount;
 		return count;
 	}
 	,IncrementVisitCountForContainer: function(container) {
 		var count = 0;
 		var containerPathStr = container.get_path().toString();
-		if((function($this) {
-			var $r;
-			var this1 = $this.get_state().visitCounts;
-			$r = this1.exists(containerPathStr);
-			return $r;
-		}(this))) {
-			var this2 = this.get_state().visitCounts;
-			count = this2.get(containerPathStr);
-		}
+		var tryCount;
+		var this1 = this.get_state().visitCounts;
+		tryCount = this1.get(containerPathStr);
+		if(tryCount != null && !isNaN(tryCount)) count = tryCount;
 		count++;
-		var this3 = this.get_state().visitCounts;
-		this3.set(containerPathStr,count);
+		var this2 = this.get_state().visitCounts;
+		this2.set(containerPathStr,count);
 	}
 	,RecordTurnIndexVisitToContainer: function(container) {
 		var containerPathStr = container.get_path().toString();
@@ -3087,11 +3076,11 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		this._state.variablesState.set_batchObservingVariableChanges(true);
 		try {
 			var stateAtLastNewline = null;
-			var iterationLimit = 512;
-			var iterationCount = 0;
+			var limit = 512;
+			var count = 0;
 			do {
-				iterationCount++;
-				if(iterationCount > iterationLimit) throw new js__$Boot_HaxeError("Iteration limit exceeded");
+				count++;
+				if(count > limit) throw new js__$Boot_HaxeError("Count iteration limit reached");
 				this.Step();
 				if(!this.get_canContinue()) this.TryFollowDefaultInvisibleChoice();
 				if(!this.get_state().get_inStringEvaluation()) {
@@ -3254,14 +3243,21 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			} else if(currentDivert.isExternal) {
 				this.CallExternalFunction(currentDivert.get_targetPathString(),currentDivert.externalArgs);
 				return true;
-			} else this.get_state().divertedTargetObject = currentDivert.get_targetContent();
-			if(currentDivert.pushesToStack) this.get_state().callStack.Push(currentDivert.stackPushType);
+			} else {
+				haxe_Log.trace("ADDING divertedTargetObject to state..",{ fileName : "Story.hx", lineNumber : 944, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
+				this.get_state().divertedTargetObject = currentDivert.get_targetContent();
+			}
+			if(currentDivert.pushesToStack) {
+				haxe_Log.trace("ADDING currentDivert to callstacke.." + currentDivert.stackPushType,{ fileName : "Story.hx", lineNumber : 949, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
+				this.get_state().callStack.Push(currentDivert.stackPushType);
+			}
 			if(this.get_state().divertedTargetObject == null && !currentDivert.isExternal) {
 				if(currentDivert != null && currentDivert.get_debugMetadata().sourceName != null) this.Error("Divert target doesn't exist: " + currentDivert.get_debugMetadata().sourceName); else this.Error("Divert resolution failed: " + Std.string(currentDivert));
 			}
 			return true;
 		} else if(js_Boot.__instanceof(contentObj,ink_runtime_ControlCommand)) {
 			var evalCommand = contentObj;
+			haxe_Log.trace("COMMAND:" + evalCommand.commandType,{ fileName : "Story.hx", lineNumber : 969, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
 			var _g = evalCommand.commandType;
 			switch(_g) {
 			case 0:
@@ -3339,14 +3335,12 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					var extraNote = "";
 					if(js_Boot.__instanceof(target1,ink_runtime_IntValue)) extraNote = ". Did you accidentally pass a read count ('knot_name') instead of a target ('-> knot_name')?";
 					this.Error("TURNS_SINCE expected a divert target (knot, stitch, label name), but saw " + Std.string(target1) + extraNote);
-					haxe_Log.trace("BBBBBB",{ fileName : "Story.hx", lineNumber : 1108, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
 				} else {
 					var divertTarget;
 					divertTarget = js_Boot.__instanceof(target1,ink_runtime_DivertTargetValue)?target1:null;
 					var container = ink_runtime_LibUtil["as"](this.ContentAtPath(divertTarget.get_targetPath()),ink_runtime_Container);
 					var turnCount = this.TurnsSinceForContainer(container);
 					this.get_state().PushEvaluationStack(new ink_runtime_IntValue(turnCount));
-					haxe_Log.trace("AA",{ fileName : "Story.hx", lineNumber : 1116, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
 				}
 				break;
 			case 12:
@@ -3414,19 +3408,15 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(previousContentObject != null) {
 			var prevAncestor;
 			if(js_Boot.__instanceof(previousContentObject,ink_runtime_Container)) prevAncestor = js_Boot.__instanceof(previousContentObject,ink_runtime_Container)?previousContentObject:null; else prevAncestor = ink_runtime_LibUtil["as"](previousContentObject.parent,ink_runtime_Container);
-			var count = 0;
 			while(prevAncestor != null) {
 				prevContainerSet.add(prevAncestor);
-				count++;
 				prevAncestor = ink_runtime_LibUtil["as"](prevAncestor.parent,ink_runtime_Container);
 			}
-			haxe_Log.trace("COunt of ancestors:" + count,{ fileName : "Story.hx", lineNumber : 1258, className : "ink.runtime.Story", methodName : "VisitChangedContainersDueToDivert"});
 		}
 		var currentChildOfContainer = newContentObject;
 		var currentContainerAncestor = ink_runtime_LibUtil["as"](currentChildOfContainer.parent,ink_runtime_Container);
 		while(currentContainerAncestor != null && !prevContainerSet.contains(currentContainerAncestor)) {
 			var enteringAtStart = currentContainerAncestor._content.length > 0 && currentChildOfContainer == currentContainerAncestor._content[0];
-			haxe_Log.trace("Entering at start? " + (enteringAtStart == null?"null":"" + enteringAtStart),{ fileName : "Story.hx", lineNumber : 1272, className : "ink.runtime.Story", methodName : "VisitChangedContainersDueToDivert"});
 			this.VisitContainer(currentContainerAncestor,enteringAtStart);
 			currentChildOfContainer = currentContainerAncestor;
 			currentContainerAncestor = ink_runtime_LibUtil["as"](currentContainerAncestor.parent,ink_runtime_Container);
@@ -3436,7 +3426,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(this._temporaryEvaluationContainer != null) return this._temporaryEvaluationContainer; else return this._mainContentContainer;
 	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1311, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
+		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1295, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
 	}
 	,ValidateExternalBindings: function() {
 	}
@@ -3469,17 +3459,17 @@ var ink_runtime_StoryState = function(story) {
 	this.turnIndices = new haxe_ds_StringMap();
 	this.currentTurnIndex = -1;
 	var timeSeed = Std["int"](new Date().getTime());
-	var storySeed = Std["int"](new ink_random_ParkMiller(timeSeed).random()) % 100;
+	this.storySeed = Std["int"](new ink_random_ParkMiller(timeSeed).random()) % 100;
 	this.currentChoices = new List();
 	this.GoToStart();
 };
 ink_runtime_StoryState.__name__ = ["ink","runtime","StoryState"];
 ink_runtime_StoryState.prototype = {
 	ToJson: function() {
-		return ink_runtime_SimpleJson.DictionaryToText(this.get_jsonToken());
+		return JSON.stringify(this.get_jsonToken());
 	}
 	,LoadJson: function(json) {
-		this.set_jsonToken(ink_runtime_SimpleJson.TextToDictionary(json));
+		this.set_jsonToken(JSON.parse(json));
 	}
 	,VisitCountAtPathString: function(pathString) {
 		var visitCountOut;
@@ -3590,8 +3580,8 @@ ink_runtime_StoryState.prototype = {
 		if(choiceThreads != null) obj.choiceThreads = choiceThreads;
 		Reflect.setField(obj,"callstackThreads",this.callStack.GetJsonToken());
 		Reflect.setField(obj,"variablesState",this.variablesState.get_jsonToken());
-		Reflect.setField(obj,"evalStack",this.evaluationStack.concat([]));
-		Reflect.setField(obj,"outputStream",this._outputStream.concat([]));
+		Reflect.setField(obj,"evalStack",ink_runtime_Json.ArrayToJArray(this.evaluationStack));
+		Reflect.setField(obj,"outputStream",ink_runtime_Json.ArrayToJArray(this._outputStream));
 		Reflect.setField(obj,"currentChoices",ink_runtime_Json.ListToJArray(this.currentChoices));
 		if(this._currentRightGlue != null) {
 			var rightGluePos = HxOverrides.indexOf(this._outputStream,this._currentRightGlue,0);

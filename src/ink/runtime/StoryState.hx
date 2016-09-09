@@ -28,7 +28,7 @@ class StoryState
 	/// </summary>
 	/// <returns>The save state in json format.</returns>
 	 public function ToJson():String {
-        return SimpleJson.DictionaryToText (jsonToken);
+        return haxe.Json.stringify(jsonToken); //SimpleJson.DictionaryToText (jsonToken);
     }
 	
 	/// <summary>
@@ -37,7 +37,7 @@ class StoryState
 	/// <param name="json">The JSON string to load.</param>
 	public function LoadJson( json:String):Void
 	{
-		jsonToken = SimpleJson.TextToDictionary (json);
+		jsonToken = haxe.Json.parse(json );  //SimpleJson.TextToDictionary (json);
 	}
 	
 	
@@ -185,7 +185,7 @@ class StoryState
 
 		// Seed the shuffle random numbers
 		var timeSeed:Int = Std.int( Date.now().getTime() ); // DateTime.Now.Millisecond;
-		var storySeed:Int = Std.int(new ParkMiller(timeSeed).random())  % 100;// (new Random (timeSeed)).Next () % 100;
+		storySeed = Std.int(new ParkMiller(timeSeed).random())  % 100;// (new Random (timeSeed)).Next () % 100;
 
 		currentChoices = new List<Choice> ();
 
@@ -765,7 +765,7 @@ class StoryState
 	// When adding state, update the Copy method and serialisation
 	// REMEMBER! REMEMBER! REMEMBER!
 		
-	var _outputStream:Array<Object>;  // formerly list. TOdo after everything's done. de.polydonal.ds List implementation
+	var _outputStream:Array<Object>;  // formerly list. consider: after everything's done. de.polydonal.ds List implementation
 	var _currentRightGlue:Glue;
 	
 }

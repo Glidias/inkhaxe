@@ -2,7 +2,7 @@ package ink.runtime;
 import haxe.ds.StringMap;
 
 /**
- * Likely going to depreciate this since got own haxe json  library
+ * Likely going to depreciate this since got own haxe json  library!!
  * Done!
  * @author Glidias
  */
@@ -287,6 +287,7 @@ class Writer   // done
 
 	function WriteObject ( obj:Dynamic):Void
 	{
+		
 		if (Std.is(obj, Int)) {
 			_sb.add(Std.int(obj)); //
 		} else if (Std.is(obj,Float)) {
@@ -311,8 +312,12 @@ class Writer   // done
 			WriteDictionary(obj);  //Dictionary<string, object>)
 		} else if (Std.is(obj, List) ) {
 			WriteList(obj);  //(List<object>)
-		}else {
-			throw new SystemException ("ink's SimpleJson writer doesn't currently support this object: " + obj);
+		}
+		else if (Std.is(obj, Array)) {
+			WriteArray(obj);  //(Array<object>)
+		}
+		else {
+			throw new SystemException ("ink's SimpleJson writer doesn't currently support this object: " + obj + " ...type:"+Type.getClass(obj));
 		}
 	}
 
@@ -340,6 +345,23 @@ class Writer   // done
 	}
 
 	function WriteList(list:List<Dynamic>):Void
+	{
+		_sb.add ("[");
+
+		var isFirst:Bool = true;
+		for (obj in list) {
+			if (!isFirst) _sb.add(",");
+
+			WriteObject (obj);
+
+			isFirst = false;
+		}
+
+		_sb.add ("]");
+	}
+
+	
+	function WriteArray(list:Array<Dynamic>):Void
 	{
 		_sb.add ("[");
 

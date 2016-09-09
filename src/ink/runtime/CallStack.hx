@@ -168,6 +168,7 @@ class CallStack
 	public function Pop(type:PushPopType = null):Void
 	{
 		if (CanPop (type)) {
+			
 			callStack.pop();  //callStack.RemoveAt (callStack.Count - 1);
 			return;
 		} else {
@@ -241,8 +242,8 @@ class CallStack
 		return currentThread.callstack;
 	}
 
-	public var _threads:List<Thread>;
-	public var  _threadCounter:Int;
+	var _threads:List<Thread>;
+	var  _threadCounter:Int;
 
 	
 
@@ -325,7 +326,7 @@ class Element
 	
 class Thread
 {
-	// Consider using Haxe GenericStack
+
 	public var callstack:Array<Element>; // Array<Element>; //List<Element>   
 	public var  threadIndex:Int;
 	public var previousContentObject:Object;
@@ -340,7 +341,7 @@ class Thread
 		return me;
 	}
 
-	private  function setup(jThreadObj:Dynamic, storyContext:Story):Void {  //: this()
+	  function setup(jThreadObj:Dynamic, storyContext:Story):Void {  //: this()
 		
 		threadIndex = Std.int(Reflect.field( jThreadObj, "threadIndex"));
 

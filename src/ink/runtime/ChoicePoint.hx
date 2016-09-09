@@ -27,7 +27,8 @@ class ChoicePoint extends Object
 	}
 	function set_pathStringOnChoice(value:String):String 
 	{
-		return CompactPathString(pathOnChoice= Path.createFromString(value));
+		pathOnChoice = Path.createFromString(value);
+		return value;//CompactPathString(pathOnChoice= Path.createFromString(value));
 	}
 	
 	

@@ -24,7 +24,11 @@ class Json
 	}
 	
 	public static inline function ArrayToJArray<T:Object>(serialisables:Array<T>):Array<Dynamic> {
-		return serialisables.concat([]);
+		 var jArray = new Array<Dynamic>();
+		for (s in serialisables) {
+			jArray.push(RuntimeObjectToJToken(s));
+		}
+		return jArray;
 	}
 	
 	public static function JArrayToRuntimeObjList(jArray:Array<Dynamic>, skipLast:Bool=false):List<Object>
@@ -65,14 +69,16 @@ class Json
 	
 	
 	
-	 public static function DictionaryRuntimeObjsToJObject(dictionary:Map<String, Object>):Map<String,Dynamic>
+	 public static function DictionaryRuntimeObjsToJObject(dictionary:Map<String, Object>):Dynamic
 	{
-		var jsonObj = new Map<String, Dynamic>();
+		var jsonObj = {};
 	
 		for (k in dictionary.keys()) {
 			var runtimeObj = LibUtil.as( dictionary.get(k), Object);
-			if (runtimeObj != null)
-				jsonObj.set( k,  RuntimeObjectToJToken(runtimeObj) );
+			if (runtimeObj != null) {
+				//jsonObj.set( k,  RuntimeObjectToJToken(runtimeObj) );
+				Reflect.setField(jsonObj, k, RuntimeObjectToJToken(runtimeObj));
+			}
 		}
 
 		return jsonObj;
@@ -229,6 +235,7 @@ class Json
 			propValue = LibUtil.tryGetValueDynamic(obj, "->");
 			if (propValue!=null) {
 				isDivert = true;
+				
 			}
 			else if ( (propValue=LibUtil.tryGetValueDynamic(obj, "f()") )!=null ) { //obj.TryGetValue ("f()", out propValue)
 				isDivert = true;
@@ -247,19 +254,20 @@ class Json
 				divPushType = PushPopType.Function;
 			}
 			if (isDivert) {
+			
 				var divert = new Divert ();
 				divert.pushesToStack = pushesToStack;
 				divert.stackPushType = divPushType;
 				divert.isExternal = external;
-
+					
 				var target = Std.string(propValue);
-
+			
 				if (  (propValue=LibUtil.tryGetValueDynamic(obj, "var") )!=null ) 
 					divert.variableDivertName = target;
 				else
 					divert.targetPathString = target;
 
-				divert.isConditional = (propValue = LibUtil.tryGetValueDynamic(obj,"c")); //obj.TryGetValue("c", out propValue);
+				divert.isConditional = (propValue = LibUtil.tryGetValueDynamic(obj,"c")) != null; //obj.TryGetValue("c", out propValue);
 
 				if (external) {
 					if ( (propValue = LibUtil.tryGetValueDynamic(obj, "exArgs"))!=null )   //obj.TryGetValue ("exArgs", out propValue))
@@ -272,6 +280,7 @@ class Json
 			// Choice
 			if (   (propValue=LibUtil.tryGetValueDynamic(obj, "*") )!=null  ) {  // obj.TryGetValue ("*", out propValue)
 				var choice = new ChoicePoint ();
+					
 				choice.pathStringOnChoice = Std.string( propValue );
 
 				if ( (propValue=LibUtil.tryGetValueDynamic(obj, "flg") )!=null )  //obj.TryGetValue ("flg", out propValue)
@@ -466,7 +475,7 @@ class Json
 	
 	
 	static function  ContainerToJArray(container:Container):Array<Dynamic> {
-		var jArray = container.content.concat([]); // ListToJArray (container.content);
+		var jArray = ArrayToJArray (container.content);
 
             // Container is always an array [...]
             // But the final element is always either:
@@ -474,6 +483,7 @@ class Json
             //    the key "#" with the count flags
             //  - null, if neither of the above
             var namedOnlyContent = container.namedOnlyContent;
+			
             var countFlags = container.countFlags;
 			
 			// namedOnlyContent.Count > 0

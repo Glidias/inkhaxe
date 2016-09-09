@@ -127,7 +127,8 @@ class Container extends Object implements INamedContent
 		 return name != null && name.length > 0;
 	}
 	
-	public var pathToFirstLeafContent(get, null):Path;
+	/*    // somehow not used??
+	public var pathToFirstLeafContent(get, null):Path;  // unusued  public
 	function get_pathToFirstLeafContent():Path 
 	{
 		if( _pathToFirstLeafContent == null )
@@ -137,7 +138,7 @@ class Container extends Object implements INamedContent
 	}
 	var _pathToFirstLeafContent:Path;
 	
-	var internalPathToFirstLeafContent(get, null):Path;
+	var internalPathToFirstLeafContent(get, null):Path;  // unusued  public
 	function get_internalPathToFirstLeafContent():Path 
 	{
 		var path = new Path();
@@ -150,7 +151,7 @@ class Container extends Object implements INamedContent
 		}
 		return path;
 	}
-	
+	*/
 	
 	public function new() 
 	{
@@ -185,7 +186,7 @@ class Container extends Object implements INamedContent
 			 throw new SystemException ("content is already in " + contentObj.parent);
 		 }
 		contentObj.parent = this;
-
+		
 		TryAddNamedContent (contentObj);
 	}
 
