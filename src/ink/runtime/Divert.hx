@@ -9,6 +9,7 @@ class Divert extends Object
 	public var targetPath(get, set):Path;
 	function get_targetPath():Path 
 	{
+	 // Resolve any relative paths to global ones as we come across them
 	  if (_targetPath != null && _targetPath.isRelative) {
 			var targetObj = targetContent;
 			if (targetObj!=null) {
@@ -17,7 +18,6 @@ class Divert extends Object
 		}
 		return _targetPath;
 	}
-	
 	function set_targetPath(value:Path):Path 
 	{
 		_targetPath = value;
@@ -41,10 +41,15 @@ class Divert extends Object
    public var  targetPathString(get, set):String;
    	function get_targetPathString():String 
 	{
+		var result;
 		if (targetPath == null)
 			return null;
 
-		return CompactPathString (targetPath);
+		
+		result =  CompactPathString (targetPath);
+		
+		trace("Getting compacted string:" + result);
+		return result;
 	}
 	
 	function set_targetPathString(value:String):String 

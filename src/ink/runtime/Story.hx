@@ -82,9 +82,9 @@ class Story extends Object
 		super();
 		setupFromContainer(null);
 		
-		var rootObject:StringMap<Dynamic> = LibUtil.jTokenToStringMap( haxe.Json.parse(jsonString) ); // SimpleJson.TextToDictionary(jsonString);
+		var rootObject:Dynamic = haxe.Json.parse(jsonString); // StringMap<Dynamic> = LibUtil.jTokenToStringMap( haxe.Json.parse(jsonString) ); // SimpleJson.TextToDictionary(jsonString);
 		
-		var versionObj:Dynamic = rootObject.get("inkVersion");
+		var versionObj:Dynamic = Reflect.field(rootObject, "inkVersion");
 		if (versionObj == null)
 			throw new SystemException ("ink version number not found. Are you sure it's a valid .ink.json file?");
 
@@ -97,7 +97,7 @@ class Story extends Object
 			trace ("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.");
 		}
 			
-		var rootToken = rootObject.get("root");//  ["root"];
+		var rootToken = Reflect.field(rootObject, "root");
 		if (rootToken == null)
 			throw new SystemException ("Root node for ink not found. Are you sure it's a valid .ink.json file?");
 		
@@ -122,6 +122,7 @@ class Story extends Object
 	
 	public function ToJsonString():String
 	{
+		trace("SEtting up output json of story!");
 		var rootContainerJsonList:Array<Dynamic> = cast Json.RuntimeObjectToJToken(_mainContentContainer);   // (List<object>) 
 
 		//var rootObject = new Map<String, Dynamic>();
@@ -201,7 +202,7 @@ class Story extends Object
                 // Diverted location has valid content?
                 if (state.currentContentObject != null) {
 				
-					trace("Divert location:"+state.currentContentObject.path.componentsString  + "  ::  "+ (state.previousContentObject!= null ? state.previousContentObject.path.componentsString : "No previousContentObject ..") );
+					//trace("Divert location:"+state.currentContentObject.path.componentsString  + "  ::  "+ (state.previousContentObject!= null ? state.previousContentObject.path.componentsString : "No previousContentObject ..") );
                     return;
                 }
 				
@@ -250,7 +251,7 @@ class Story extends Object
                 }
 			}
 			
-			if (state.currentContentObject!= null) trace("location:"+state.currentContentObject.path.componentsString  + "  ::  "+ (state.previousContentObject!= null ? state.previousContentObject.path.componentsString : "No previousContentObject ..") );
+			//if (state.currentContentObject!= null) trace("location:"+state.currentContentObject.path.componentsString  + "  ::  "+ (state.previousContentObject!= null ? state.previousContentObject.path.componentsString : "No previousContentObject ..") );
 				
 		}
 
@@ -557,7 +558,7 @@ class Story extends Object
 			// and rewind if necessary.
 			// This code is slightly fragile :-/ 
 			//
-			var limit:Int = 512;
+			var limit:Int = 256;
 			var count:Int = 0;
 			do {
 				count++;

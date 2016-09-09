@@ -58,10 +58,13 @@ class Object
 	function get_path():Path 
 	{
 		 if (_path == null) {
-
+			
 			if (parent == null) {
+				
 				_path = new Path ();
+				trace("Lazy instantiation of path at root!");
 			} else {
+				
 				// Maintain a Stack so that the order of the components
 				// is reversed when they're added to the Path.
 				// We're iterating up the hierarchy from the leaves/children to the root.
@@ -87,9 +90,12 @@ class Object
 
 				_path =  Path.createFromComponentStack(comps);
 				
+				trace("Lazy instantiation of path from parent! relative?"+ _path.isRelative + ": "+_path.componentsString);
+				
 			}
 
 		}
+		
 		return _path;
 	}
 	private var _path:Path;
@@ -157,7 +163,7 @@ class Object
 	
 	
 	// Find most compact representation for a path, whether relative or global
-	private function CompactPathString( otherPath:Path):String
+	function CompactPathString( otherPath:Path):String
 	{
 		
 		var globalPathStr:String = null;

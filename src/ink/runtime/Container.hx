@@ -338,7 +338,8 @@ class Container extends Object implements INamedContent
 				sb.add(",");
 			}
 
-			if ( !(Std.is(obj, Container)) && obj == pointedObj ) {
+			//
+			if ( !(Std.is(obj, Container)) && obj == pointedObj ) {  // CONSIDER: equality check here might require IEquals implementation! But this method isn't critical and only sued for dev debugging
 				sb.add ("  <---");
 			}
 				

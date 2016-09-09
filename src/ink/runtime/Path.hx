@@ -181,8 +181,10 @@ class Path extends Object implements IEquatable<Path>
 		if (componentsStr.charAt(0) == '.') {
 			this.isRelative = true;
 			componentsStr = componentsStr.substring (1);
+			trace("Impicit set to relative via componentString setter.");
 		} else {
 			this.isRelative = false;
+			trace("Impicit UNSET  relative via componentString setter.");
 		}
 
 		var componentStrings = componentsStr.split('.');
@@ -196,9 +198,10 @@ class Path extends Object implements IEquatable<Path>
 			}
 		}
 	
-		//value = get_componentsString();
-
-		return value;// get_componentsString();
+		value = get_componentsString();
+		trace("Final value:" + value);
+		
+		return value;
 	}
 	
 	

@@ -125,8 +125,9 @@ table{
 	<div id="selection">
 		<h1>
 			inkhaxe js demo
-			<a class="github-button" href="https://github.com/y-lohse/inkjs" data-icon="octicon-star" aria-label="Star y-lohse/inkjs on GitHub">Star</a>
+			<a class="github-button" href="https://github.com/glidias/inkhaxe" data-icon="octicon-star" aria-label="Star glidias/inkhaxe on GitHub">Star</a>
 		</h1>
+		<p style="font-size:11px;margin-bottom:15px">based off original demo file from <a href="https://github.com/y-lohse/inkjs" target="_blank">inkjs</a></p>
 		
 		<input type="file" id="file-input" accept=".json" />
 		<label for="file-input" class="loader">Load a .json file</label>
@@ -180,10 +181,10 @@ table{
 			$playArea.find('p').remove();
 
 			myStory = new ink.runtime.Story(inkFile);
+
+			console.log(myStory.ToJsonString());
 			
-			//console.log(myStory.ToJsonString());
-			
-			continueToNextChoice();
+			//setTimeout( continueToNextChoice, 1000);
 		}
 		
 		

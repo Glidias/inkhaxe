@@ -55,7 +55,7 @@ class Json
 			count--;
 
 		var list = new Array<Object>();  //jArray.Count
-
+		
 		for (i in 0...count) {
 			var jTok = jArray[i];
 			var runtimeObj = LibUtil.as( JTokenToRuntimeObject (jTok), Object);
@@ -159,6 +159,7 @@ class Json
         // Choice:         Nothing too clever, it's only used in the save state,
         //       
 	public static function JTokenToRuntimeObject(token:Dynamic):Object {
+	
 		if (Std.is(token, Int) || Std.is(token, Float)) {
 			
 			return Value.Create(token);
@@ -168,10 +169,14 @@ class Json
 
 			// String value
 			var firstChar:String = str.charAt(0);
-			if (firstChar == '^')
+			if (firstChar == '^') {
+				trace("returning string value:" + str.substring(1));
 				return new StringValue(str.substring(1));
-			else if( firstChar == '\n' && str.length == 1)
+			}
+			else if ( firstChar == '\n' && str.length == 1) {
+				trace("returning line break");
 				return new StringValue ("\n");
+			}
 
 			// Glue
 			if (str == "<>")
@@ -185,8 +190,11 @@ class Json
 			for (i in 0..._controlCommandNames.length) {
 				var cmdName = _controlCommandNames [i];
 				if (str == cmdName) {
+					var cmdType:CommandType = cast i;
+					trace("returning command:" + i );
 					return  ControlCommand.createFromCommandType(cast i);
 				}
+				
 			}
 
 			// Native functions
@@ -214,7 +222,7 @@ class Json
 
 			// Divert target value to path
 			propValue = LibUtil.tryGetValueDynamic(obj, "^->");
-			if (propValue!=null)
+			if (propValue != null)
 				return new DivertTargetValue( Path.createFromString(Std.string(propValue)));
 
 			// VariablePointerValue
@@ -273,7 +281,7 @@ class Json
 					if ( (propValue = LibUtil.tryGetValueDynamic(obj, "exArgs"))!=null )   //obj.TryGetValue ("exArgs", out propValue))
 						divert.externalArgs = Std.int(propValue);
 				}
-
+				
 				return divert;
 			}
 				
@@ -336,7 +344,7 @@ class Json
 			return ContainerToJArray(container);
 		}
 
-		var divert = LibUtil.as(obj, Divert);
+		var divert:Divert = LibUtil.as(obj, Divert);
 		if (divert != null) {
 			var divTypeKey = "->";
 			if (divert.isExternal)
@@ -351,8 +359,10 @@ class Json
 			var targetStr:String;
 			if (divert.hasVariableTarget)
 				targetStr = divert.variableDivertName;
-			else
+			else {
 				targetStr = divert.targetPathString;
+				trace("Setting via targetPathString:" + targetStr + ","+divert.targetPath.isRelative);
+			}
 
 			var jObj:Dynamic= {};
 			Reflect.setField(jObj, divTypeKey, targetStr);  // jObj[divTypeKey] = targetStr;
@@ -449,7 +459,7 @@ class Json
 		if (varAss!=null) {
 			var key:String = varAss.isGlobal ? "VAR=" : "temp=";
 			var jObj = {};
-			Reflect.setField(jObj, "key", varAss.variableName); // jObj[key] = varAss.variableName;
+			Reflect.setField(jObj, key, varAss.variableName); // jObj[key] = varAss.variableName;
 
 			// Reassignment?
 			if (!varAss.isNewDeclaration)
@@ -501,7 +511,7 @@ class Json
                             var attrJObj:Dynamic  = subContainerJArray[subContainerJArray.length - 1]; // LibUtil.as( subContainerJArray[subContainerJArray.length - 1], Map);
                             if (attrJObj != null) {  
 							   Reflect.deleteField(attrJObj, "#n"); // attrJObj.Remove ("#n");
-                                if (Reflect.fields(attrJObj).length == 0)
+                                if (Reflect.fields(attrJObj).length == 0) //attrJObj.Count == 0
                                     subContainerJArray [subContainerJArray.length - 1] = null;
                             }
                         }
@@ -516,6 +526,8 @@ class Json
                 if( container.name != null )
                      Reflect.setField(terminatingObj, "#n", container.name);//terminatingObj ["#n"] = container.name;
 
+			
+					 
                 jArray.push(terminatingObj);
             } 
 
