@@ -220,7 +220,7 @@ class StoryState
 
 		copy.variablesState = new VariablesState (copy.callStack);
 		
-		trace("xxx SNAPPING: .. problems?"+hasError);
+
 		copy.variablesState.CopyFrom (variablesState);
 
 		LibUtil.addRangeForArray(copy.evaluationStack, evaluationStack); // copy.evaluationStack.AddRange (evaluationStack);
@@ -230,10 +230,10 @@ class StoryState
 
 		copy.previousContentObject = previousContentObject;
 
-		var cloner:Cloner = new Cloner();
-		copy.visitCounts = cloner.clone(visitCounts );
+		//var cloner:Cloner = new Cloner();
+		copy.visitCounts = LibUtil.cloneStrIntMap(visitCounts); //cloner.clone(visitCounts );
 		
-		copy.turnIndices = cloner.clone( turnIndices);
+		copy.turnIndices = LibUtil.cloneStrIntMap(turnIndices); //cloner.clone( turnIndices);
 	
 		copy.currentTurnIndex = currentTurnIndex;
 		copy.storySeed = storySeed;

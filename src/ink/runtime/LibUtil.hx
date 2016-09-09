@@ -39,6 +39,34 @@ class LibUtil
 		return strMap;
 	}
 	
+	public static function cloneStrMap<K:String,V:{ }>(map:Map<K,V>):Map<K, V> {
+		var cMap = new Map<K, V>();
+		for (c in map.keys()) {
+			cMap.set(c, map.get(c) );
+		}
+		
+		return cMap;
+	}
+	
+	public static function cloneStrIntMap<K:String,V:Int>(map:Map<K,V>):Map<K, V> {
+		var cMap = new Map<K, V>();
+		for (c in map.keys()) {
+			cMap.set(c, map.get(c) );
+		}
+		
+		return cMap;
+	}
+	
+	
+	public static function cloneObjMap<K:{ },V:{ }>(map:Map<K,V>):Map<K, V> {
+		var cMap = new Map<K, V>();
+		for (c in map.keys()) {
+			cMap.set(c, map.get(c) );
+		}
+		
+		return cMap;
+	}
+	
 	public static  function listIndexOf<T>(list:List<T>, obj:Dynamic):Int {
 		var count:Int = 0;
 		for (l in list) {

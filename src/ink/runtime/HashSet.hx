@@ -24,8 +24,10 @@ class HashSet<K: {}>
 	}
 	
 	public function contains(key:K):Bool {
-		return map.get(key);
+		return map.exists(key);
 	}
+	
+	
 	
 	
 }

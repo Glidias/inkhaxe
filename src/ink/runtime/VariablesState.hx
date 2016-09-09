@@ -115,6 +115,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
         _callStack = callStack;
 	}
 
+	/*
 	function _cloneMap(map:Map<String,Dynamic>):Map<String, Object> {
 		var cMap = new Map<String, Object>();
 		for (c in map.keys()) {
@@ -123,11 +124,12 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 		
 		return cMap;
 	}
+	*/
 
 	public function CopyFrom( varState:VariablesState):Void  
 	{
 			
-		_globalVariables = _cloneMap (_globalVariables); // cloner.clone( varState._globalVariables );
+		_globalVariables = LibUtil.cloneStrMap(_globalVariables); // _cloneMap (_globalVariables); // cloner.clone( varState._globalVariables );
 		
 		variableChangedEvent = varState.variableChangedEvent;
 
@@ -316,7 +318,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	
 	
 
-	var _globalVariables:Map<String, Object>;
+	public var _globalVariables:Map<String, Object>;
 		
    // Used for accessing temporary variables
 	var _callStack:CallStack;

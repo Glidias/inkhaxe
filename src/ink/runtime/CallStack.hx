@@ -310,8 +310,8 @@ class Element
 		var copy = new Element (this.type, this.currentContainer, this.currentContentIndex, this.inExpressionEvaluation);
 			
 		// TOCHECK: hopefully, this method works
-		var cloner:Cloner = new Cloner();
-		var clone = cloner.clone(this.temporaryVariables);
+		//var cloner:Cloner = new Cloner();
+		var clone = LibUtil.cloneStrMap(temporaryVariables); //cloner.clone(this.temporaryVariables);
 		copy.temporaryVariables = clone; //this.temporaryVariables
 		return copy;
 		

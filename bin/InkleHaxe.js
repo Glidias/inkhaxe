@@ -716,8 +716,7 @@ ink_runtime_Element.prototype = {
 	}
 	,Copy: function() {
 		var copy = new ink_runtime_Element(this.type,this.currentContainer,this.currentContentIndex,this.inExpressionEvaluation);
-		var cloner = new ink_runtime_Cloner();
-		var clone = cloner.clone(this.temporaryVariables);
+		var clone = ink_runtime_LibUtil.cloneStrMap(this.temporaryVariables);
 		copy.temporaryVariables = clone;
 		return copy;
 	}
@@ -1537,7 +1536,7 @@ ink_runtime_HashSet.prototype = {
 		return this.map.keys();
 	}
 	,contains: function(key) {
-		return this.map.h[key.__id__];
+		return this.map.h.__keys__[key.__id__] != null;
 	}
 	,__class__: ink_runtime_HashSet
 };
@@ -1962,6 +1961,38 @@ ink_runtime_LibUtil.jTokenToStringMap = function(token) {
 		strMap.set(f,Reflect.field(token,f));
 	}
 	return strMap;
+};
+ink_runtime_LibUtil.cloneStrMap = function(map) {
+	var cMap = new haxe_ds_StringMap();
+	var $it0 = map.keys();
+	while( $it0.hasNext() ) {
+		var c = $it0.next();
+		var value;
+		value = __map_reserved[c] != null?map.getReserved(c):map.h[c];
+		if(__map_reserved[c] != null) cMap.setReserved(c,value); else cMap.h[c] = value;
+	}
+	return cMap;
+};
+ink_runtime_LibUtil.cloneStrIntMap = function(map) {
+	var cMap = new haxe_ds_StringMap();
+	var $it0 = map.keys();
+	while( $it0.hasNext() ) {
+		var c = $it0.next();
+		var value;
+		value = __map_reserved[c] != null?map.getReserved(c):map.h[c];
+		if(__map_reserved[c] != null) cMap.setReserved(c,value); else cMap.h[c] = value;
+	}
+	return cMap;
+};
+ink_runtime_LibUtil.cloneObjMap = function(map) {
+	var cMap = new haxe_ds_ObjectMap();
+	var $it0 = map.keys();
+	while( $it0.hasNext() ) {
+		var c = $it0.next();
+		var value = map.h[c.__id__];
+		cMap.set(c,value);
+	}
+	return cMap;
 };
 ink_runtime_LibUtil.listIndexOf = function(list,obj) {
 	var count = 0;
@@ -2765,7 +2796,7 @@ var ink_runtime_Story = $hx_exports.ink.runtime.Story = function(jsonString) {
 	versionObj = __map_reserved.inkVersion != null?rootObject.getReserved("inkVersion"):rootObject.h["inkVersion"];
 	if(versionObj == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("ink version number not found. Are you sure it's a valid .ink.json file?"));
 	var formatFromFile = Std["int"](versionObj);
-	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) haxe_Log.trace("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.",{ fileName : "Story.hx", lineNumber : 97, className : "ink.runtime.Story", methodName : "new"});
+	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) haxe_Log.trace("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.",{ fileName : "Story.hx", lineNumber : 98, className : "ink.runtime.Story", methodName : "new"});
 	var rootToken;
 	rootToken = __map_reserved.root != null?rootObject.getReserved("root"):rootObject.h["root"];
 	if(rootToken == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Root node for ink not found. Are you sure it's a valid .ink.json file?"));
@@ -2858,24 +2889,27 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			this.get_state().divertedTargetObject = null;
 			this.VisitChangedContainersDueToDivert();
 			if(this.get_state().get_currentContentObject() != null) {
-				haxe_Log.trace("Divert location:" + this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + this.get_state().get_previousContentObject().get_path().get_componentsString(),{ fileName : "Story.hx", lineNumber : 203, className : "ink.runtime.Story", methodName : "NextContent"});
+				haxe_Log.trace("Divert location:" + this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + Std.string(this.get_state().divertedTargetObject != null),{ fileName : "Story.hx", lineNumber : 204, className : "ink.runtime.Story", methodName : "NextContent"});
 				return;
 			}
 		}
 		var successfulPointerIncrement = this.IncrementContentPointer();
 		if(!successfulPointerIncrement) {
 			var didPop = false;
+			haxe_Log.trace("Consideriing run out of content case..",{ fileName : "Story.hx", lineNumber : 224, className : "ink.runtime.Story", methodName : "NextContent"});
 			if(this.get_state().callStack.CanPop(1)) {
+				haxe_Log.trace("case 1",{ fileName : "Story.hx", lineNumber : 226, className : "ink.runtime.Story", methodName : "NextContent"});
 				this.get_state().callStack.Pop(1);
 				if(this.get_state().get_inExpressionEvaluation()) this.get_state().PushEvaluationStack(new ink_runtime_VoidObj());
 				didPop = true;
 			} else if(this.get_state().callStack.get_canPopThread()) {
+				haxe_Log.trace("case 2",{ fileName : "Story.hx", lineNumber : 240, className : "ink.runtime.Story", methodName : "NextContent"});
 				this.get_state().callStack.PopThread();
 				didPop = true;
 			}
 			if(didPop && this.get_state().get_currentContentObject() != null) this.NextContent();
 		}
-		haxe_Log.trace(this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + this.get_state().get_previousContentObject().get_path().get_componentsString(),{ fileName : "Story.hx", lineNumber : 251, className : "ink.runtime.Story", methodName : "NextContent"});
+		haxe_Log.trace(this.get_state().get_currentContentObject().get_path().get_componentsString() + "  ::  " + this.get_state().get_previousContentObject().get_path().get_componentsString(),{ fileName : "Story.hx", lineNumber : 253, className : "ink.runtime.Story", methodName : "NextContent"});
 	}
 	,IncrementContentPointer: function() {
 		var successfulIncrement = true;
@@ -2884,9 +2918,15 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		while(currEl.currentContentIndex >= currEl.currentContainer._content.length) {
 			successfulIncrement = false;
 			var nextAncestor = ink_runtime_LibUtil["as"](currEl.currentContainer.parent,ink_runtime_Container);
-			if(!(nextAncestor != null)) break;
+			if(!(nextAncestor != null)) {
+				haxe_Log.trace("Goodbreak!",{ fileName : "Story.hx", lineNumber : 272, className : "ink.runtime.Story", methodName : "IncrementContentPointer"});
+				break;
+			}
 			var indexInAncestor = HxOverrides.indexOf(nextAncestor._content,currEl.currentContainer,0);
-			if(indexInAncestor == -1) break;
+			if(indexInAncestor == -1) {
+				haxe_Log.trace("Goodbreak22!",{ fileName : "Story.hx", lineNumber : 278, className : "ink.runtime.Story", methodName : "IncrementContentPointer"});
+				break;
+			}
 			currEl.currentContainer = nextAncestor;
 			currEl.currentContentIndex = indexInAncestor + 1;
 			successfulIncrement = true;
@@ -2919,13 +2959,18 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	,IncrementVisitCountForContainer: function(container) {
 		var count = 0;
 		var containerPathStr = container.get_path().toString();
-		var this1 = this.get_state().visitCounts;
-		count = this1.get(containerPathStr);
-		if(count != null && !isNaN(count)) {
-			count++;
+		if((function($this) {
+			var $r;
+			var this1 = $this.get_state().visitCounts;
+			$r = this1.exists(containerPathStr);
+			return $r;
+		}(this))) {
 			var this2 = this.get_state().visitCounts;
-			this2.set(containerPathStr,count);
-		} else haxe_Log.trace("Warning, can't find visit count for containerPath:" + containerPathStr + " for container.name:" + container.name,{ fileName : "Story.hx", lineNumber : 337, className : "ink.runtime.Story", methodName : "IncrementVisitCountForContainer"});
+			count = this2.get(containerPathStr);
+		}
+		count++;
+		var this3 = this.get_state().visitCounts;
+		this3.set(containerPathStr,count);
 	}
 	,RecordTurnIndexVisitToContainer: function(container) {
 		var containerPathStr = container.get_path().toString();
@@ -3042,7 +3087,11 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		this._state.variablesState.set_batchObservingVariableChanges(true);
 		try {
 			var stateAtLastNewline = null;
+			var iterationLimit = 512;
+			var iterationCount = 0;
 			do {
+				iterationCount++;
+				if(iterationCount > iterationLimit) throw new js__$Boot_HaxeError("Iteration limit exceeded");
 				this.Step();
 				if(!this.get_canContinue()) this.TryFollowDefaultInvisibleChoice();
 				if(!this.get_state().get_inStringEvaluation()) {
@@ -3290,12 +3339,14 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					var extraNote = "";
 					if(js_Boot.__instanceof(target1,ink_runtime_IntValue)) extraNote = ". Did you accidentally pass a read count ('knot_name') instead of a target ('-> knot_name')?";
 					this.Error("TURNS_SINCE expected a divert target (knot, stitch, label name), but saw " + Std.string(target1) + extraNote);
+					haxe_Log.trace("BBBBBB",{ fileName : "Story.hx", lineNumber : 1108, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
 				} else {
 					var divertTarget;
 					divertTarget = js_Boot.__instanceof(target1,ink_runtime_DivertTargetValue)?target1:null;
 					var container = ink_runtime_LibUtil["as"](this.ContentAtPath(divertTarget.get_targetPath()),ink_runtime_Container);
 					var turnCount = this.TurnsSinceForContainer(container);
 					this.get_state().PushEvaluationStack(new ink_runtime_IntValue(turnCount));
+					haxe_Log.trace("AA",{ fileName : "Story.hx", lineNumber : 1116, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
 				}
 				break;
 			case 12:
@@ -3363,15 +3414,19 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(previousContentObject != null) {
 			var prevAncestor;
 			if(js_Boot.__instanceof(previousContentObject,ink_runtime_Container)) prevAncestor = js_Boot.__instanceof(previousContentObject,ink_runtime_Container)?previousContentObject:null; else prevAncestor = ink_runtime_LibUtil["as"](previousContentObject.parent,ink_runtime_Container);
+			var count = 0;
 			while(prevAncestor != null) {
 				prevContainerSet.add(prevAncestor);
+				count++;
 				prevAncestor = ink_runtime_LibUtil["as"](prevAncestor.parent,ink_runtime_Container);
 			}
+			haxe_Log.trace("COunt of ancestors:" + count,{ fileName : "Story.hx", lineNumber : 1258, className : "ink.runtime.Story", methodName : "VisitChangedContainersDueToDivert"});
 		}
 		var currentChildOfContainer = newContentObject;
 		var currentContainerAncestor = ink_runtime_LibUtil["as"](currentChildOfContainer.parent,ink_runtime_Container);
 		while(currentContainerAncestor != null && !prevContainerSet.contains(currentContainerAncestor)) {
 			var enteringAtStart = currentContainerAncestor._content.length > 0 && currentChildOfContainer == currentContainerAncestor._content[0];
+			haxe_Log.trace("Entering at start? " + (enteringAtStart == null?"null":"" + enteringAtStart),{ fileName : "Story.hx", lineNumber : 1272, className : "ink.runtime.Story", methodName : "VisitChangedContainersDueToDivert"});
 			this.VisitContainer(currentContainerAncestor,enteringAtStart);
 			currentChildOfContainer = currentContainerAncestor;
 			currentContainerAncestor = ink_runtime_LibUtil["as"](currentContainerAncestor.parent,ink_runtime_Container);
@@ -3381,7 +3436,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(this._temporaryEvaluationContainer != null) return this._temporaryEvaluationContainer; else return this._mainContentContainer;
 	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1294, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
+		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1311, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
 	}
 	,ValidateExternalBindings: function() {
 	}
@@ -3498,14 +3553,12 @@ ink_runtime_StoryState.prototype = {
 		copy.callStack = ink_runtime_CallStack.createCallStack2(this.callStack);
 		copy._currentRightGlue = this._currentRightGlue;
 		copy.variablesState = new ink_runtime_VariablesState(copy.callStack);
-		haxe_Log.trace("xxx SNAPPING: .. problems?" + Std.string(this.get_hasError()),{ fileName : "StoryState.hx", lineNumber : 223, className : "ink.runtime.StoryState", methodName : "Copy"});
 		copy.variablesState.CopyFrom(this.variablesState);
 		ink_runtime_LibUtil.addRangeForArray(copy.evaluationStack,this.evaluationStack);
 		if(this.divertedTargetObject != null) copy.divertedTargetObject = this.divertedTargetObject;
 		copy.set_previousContentObject(this.get_previousContentObject());
-		var cloner = new ink_runtime_Cloner();
-		copy.visitCounts = cloner.clone(this.visitCounts);
-		copy.turnIndices = cloner.clone(this.turnIndices);
+		copy.visitCounts = ink_runtime_LibUtil.cloneStrIntMap(this.visitCounts);
+		copy.turnIndices = ink_runtime_LibUtil.cloneStrIntMap(this.turnIndices);
 		copy.currentTurnIndex = this.currentTurnIndex;
 		copy.storySeed = this.storySeed;
 		copy.didSafeExit = this.didSafeExit;
@@ -4109,19 +4162,8 @@ ink_runtime_VariablesState.prototype = {
 		}
 		this.SetGlobal(variableName,val);
 	}
-	,_cloneMap: function(map) {
-		var cMap = new haxe_ds_StringMap();
-		var $it0 = map.keys();
-		while( $it0.hasNext() ) {
-			var c = $it0.next();
-			var value;
-			value = __map_reserved[c] != null?map.getReserved(c):map.h[c];
-			if(__map_reserved[c] != null) cMap.setReserved(c,value); else cMap.h[c] = value;
-		}
-		return cMap;
-	}
 	,CopyFrom: function(varState) {
-		this._globalVariables = this._cloneMap(this._globalVariables);
+		this._globalVariables = ink_runtime_LibUtil.cloneStrMap(this._globalVariables);
 		this.variableChangedEvent = varState.variableChangedEvent;
 		if(varState.get_batchObservingVariableChanges() != this.get_batchObservingVariableChanges()) {
 			if(varState.get_batchObservingVariableChanges()) {
