@@ -90,8 +90,8 @@ class Object
 
 				_path =  Path.createFromComponentStack(comps);
 				
-				trace("Lazy instantiation of path from parent! relative?"+ _path.isRelative + ": "+_path.componentsString);
-				
+				trace("Lazy instantiation of path from parent! relative?"+ _path.isRelative + ": "+_path.componentsString + ", "+Type.getClassName(Type.getClass(this)));
+			//	throw "break";
 			}
 
 		}
@@ -103,7 +103,7 @@ class Object
 	private function ResolvePath(path:Path):Object 	
 	{
 		if (path.isRelative) {
-
+			trace("Resolving path relative:"+Type.getClassName(Type.getClass(this)));
 			var nearestContainer:Container = LibUtil.as(this, Container);
 			if (nearestContainer == null) {
 				Assert.bool(this.parent != null, "Can't resolve relative path because we don't have a parent");
@@ -115,6 +115,7 @@ class Object
 
 			return nearestContainer.ContentAtPath (path);
 		} else {
+			trace("Resolving path not relative"+Type.getClassName(Type.getClass(this)));
 			return this.rootContentContainer.ContentAtPath (path);
 		}
 	}

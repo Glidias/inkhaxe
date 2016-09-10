@@ -170,11 +170,9 @@ class Json
 			// String value
 			var firstChar:String = str.charAt(0);
 			if (firstChar == '^') {
-				trace("returning string value:" + str.substring(1));
 				return new StringValue(str.substring(1));
 			}
 			else if ( firstChar == '\n' && str.length == 1) {
-				trace("returning line break");
 				return new StringValue ("\n");
 			}
 
@@ -191,7 +189,6 @@ class Json
 				var cmdName = _controlCommandNames [i];
 				if (str == cmdName) {
 					var cmdType:CommandType = cast i;
-					trace("returning command:" + i );
 					return  ControlCommand.createFromCommandType(cast i);
 				}
 				
@@ -213,6 +210,7 @@ class Json
 		}
 		// Array is always a Runtime.Container
 		else if (Std.is(token, Array )) {  //(List<object>
+			
 			return JArrayToContainer( token);
 		}
 		else if (Std.is(token, Dynamic)) {   //token is Dictionary<string, object>
@@ -272,8 +270,9 @@ class Json
 			
 				if (  (propValue=LibUtil.tryGetValueDynamic(obj, "var") )!=null ) 
 					divert.variableDivertName = target;
-				else
+				else {
 					divert.targetPathString = target;
+				}
 
 				divert.isConditional = (propValue = LibUtil.tryGetValueDynamic(obj,"c")) != null; //obj.TryGetValue("c", out propValue);
 
@@ -329,6 +328,7 @@ class Json
 		}
 
 		if (token == null) {
+	
 			return null;
 		}
 
@@ -361,7 +361,7 @@ class Json
 				targetStr = divert.variableDivertName;
 			else {
 				targetStr = divert.targetPathString;
-				trace("Setting via targetPathString:" + targetStr + ","+divert.targetPath.isRelative);
+	
 			}
 
 			var jObj:Dynamic= {};
@@ -469,6 +469,7 @@ class Json
 		}
 			
 		var voidObj = LibUtil.as(obj, VoidObj);
+		
 		if (voidObj!=null)
 			return "void";
 
@@ -485,7 +486,7 @@ class Json
 	
 	
 	static function  ContainerToJArray(container:Container):Array<Dynamic> {
-		var jArray = ArrayToJArray (container.content);
+			var jArray = ArrayToJArray (container.content);
 
             // Container is always an array [...]
             // But the final element is always either:
@@ -497,7 +498,7 @@ class Json
             var countFlags = container.countFlags;
 			
 			// namedOnlyContent.Count > 0
-            if (namedOnlyContent != null && namedOnlyContent.iterator().hasNext() || countFlags > 0 || container.name != null) {
+            if (namedOnlyContent != null && namedOnlyContent.iterator().hasNext()  || countFlags > 0 || container.name != null) {  // name being set is causing issues?
 
                 var terminatingObj:Dynamic; //Dictionary<string, object> terminatingObj;
                 if (namedOnlyContent != null) {
@@ -506,8 +507,10 @@ class Json
                     // Strip redundant names from containers if necessary
                     for (p in Reflect.fields(terminatingObj)) {
 						var namedContentObj = Reflect.field(terminatingObj, p);
-                        var subContainerJArray = LibUtil.as( namedContentObj.Value, Array); //List<object>;
+					
+                        var subContainerJArray = LibUtil.as( Reflect.field(terminatingObj, p), Array); // namedContentObj.Value; // var subContainerJArray = namedContentObj.Value as List<object>;
                         if (subContainerJArray != null) {
+							
                             var attrJObj:Dynamic  = subContainerJArray[subContainerJArray.length - 1]; // LibUtil.as( subContainerJArray[subContainerJArray.length - 1], Map);
                             if (attrJObj != null) {  
 							   Reflect.deleteField(attrJObj, "#n"); // attrJObj.Remove ("#n");
@@ -517,9 +520,10 @@ class Json
                         }
                     }
 
-                } else
+                } else {
+			
                     terminatingObj =  {}; // new Dictionary<string, object> ();
-
+				}
                 if( countFlags > 0 )
                    Reflect.setField(terminatingObj, "#f", countFlags);// terminatingObj ["#f"] = countFlags;
 
@@ -527,12 +531,12 @@ class Json
                      Reflect.setField(terminatingObj, "#n", container.name);//terminatingObj ["#n"] = container.name;
 
 			
-					 
+				//trace("pushing termianting obj:",terminatingObj);
                 jArray.push(terminatingObj);
             } 
-
             // Add null terminator to indicate that there's no dictionary
             else {
+				trace("pushing null:");
                 jArray.push(null);
             }
 			
@@ -549,26 +553,31 @@ class Json
             //  - a "#" key with the countFlags
             // (if either exists at all, otherwise null)
             var terminatingObj:Dynamic = jArray [jArray.length - 1]; // as Dictionary<string, object>;
+			
             if (terminatingObj != null) {
 
                 var namedOnlyContent = new Map<String, Object>();  //terminatingObj.Count
 
                 for (k in Reflect.fields(terminatingObj)) {
+		
                     if (k == "#f") {
                         container.countFlags = Std.int(Reflect.field(terminatingObj, k)); // (int) keyVal.Value;
                     } else if (k == "#n") {
-                        container.name = Std.string(Reflect.field(terminatingObj,k)); // keyVal.Value.ToString ();
+                        container.name = Std.string(Reflect.field(terminatingObj, k)); // keyVal.Value.ToString ();
                     } else {
                         var namedContentItem = JTokenToRuntimeObject(Reflect.field(terminatingObj,k));
                         var namedSubContainer = LibUtil.as(namedContentItem , Container);
                         if (namedSubContainer !=null)
                             namedSubContainer.name = k;
-                        namedOnlyContent[k] = namedContentItem;
+                        namedOnlyContent.set(k, namedContentItem);
+						trace("ADDIng named only content:" + k);
                     }
                 }
 
                 container.namedOnlyContent = namedOnlyContent;
+				
             }
+			
 
             return container;
 	}

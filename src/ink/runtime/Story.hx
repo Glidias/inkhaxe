@@ -136,6 +136,7 @@ class Story extends Object
 
 	public function ResetState():Void
 	{
+		
 		_state = new StoryState (this);
 		
 		//_state.variablesState.variableChangedEvent += VariableStateDidChangeEvent;  // C_sharp version

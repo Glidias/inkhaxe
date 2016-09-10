@@ -59,8 +59,9 @@ class Container extends Object implements INamedContent
 			}
 		}
 		
-		if (!namedOnlyContent.iterator().hasNext())   //namedOnlyContent.length == 0
+		if (!namedOnlyContent.iterator().hasNext())  { //namedOnlyContent.length == 0 
 			namedOnlyContent = null;
+		}
 
 		return namedOnlyContent;
 	}
