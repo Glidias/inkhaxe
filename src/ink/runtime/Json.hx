@@ -161,8 +161,13 @@ class Json
 	public static function JTokenToRuntimeObject(token:Dynamic):Object {
 		
 		
-		// why is JS so wierd to think of \n as a number?!?? So, consider this weird non-string case as the first case to catch!!
-		if  ( Std.is(token, String) || token == "\n" ) {
+		// why is JS so wierd to think of \n as a number?!?? Let it slide?
+		if ( (Std.is(token, Int) || Std.is(token, Float) )  ) {
+			//if (Type.typeof(token) == Type.ValueType.TInt
+			return Value.Create(token);
+		}
+		
+		if  ( Std.is(token, String)  ) {
 			
 			var str:String =  Std.string(token);
 			// String value
@@ -208,9 +213,7 @@ class Json
 				
 			trace("Failed to resolve String type!");	
 		}
-		if ( (Std.is(token, Int) || Std.is(token, Float) )  ) {
-			return Value.Create(token);
-		}
+		
 		
 		// Array is always a Runtime.Container
 		if (Std.is(token, Array )) {  //(List<object>

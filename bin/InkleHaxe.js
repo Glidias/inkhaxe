@@ -1691,7 +1691,8 @@ ink_runtime_Json.IntDictionaryToJObject = function(dict) {
 	return jObj;
 };
 ink_runtime_Json.JTokenToRuntimeObject = function(token) {
-	if(typeof(token) == "string" || token == "\n") {
+	if(((token | 0) === token) || typeof(token) == "number") return ink_runtime_Value.Create(token);
+	if(typeof(token) == "string") {
 		var str = Std.string(token);
 		var firstChar = str.charAt(0);
 		if(firstChar == "^") return new ink_runtime_StringValue(str.substring(1)); else if(firstChar == "\n" && str.length == 1 || token == "\n") return new ink_runtime_StringValue("\n");
@@ -1709,9 +1710,8 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 		if(ink_runtime_NativeFunctionCall.CallExistsWithName(str)) return ink_runtime_NativeFunctionCall.CallWithName(str);
 		if(str == "->->") return ink_runtime_ControlCommand.PopTunnel(); else if(str == "~ret") return ink_runtime_ControlCommand.PopFunction();
 		if(str == "void") return new ink_runtime_VoidObj();
-		haxe_Log.trace("Failed to resolve String type!",{ fileName : "Json.hx", lineNumber : 209, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
+		haxe_Log.trace("Failed to resolve String type!",{ fileName : "Json.hx", lineNumber : 214, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
 	}
-	if(((token | 0) === token) || typeof(token) == "number") return ink_runtime_Value.Create(token);
 	if((token instanceof Array) && token.__enum__ == null) return ink_runtime_Json.JArrayToContainer(token);
 	if(js_Boot.__instanceof(token,Dynamic)) {
 		var obj = token;
@@ -1784,7 +1784,7 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 			return varAss;
 		}
 		if(Reflect.field(obj,"originalChoicePath") != null) return ink_runtime_Json.JObjectToChoice(obj);
-		haxe_Log.trace("Failed to resolve Dynamic type!",{ fileName : "Json.hx", lineNumber : 333, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
+		haxe_Log.trace("Failed to resolve Dynamic type!",{ fileName : "Json.hx", lineNumber : 336, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
 	}
 	if(token == null) return null;
 	throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to convert token to runtime object: " + Std.string(token) + " :: " + Std.string(Type["typeof"](token))));
