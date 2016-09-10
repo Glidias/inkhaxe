@@ -106,7 +106,7 @@ class Story extends Object
 	
 		_mainContentContainer = LibUtil.as(Json.JTokenToRuntimeObject(rootToken) , Container);
 
-	//	ResetState ();
+		ResetState ();
 	}
 	
 	public static function createFromContainer(contentContainer:Container):Story {

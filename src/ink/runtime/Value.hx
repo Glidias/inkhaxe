@@ -66,6 +66,7 @@ class Value<T> extends Object
 		
 		// return converted instance
 		if ( Std.is(val, Int)) {
+			//if (val == "\n") throw "newline character treated as integer engine problem uncaught!!";
 			return  cast new IntValue( val );
 		}
 		else if (Std.is(val,Float)) {

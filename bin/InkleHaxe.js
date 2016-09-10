@@ -2830,6 +2830,7 @@ var ink_runtime_Story = $hx_exports.ink.runtime.Story = function(jsonString) {
 	var rootToken = Reflect.field(rootObject,"root");
 	if(rootToken == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Root node for ink not found. Are you sure it's a valid .ink.json file?"));
 	this._mainContentContainer = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(rootToken),ink_runtime_Container);
+	this.ResetState();
 };
 ink_runtime_Story.__name__ = ["ink","runtime","Story"];
 ink_runtime_Story.createFromContainer = function(contentContainer) {
