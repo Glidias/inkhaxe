@@ -702,9 +702,11 @@ class StoryState
 
 	public function  PopEvaluationStack():Object
 	{
-		var obj =  evaluationStack [evaluationStack.length - 1];
-		evaluationStack.pop(); // evaluationStack.RemoveAt (evaluationStack.length - 1);
-		return obj;
+		//var obj =  evaluationStack [evaluationStack.length - 1];
+		//evaluationStack.pop(); // evaluationStack.RemoveAt (evaluationStack.length - 1);
+		//return obj;
+		
+		return evaluationStack.pop();
 	}
 
 	public function PeekEvaluationStack():Object

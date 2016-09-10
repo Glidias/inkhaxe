@@ -3317,6 +3317,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					command = js_Boot.__instanceof(obj,ink_runtime_ControlCommand)?obj:null;
 					if(command != null && command.commandType == 7) break;
 					if(js_Boot.__instanceof(obj,ink_runtime_StringValue)) contentStackForString.head = new haxe_ds_GenericCell(obj,contentStackForString.head);
+					i--;
 				}
 				this.get_state().get_outputStream().splice(this.get_state().get_outputStream().length - outputCountConsumed,outputCountConsumed);
 				var sb = new StringBuf();
@@ -3429,7 +3430,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(this._temporaryEvaluationContainer != null) return this._temporaryEvaluationContainer; else return this._mainContentContainer;
 	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1293, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
+		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1295, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
 	}
 	,ValidateExternalBindings: function() {
 	}
@@ -3854,9 +3855,7 @@ ink_runtime_StoryState.prototype = {
 		this.evaluationStack.push(obj);
 	}
 	,PopEvaluationStack: function() {
-		var obj = this.evaluationStack[this.evaluationStack.length - 1];
-		this.evaluationStack.pop();
-		return obj;
+		return this.evaluationStack.pop();
 	}
 	,PeekEvaluationStack: function() {
 		return this.evaluationStack[this.evaluationStack.length - 1];

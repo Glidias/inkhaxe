@@ -563,6 +563,7 @@ class Story extends Object
 			do {
 				count++;
 				if (count > limit) throw "Count iteration limit reached";
+			
 				
 				// Run main step function (walks through content)
 				Step();
@@ -801,7 +802,7 @@ class Story extends Object
 
 		// Increment the content pointer, following diverts if necessary
 		NextContent ();
-
+	
 		// Starting a thread should be done after the increment to the content pointer,
 		// so that when returning from the thread, it returns to the content after this instruction.
 		var controlCmd = LibUtil.as( currentContentObj , ControlCommand);
@@ -1065,6 +1066,8 @@ class Story extends Object
 
 					if( Std.is(obj ,StringValue) ) 
 						contentStackForString.add (obj);
+						
+					i--;  // continuing..
 				}
 
 				// Consume the content that was produced for this string

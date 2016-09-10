@@ -188,10 +188,11 @@ class Object
 	function get_rootContentContainer():Container  // done
 	{
 			var ancestor:Object = this;
+			
 			while (ancestor.parent!=null) {
 				ancestor = ancestor.parent;
 			}
-			//Assert.bool(Std.is(ancestor, Container), "Ancestor is not parent but may be self:"+(this==ancestor));
+	
 			return LibUtil.as(ancestor , Container);
 	}
 	
