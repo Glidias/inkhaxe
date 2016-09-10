@@ -198,8 +198,8 @@ class Path extends Object implements IEquatable<Path>
 			}
 		}
 	
-		value = get_componentsString();
-		trace("Final value:" + value);
+		//value = get_componentsString();
+		//trace("Final value:" + value);
 		
 		return value;
 	}

@@ -1426,7 +1426,10 @@ ink_runtime_Divert.prototype = $extend(ink_runtime_Object.prototype,{
 	get_targetPath: function() {
 		if(this._targetPath != null && this._targetPath.isRelative) {
 			var targetObj = this.get_targetContent();
-			if(targetObj != null) this._targetPath = targetObj.get_path();
+			if(targetObj != null) {
+				this._targetPath = targetObj.get_path();
+				haxe_Log.trace("Converting targetPath to global instead of relative...relative?" + Std.string(this._targetPath.isRelative),{ fileName : "Divert.hx", lineNumber : 18, className : "ink.runtime.Divert", methodName : "get_targetPath"});
+			}
 		}
 		return this._targetPath;
 	}
@@ -1442,14 +1445,14 @@ ink_runtime_Divert.prototype = $extend(ink_runtime_Object.prototype,{
 	,get_targetPathString: function() {
 		var result;
 		if(this.get_targetPath() == null) return null;
+		haxe_Log.trace("Getting compacted string:" + ". " + Std.string(this._targetPath.isRelative),{ fileName : "Divert.hx", lineNumber : 50, className : "ink.runtime.Divert", methodName : "get_targetPathString"});
 		result = this.CompactPathString(this.get_targetPath());
-		haxe_Log.trace("Getting compacted string:" + result + ". " + Std.string(this._targetPath.isRelative) + ", " + this._targetPath.get_componentsString(),{ fileName : "Divert.hx", lineNumber : 52, className : "ink.runtime.Divert", methodName : "get_targetPathString"});
 		return result;
 	}
 	,set_targetPathString: function(value) {
 		if(value == null) this.set_targetPath(null); else {
 			this.set_targetPath(ink_runtime_Path.createFromString(value));
-			haxe_Log.trace("Setting as non compacted path:" + Std.string(this._targetPath._path) + " :: " + Std.string(this._targetPath.isRelative) + ", " + this._targetPath.get_componentsString(),{ fileName : "Divert.hx", lineNumber : 62, className : "ink.runtime.Divert", methodName : "set_targetPathString"});
+			haxe_Log.trace("Setting as non compacted path:" + Std.string(this._targetPath._path) + " :: " + Std.string(this._targetPath.isRelative) + ", " + this._targetPath.get_componentsString(),{ fileName : "Divert.hx", lineNumber : 63, className : "ink.runtime.Divert", methodName : "set_targetPathString"});
 		}
 		return value;
 	}
@@ -1688,10 +1691,10 @@ ink_runtime_Json.IntDictionaryToJObject = function(dict) {
 	return jObj;
 };
 ink_runtime_Json.JTokenToRuntimeObject = function(token) {
-	if(((token | 0) === token) || typeof(token) == "number") return ink_runtime_Value.Create(token); else if(typeof(token) == "string") {
-		var str = token;
+	if(typeof(token) == "string" || token == "\n") {
+		var str = Std.string(token);
 		var firstChar = str.charAt(0);
-		if(firstChar == "^") return new ink_runtime_StringValue(str.substring(1)); else if(firstChar == "\n" && str.length == 1) return new ink_runtime_StringValue("\n");
+		if(firstChar == "^") return new ink_runtime_StringValue(str.substring(1)); else if(firstChar == "\n" && str.length == 1 || token == "\n") return new ink_runtime_StringValue("\n");
 		if(str == "<>") return new ink_runtime_Glue(ink_runtime_GlueType.Bidirectional); else if(str == "G<") return new ink_runtime_Glue(ink_runtime_GlueType.Left); else if(str == "G>") return new ink_runtime_Glue(ink_runtime_GlueType.Right);
 		var _g1 = 0;
 		var _g = ink_runtime_Json._controlCommandNames.length;
@@ -1706,7 +1709,11 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 		if(ink_runtime_NativeFunctionCall.CallExistsWithName(str)) return ink_runtime_NativeFunctionCall.CallWithName(str);
 		if(str == "->->") return ink_runtime_ControlCommand.PopTunnel(); else if(str == "~ret") return ink_runtime_ControlCommand.PopFunction();
 		if(str == "void") return new ink_runtime_VoidObj();
-	} else if((token instanceof Array) && token.__enum__ == null) return ink_runtime_Json.JArrayToContainer(token); else if(js_Boot.__instanceof(token,Dynamic)) {
+		haxe_Log.trace("Failed to resolve String type!",{ fileName : "Json.hx", lineNumber : 209, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
+	}
+	if(((token | 0) === token) || typeof(token) == "number") return ink_runtime_Value.Create(token);
+	if((token instanceof Array) && token.__enum__ == null) return ink_runtime_Json.JArrayToContainer(token);
+	if(js_Boot.__instanceof(token,Dynamic)) {
 		var obj = token;
 		var propValue;
 		propValue = Reflect.field(obj,"^->");
@@ -1777,9 +1784,10 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 			return varAss;
 		}
 		if(Reflect.field(obj,"originalChoicePath") != null) return ink_runtime_Json.JObjectToChoice(obj);
+		haxe_Log.trace("Failed to resolve Dynamic type!",{ fileName : "Json.hx", lineNumber : 333, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
 	}
 	if(token == null) return null;
-	throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to convert token to runtime object: " + Std.string(token)));
+	throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to convert token to runtime object: " + Std.string(token) + " :: " + Std.string(Type["typeof"](token))));
 };
 ink_runtime_Json.RuntimeObjectToJToken = function(obj) {
 	var container;
@@ -1899,10 +1907,7 @@ ink_runtime_Json.ContainerToJArray = function(container) {
 		if(countFlags > 0) terminatingObj["#f"] = countFlags;
 		if(container.name != null) terminatingObj["#n"] = container.name;
 		jArray.push(terminatingObj);
-	} else {
-		haxe_Log.trace("pushing null:",{ fileName : "Json.hx", lineNumber : 539, className : "ink.runtime.Json", methodName : "ContainerToJArray"});
-		jArray.push(null);
-	}
+	} else jArray.push(null);
 	return jArray;
 };
 ink_runtime_Json.JArrayToContainer = function(jArray) {
@@ -1922,7 +1927,6 @@ ink_runtime_Json.JArrayToContainer = function(jArray) {
 				namedSubContainer = js_Boot.__instanceof(namedContentItem,ink_runtime_Container)?namedContentItem:null;
 				if(namedSubContainer != null) namedSubContainer.name = k;
 				if(__map_reserved[k] != null) namedOnlyContent.setReserved(k,namedContentItem); else namedOnlyContent.h[k] = namedContentItem;
-				haxe_Log.trace("ADDIng named only content:" + k,{ fileName : "Json.hx", lineNumber : 573, className : "ink.runtime.Json", methodName : "JArrayToContainer"});
 			}
 		}
 		container.set_namedOnlyContent(namedOnlyContent);
@@ -2554,8 +2558,6 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 			index = Std.parseInt(str);
 			if(index != null && !isNaN(index)) this.components.push(ink_runtime_Component.createFromIndex(index)); else this.components.push(ink_runtime_Component.createFromName(str));
 		}
-		value = this.get_componentsString();
-		haxe_Log.trace("Final value:" + value,{ fileName : "Path.hx", lineNumber : 202, className : "ink.runtime.Path", methodName : "set_componentsString"});
 		return value;
 	}
 	,toString: function() {
@@ -2828,7 +2830,6 @@ var ink_runtime_Story = $hx_exports.ink.runtime.Story = function(jsonString) {
 	var rootToken = Reflect.field(rootObject,"root");
 	if(rootToken == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Root node for ink not found. Are you sure it's a valid .ink.json file?"));
 	this._mainContentContainer = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(rootToken),ink_runtime_Container);
-	this.ResetState();
 };
 ink_runtime_Story.__name__ = ["ink","runtime","Story"];
 ink_runtime_Story.createFromContainer = function(contentContainer) {

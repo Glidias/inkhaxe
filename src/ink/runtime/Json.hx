@@ -159,20 +159,18 @@ class Json
         // Choice:         Nothing too clever, it's only used in the save state,
         //       
 	public static function JTokenToRuntimeObject(token:Dynamic):Object {
-	
-		if (Std.is(token, Int) || Std.is(token, Float)) {
+		
+		
+		// why is JS so wierd to think of \n as a number?!?? So, consider this weird non-string case as the first case to catch!!
+		if  ( Std.is(token, String) || token == "\n" ) {
 			
-			return Value.Create(token);
-		}
-		else  if (Std.is(token, String)) {
-			var str:String =  token;
-
+			var str:String =  Std.string(token);
 			// String value
 			var firstChar:String = str.charAt(0);
 			if (firstChar == '^') {
 				return new StringValue(str.substring(1));
 			}
-			else if ( firstChar == '\n' && str.length == 1) {
+			else if ( (firstChar == '\n' && str.length == 1) || token == "\n" ) {  
 				return new StringValue ("\n");
 			}
 
@@ -207,14 +205,20 @@ class Json
 			// Void
 			if (str == "void")
 				return new VoidObj();
+				
+			trace("Failed to resolve String type!");	
 		}
+		if ( (Std.is(token, Int) || Std.is(token, Float) )  ) {
+			return Value.Create(token);
+		}
+		
 		// Array is always a Runtime.Container
-		else if (Std.is(token, Array )) {  //(List<object>
+		if (Std.is(token, Array )) {  //(List<object>
 			
 			return JArrayToContainer( token);
 		}
-		else if (Std.is(token, Dynamic)) {   //token is Dictionary<string, object>
-		
+		if (Std.is(token, Dynamic)) {   //token is Dictionary<string, object>
+			
 			var obj = token;  //(Dictionary < string, object> )
 			var propValue:Dynamic;
 
@@ -325,14 +329,15 @@ class Json
 
 			if (Reflect.field(obj, "originalChoicePath") != null)
 				return JObjectToChoice(obj);
+				
+			trace("Failed to resolve Dynamic type!");
 		}
 
 		if (token == null) {
-	
 			return null;
 		}
 
-		throw new SystemException ("Failed to convert token to runtime object: " + token);
+		throw new SystemException ("Failed to convert token to runtime object: " + token + " :: "+Type.typeof(token) );
 		
 	}
 	
@@ -529,14 +534,11 @@ class Json
 
                 if( container.name != null )
                      Reflect.setField(terminatingObj, "#n", container.name);//terminatingObj ["#n"] = container.name;
-
-			
-				//trace("pushing termianting obj:",terminatingObj);
+					 
                 jArray.push(terminatingObj);
             } 
             // Add null terminator to indicate that there's no dictionary
             else {
-				trace("pushing null:");
                 jArray.push(null);
             }
 			
@@ -570,7 +572,6 @@ class Json
                         if (namedSubContainer !=null)
                             namedSubContainer.name = k;
                         namedOnlyContent.set(k, namedContentItem);
-						trace("ADDIng named only content:" + k);
                     }
                 }
 

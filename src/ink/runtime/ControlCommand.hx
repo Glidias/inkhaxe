@@ -25,9 +25,7 @@ class ControlCommand extends Object
 	{
 		return  ControlCommand.createFromCommandType(commandType);
 	}
-	
 
-	
 	 // The following static factory methods are to make generating these objects
         // slightly more succinct. Without these, the code gets pretty massive! e.g.
         //
