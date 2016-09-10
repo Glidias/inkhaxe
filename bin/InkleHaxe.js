@@ -169,6 +169,9 @@ Reflect.deleteField = function(o,field) {
 };
 var Std = function() { };
 Std.__name__ = ["Std"];
+Std["is"] = function(v,t) {
+	return js_Boot.__instanceof(v,t);
+};
 Std.string = function(s) {
 	return js_Boot.__string_rec(s,"");
 };
@@ -471,6 +474,17 @@ haxe_ds_StringMap.prototype = {
 	}
 	,__class__: haxe_ds_StringMap
 };
+var haxe_io_Error = { __ename__ : true, __constructs__ : ["Blocked","Overflow","OutsideBounds","Custom"] };
+haxe_io_Error.Blocked = ["Blocked",0];
+haxe_io_Error.Blocked.toString = $estr;
+haxe_io_Error.Blocked.__enum__ = haxe_io_Error;
+haxe_io_Error.Overflow = ["Overflow",1];
+haxe_io_Error.Overflow.toString = $estr;
+haxe_io_Error.Overflow.__enum__ = haxe_io_Error;
+haxe_io_Error.OutsideBounds = ["OutsideBounds",2];
+haxe_io_Error.OutsideBounds.toString = $estr;
+haxe_io_Error.OutsideBounds.__enum__ = haxe_io_Error;
+haxe_io_Error.Custom = function(e) { var $x = ["Custom",3,e]; $x.__enum__ = haxe_io_Error; $x.toString = $estr; return $x; };
 var ink_random_RNG = function() {
 	this._seed = 0;
 };
@@ -850,14 +864,12 @@ ink_runtime_Object.prototype = {
 					container = ink_runtime_LibUtil["as"](container.parent,ink_runtime_Container);
 				}
 				this._path = ink_runtime_Path.createFromComponentStack(comps);
-				haxe_Log.trace("Lazy instantiation of path from parent! relative?" + Std.string(this._path.isRelative) + ": " + this._path.get_componentsString() + ", " + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 92, className : "ink.runtime.Object", methodName : "get_path"});
 			}
 		}
 		return this._path;
 	}
 	,ResolvePath: function(path) {
 		if(path.isRelative) {
-			haxe_Log.trace("Resolving path relative:" + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 105, className : "ink.runtime.Object", methodName : "ResolvePath"});
 			var nearestContainer;
 			nearestContainer = js_Boot.__instanceof(this,ink_runtime_Container)?this:null;
 			if(nearestContainer == null) {
@@ -868,10 +880,7 @@ ink_runtime_Object.prototype = {
 				path = path.get_tail();
 			}
 			return nearestContainer.ContentAtPath(path);
-		} else {
-			haxe_Log.trace("Resolving path not relative" + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 117, className : "ink.runtime.Object", methodName : "ResolvePath"});
-			return this.get_rootContentContainer().ContentAtPath(path);
-		}
+		} else return this.get_rootContentContainer().ContentAtPath(path);
 	}
 	,ConvertPathToRelative: function(globalPath) {
 		var ownPath = this.get_path();
@@ -2534,11 +2543,7 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 		if(componentsStr.charAt(0) == ".") {
 			this.isRelative = true;
 			componentsStr = componentsStr.substring(1);
-			haxe_Log.trace("Impicit set to relative via componentString setter.",{ fileName : "Path.hx", lineNumber : 185, className : "ink.runtime.Path", methodName : "set_componentsString"});
-		} else {
-			this.isRelative = false;
-			haxe_Log.trace("Impicit UNSET  relative via componentString setter.",{ fileName : "Path.hx", lineNumber : 188, className : "ink.runtime.Path", methodName : "set_componentsString"});
-		}
+		} else this.isRelative = false;
 		var componentStrings = componentsStr.split(".");
 		var _g = 0;
 		while(_g < componentStrings.length) {
@@ -2816,7 +2821,7 @@ var ink_runtime_Story = $hx_exports.ink.runtime.Story = function(jsonString) {
 	var versionObj = Reflect.field(rootObject,"inkVersion");
 	if(versionObj == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("ink version number not found. Are you sure it's a valid .ink.json file?"));
 	var formatFromFile = Std["int"](versionObj);
-	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) haxe_Log.trace("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.",{ fileName : "Story.hx", lineNumber : 97, className : "ink.runtime.Story", methodName : "new"});
+	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) haxe_Log.trace("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.",{ fileName : "Story.hx", lineNumber : 98, className : "ink.runtime.Story", methodName : "new"});
 	var rootToken = Reflect.field(rootObject,"root");
 	if(rootToken == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Root node for ink not found. Are you sure it's a valid .ink.json file?"));
 	this._mainContentContainer = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(rootToken),ink_runtime_Container);
@@ -2832,7 +2837,7 @@ ink_runtime_Story.createFromContainer = function(contentContainer) {
 ink_runtime_Story.__super__ = ink_runtime_Object;
 ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	get_currentChoices: function() {
-		var choices = new List();
+		var choices = [];
 		var _g_head = this._state.currentChoices.h;
 		var _g_val = null;
 		while(_g_head != null) {
@@ -2846,7 +2851,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			}(this));
 			if(!c.choicePoint.isInvisibleDefault) {
 				c.index = choices.length;
-				choices.add(c);
+				choices.push(c);
 			}
 		}
 		return choices;
@@ -3429,8 +3434,26 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	,get_mainContentContainer: function() {
 		if(this._temporaryEvaluationContainer != null) return this._temporaryEvaluationContainer; else return this._mainContentContainer;
 	}
+	,ChooseChoiceIndex: function(choiceIdx) {
+		var choices = this.get_currentChoices();
+		ink_runtime_Assert.bool(choiceIdx >= 0 && choiceIdx < choices.length,"choice out of range");
+		var choiceToChoose = choices[choiceIdx];
+		this.get_state().callStack.set_currentThread(choiceToChoose.threadAtGeneration);
+		this.ChoosePath(choiceToChoose.choicePoint.get_choiceTarget().get_path());
+	}
+	,HasFunction: function(functionName) {
+		try {
+			return Std["is"](this.ContentAtPath(ink_runtime_Path.createFromString(functionName)),ink_runtime_Container);
+		} catch( e ) {
+			if (e instanceof js__$Boot_HaxeError) e = e.val;
+			if( js_Boot.__instanceof(e,haxe_io_Error) ) {
+				return false;
+			} else throw(e);
+		}
+		return false;
+	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1295, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
+		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1480, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
 	}
 	,ValidateExternalBindings: function() {
 	}

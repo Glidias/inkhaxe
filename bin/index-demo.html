@@ -189,6 +189,8 @@ table{
 		}
 		
 		
+	
+		
 		function continueToNextChoice(){
 			while (myStory.get_canContinue()){
 			
@@ -199,10 +201,12 @@ table{
 				});
 			}
 
-			var len = myStory.get_currentChoices().length;
+			var choices = myStory.get_currentChoices();
+			var len = choices.length;
+		
 			if (len > 0){
 				for (var i = 0; i < len; ++i) {
-					var choice = myStory.currentChoices[i];
+					var choice = choices[i];
 					var $li = $('<li>').text(choice.text).appendTo($choices);
 					$li.on('click', onChoiceSelect);
 				}
