@@ -122,7 +122,6 @@ class Story extends Object
 	
 	public function ToJsonString():String
 	{
-		trace("SEtting up output json of story!");
 		var rootContainerJsonList:Array<Dynamic> = cast Json.RuntimeObjectToJToken(_mainContentContainer);   // (List<object>) 
 
 		//var rootObject = new Map<String, Dynamic>();
@@ -943,12 +942,10 @@ class Story extends Object
 				CallExternalFunction (currentDivert.targetPathString, currentDivert.externalArgs);
 				return true;
 			} else {
-				trace("ADDING divertedTargetObject to state..");
 				state.divertedTargetObject = currentDivert.targetContent;
 			}
 
 			if (currentDivert.pushesToStack) {
-				trace("ADDING currentDivert to callstacke.."+currentDivert.stackPushType);
 				state.callStack.Push (currentDivert.stackPushType);
 			}
 
@@ -968,7 +965,6 @@ class Story extends Object
 		// Start/end an expression evaluation? Or print out the result?
 		else if( Std.is(contentObj , ControlCommand) ) {
 			var evalCommand:ControlCommand = cast contentObj; //(ControlCommand)
-			trace( "COMMAND:"+evalCommand.commandType);
 			switch (evalCommand.commandType) {
 
 			case ControlCommand.CommandType.EvalStart:

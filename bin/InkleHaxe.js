@@ -838,10 +838,7 @@ ink_runtime_Object.prototype = {
 	}
 	,get_path: function() {
 		if(this._path == null) {
-			if(this.parent == null) {
-				this._path = new ink_runtime_Path();
-				haxe_Log.trace("Lazy instantiation of path at root!",{ fileName : "Object.hx", lineNumber : 65, className : "ink.runtime.Object", methodName : "get_path"});
-			} else {
+			if(this.parent == null) this._path = new ink_runtime_Path(); else {
 				var comps = new haxe_ds_GenericStack();
 				var child = this;
 				var container = ink_runtime_LibUtil["as"](child.parent,ink_runtime_Container);
@@ -853,14 +850,14 @@ ink_runtime_Object.prototype = {
 					container = ink_runtime_LibUtil["as"](container.parent,ink_runtime_Container);
 				}
 				this._path = ink_runtime_Path.createFromComponentStack(comps);
-				haxe_Log.trace("Lazy instantiation of path from parent! relative?" + Std.string(this._path.isRelative) + ": " + this._path.get_componentsString() + ", " + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 93, className : "ink.runtime.Object", methodName : "get_path"});
+				haxe_Log.trace("Lazy instantiation of path from parent! relative?" + Std.string(this._path.isRelative) + ": " + this._path.get_componentsString() + ", " + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 92, className : "ink.runtime.Object", methodName : "get_path"});
 			}
 		}
 		return this._path;
 	}
 	,ResolvePath: function(path) {
 		if(path.isRelative) {
-			haxe_Log.trace("Resolving path relative:" + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 106, className : "ink.runtime.Object", methodName : "ResolvePath"});
+			haxe_Log.trace("Resolving path relative:" + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 105, className : "ink.runtime.Object", methodName : "ResolvePath"});
 			var nearestContainer;
 			nearestContainer = js_Boot.__instanceof(this,ink_runtime_Container)?this:null;
 			if(nearestContainer == null) {
@@ -872,7 +869,7 @@ ink_runtime_Object.prototype = {
 			}
 			return nearestContainer.ContentAtPath(path);
 		} else {
-			haxe_Log.trace("Resolving path not relative" + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 118, className : "ink.runtime.Object", methodName : "ResolvePath"});
+			haxe_Log.trace("Resolving path not relative" + Type.getClassName(js_Boot.getClass(this)),{ fileName : "Object.hx", lineNumber : 117, className : "ink.runtime.Object", methodName : "ResolvePath"});
 			return this.get_rootContentContainer().ContentAtPath(path);
 		}
 	}
@@ -1161,7 +1158,7 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 			var named = ink_runtime_LibUtil["as"](__map_reserved[k1] != null?value.getReserved(k1):value.h[k1],ink_runtime_INamedContent);
 			if(named != null) this.AddToNamedContentOnly(named);
 		}
-		return existingNamedOnly;
+		return value;
 	}
 	,get_countFlags: function() {
 		var flags = 0;
@@ -1426,10 +1423,7 @@ ink_runtime_Divert.prototype = $extend(ink_runtime_Object.prototype,{
 	get_targetPath: function() {
 		if(this._targetPath != null && this._targetPath.isRelative) {
 			var targetObj = this.get_targetContent();
-			if(targetObj != null) {
-				this._targetPath = targetObj.get_path();
-				haxe_Log.trace("Converting targetPath to global instead of relative...relative?" + Std.string(this._targetPath.isRelative),{ fileName : "Divert.hx", lineNumber : 18, className : "ink.runtime.Divert", methodName : "get_targetPath"});
-			}
+			if(targetObj != null) this._targetPath = targetObj.get_path();
 		}
 		return this._targetPath;
 	}
@@ -1445,15 +1439,11 @@ ink_runtime_Divert.prototype = $extend(ink_runtime_Object.prototype,{
 	,get_targetPathString: function() {
 		var result;
 		if(this.get_targetPath() == null) return null;
-		haxe_Log.trace("Getting compacted string:" + ". " + Std.string(this._targetPath.isRelative),{ fileName : "Divert.hx", lineNumber : 50, className : "ink.runtime.Divert", methodName : "get_targetPathString"});
 		result = this.CompactPathString(this.get_targetPath());
 		return result;
 	}
 	,set_targetPathString: function(value) {
-		if(value == null) this.set_targetPath(null); else {
-			this.set_targetPath(ink_runtime_Path.createFromString(value));
-			haxe_Log.trace("Setting as non compacted path:" + Std.string(this._targetPath._path) + " :: " + Std.string(this._targetPath.isRelative) + ", " + this._targetPath.get_componentsString(),{ fileName : "Divert.hx", lineNumber : 63, className : "ink.runtime.Divert", methodName : "set_targetPathString"});
-		}
+		if(value == null) this.set_targetPath(null); else this.set_targetPath(ink_runtime_Path.createFromString(value));
 		return value;
 	}
 	,get_hasVariableTarget: function() {
@@ -1713,7 +1703,7 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 		haxe_Log.trace("Failed to resolve String type!",{ fileName : "Json.hx", lineNumber : 214, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
 	}
 	if((token instanceof Array) && token.__enum__ == null) return ink_runtime_Json.JArrayToContainer(token);
-	if(js_Boot.__instanceof(token,Dynamic)) {
+	if(Type["typeof"](token) == ValueType.TObject) {
 		var obj = token;
 		var propValue;
 		propValue = Reflect.field(obj,"^->");
@@ -1784,7 +1774,7 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 			return varAss;
 		}
 		if(Reflect.field(obj,"originalChoicePath") != null) return ink_runtime_Json.JObjectToChoice(obj);
-		haxe_Log.trace("Failed to resolve Dynamic type!",{ fileName : "Json.hx", lineNumber : 336, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
+		haxe_Log.trace("Failed to resolve TObject type!",{ fileName : "Json.hx", lineNumber : 334, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
 	}
 	if(token == null) return null;
 	throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to convert token to runtime object: " + Std.string(token) + " :: " + Std.string(Type["typeof"](token))));
@@ -2513,7 +2503,7 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 	}
 	,get_tail: function() {
 		if(this.components.length >= 2) {
-			var tailComps = this.components.slice(1,this.components.length - 1);
+			var tailComps = this.components.slice(1,this.components.length);
 			return ink_runtime_Path.createFromComponents(tailComps);
 		} else return ink_runtime_Path.get_self();
 	}
@@ -2544,10 +2534,10 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 		if(componentsStr.charAt(0) == ".") {
 			this.isRelative = true;
 			componentsStr = componentsStr.substring(1);
-			haxe_Log.trace("Impicit set to relative via componentString setter.",{ fileName : "Path.hx", lineNumber : 184, className : "ink.runtime.Path", methodName : "set_componentsString"});
+			haxe_Log.trace("Impicit set to relative via componentString setter.",{ fileName : "Path.hx", lineNumber : 185, className : "ink.runtime.Path", methodName : "set_componentsString"});
 		} else {
 			this.isRelative = false;
-			haxe_Log.trace("Impicit UNSET  relative via componentString setter.",{ fileName : "Path.hx", lineNumber : 187, className : "ink.runtime.Path", methodName : "set_componentsString"});
+			haxe_Log.trace("Impicit UNSET  relative via componentString setter.",{ fileName : "Path.hx", lineNumber : 188, className : "ink.runtime.Path", methodName : "set_componentsString"});
 		}
 		var componentStrings = componentsStr.split(".");
 		var _g = 0;
@@ -2881,7 +2871,6 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		this._externals = new haxe_ds_StringMap();
 	}
 	,ToJsonString: function() {
-		haxe_Log.trace("SEtting up output json of story!",{ fileName : "Story.hx", lineNumber : 125, className : "ink.runtime.Story", methodName : "ToJsonString"});
 		var rootContainerJsonList = ink_runtime_Json.RuntimeObjectToJToken(this._mainContentContainer);
 		return JSON.stringify({ inkVersion : 12, root : rootContainerJsonList});
 	}
@@ -3264,21 +3253,14 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			} else if(currentDivert.isExternal) {
 				this.CallExternalFunction(currentDivert.get_targetPathString(),currentDivert.externalArgs);
 				return true;
-			} else {
-				haxe_Log.trace("ADDING divertedTargetObject to state..",{ fileName : "Story.hx", lineNumber : 946, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
-				this.get_state().divertedTargetObject = currentDivert.get_targetContent();
-			}
-			if(currentDivert.pushesToStack) {
-				haxe_Log.trace("ADDING currentDivert to callstacke.." + currentDivert.stackPushType,{ fileName : "Story.hx", lineNumber : 951, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
-				this.get_state().callStack.Push(currentDivert.stackPushType);
-			}
+			} else this.get_state().divertedTargetObject = currentDivert.get_targetContent();
+			if(currentDivert.pushesToStack) this.get_state().callStack.Push(currentDivert.stackPushType);
 			if(this.get_state().divertedTargetObject == null && !currentDivert.isExternal) {
 				if(currentDivert != null && currentDivert.get_debugMetadata().sourceName != null) this.Error("Divert target doesn't exist: " + currentDivert.get_debugMetadata().sourceName); else this.Error("Divert resolution failed: " + Std.string(currentDivert));
 			}
 			return true;
 		} else if(js_Boot.__instanceof(contentObj,ink_runtime_ControlCommand)) {
 			var evalCommand = contentObj;
-			haxe_Log.trace("COMMAND:" + evalCommand.commandType,{ fileName : "Story.hx", lineNumber : 971, className : "ink.runtime.Story", methodName : "PerformLogicAndFlowControl"});
 			var _g = evalCommand.commandType;
 			switch(_g) {
 			case 0:
@@ -3447,7 +3429,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(this._temporaryEvaluationContainer != null) return this._temporaryEvaluationContainer; else return this._mainContentContainer;
 	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1297, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
+		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1293, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
 	}
 	,ValidateExternalBindings: function() {
 	}

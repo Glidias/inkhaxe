@@ -217,11 +217,9 @@ class Json
 		
 		// Array is always a Runtime.Container
 		if (Std.is(token, Array )) {  //(List<object>
-			
 			return JArrayToContainer( token);
 		}
-		if (Std.is(token, Dynamic)) {   //token is Dictionary<string, object>
-			
+		if (Type.typeof(token) == Type.ValueType.TObject ) {   //token is Dictionary<string, object>  Std.is(token, Dynamic)
 			var obj = token;  //(Dictionary < string, object> )
 			var propValue:Dynamic;
 
@@ -333,7 +331,7 @@ class Json
 			if (Reflect.field(obj, "originalChoicePath") != null)
 				return JObjectToChoice(obj);
 				
-			trace("Failed to resolve Dynamic type!");
+			trace("Failed to resolve TObject type!");
 		}
 
 		if (token == null) {

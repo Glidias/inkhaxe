@@ -37,6 +37,7 @@ class Object
 	
 	function DebugLineNumberOfPath(path:Path):Dynamic  //?int (for return data type)
 	{
+
 		if (path == null)
 			return null;
 		
@@ -60,9 +61,7 @@ class Object
 		 if (_path == null) {
 			
 			if (parent == null) {
-				
 				_path = new Path ();
-				trace("Lazy instantiation of path at root!");
 			} else {
 				
 				// Maintain a Stack so that the order of the components
@@ -192,6 +191,7 @@ class Object
 			while (ancestor.parent!=null) {
 				ancestor = ancestor.parent;
 			}
+			//Assert.bool(Std.is(ancestor, Container), "Ancestor is not parent but may be self:"+(this==ancestor));
 			return LibUtil.as(ancestor , Container);
 	}
 	

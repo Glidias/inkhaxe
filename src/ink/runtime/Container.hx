@@ -68,7 +68,7 @@ class Container extends Object implements INamedContent
 	
 	function set_namedOnlyContent(value:Map<String, Object>):Map<String, Object> 
 	{
-		var existingNamedOnly = get_namedOnlyContent();
+		var existingNamedOnly = this.namedOnlyContent;// get_namedOnlyContent();
 		if (existingNamedOnly != null) {
 			for  (k in existingNamedOnly.keys()) {
 				namedContent.remove(k);
@@ -80,11 +80,11 @@ class Container extends Object implements INamedContent
 		
 		for (k in value.keys()) {
 			var named = LibUtil.as( value.get(k) , INamedContent);
-			if( named != null )
+			if( named != null ) // js version shouldn;t this be a boolean? ?  named.name && typeof named.hasValidName !== 'undefined'
 				AddToNamedContentOnly (named);
 		}
 		
-		return existingNamedOnly;  // is this return correct?
+		return value; // existingNamedOnly;  // is this return correct?
 	}
 
 	public var visitsShouldBeCounted:Bool;// { get; set; }

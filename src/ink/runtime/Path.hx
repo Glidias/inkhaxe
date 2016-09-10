@@ -58,7 +58,8 @@ class Path extends Object implements IEquatable<Path>
 	{
 		
 		if (components.length >= 2) {
-			var tailComps:Array<Component>  = components.slice(1, components.length - 1); //  components.GetRange (1, components.Count - 1);
+			// careful, the original code uses length-1 here. This is because the second argument of List.GetRange is a number of elements to extract, wherease Array.slice uses an index
+			var tailComps:Array<Component>  = components.slice(1, components.length); //  components.GetRange (1, components.Count - 1);
 			return  Path.createFromComponents(tailComps);
 		} 
 		else {

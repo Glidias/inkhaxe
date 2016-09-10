@@ -15,7 +15,6 @@ class Divert extends Object
 			if (targetObj != null) {
 				
 				_targetPath = targetObj.path;
-				trace("Converting targetPath to global instead of relative...relative?" + _targetPath.isRelative);
 			}
 		}
 		return _targetPath;
@@ -47,7 +46,6 @@ class Divert extends Object
 		if (targetPath == null)
 			return null;
 
-trace("Getting compacted string:"  + ". "+_targetPath.isRelative );
 		result = CompactPathString (targetPath);
 		
 		
@@ -60,7 +58,6 @@ trace("Getting compacted string:"  + ". "+_targetPath.isRelative );
 			targetPath = null;
 		} else {
 			targetPath =  Path.createFromString(value);
-			trace("Setting as non compacted path:" + _targetPath._path + " :: " + _targetPath.isRelative+ ", "+_targetPath.componentsString);
 		}
 		return value;  //CompactPathString??
 	}
