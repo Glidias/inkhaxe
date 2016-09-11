@@ -2982,30 +2982,28 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		var iterationIndex = seqCount % numElements;
 		var seqPathStr = seqContainer.get_path().toString();
 		var sequenceHash = 0;
-		var _g = 0;
-		var _g1 = seqPathStr.split("");
-		while(_g < _g1.length) {
-			var c = _g1[_g];
-			++_g;
-			var resultI = Std.parseInt(c);
-			if(resultI != null && !isNaN(resultI)) sequenceHash += resultI; else sequenceHash += 0;
+		var _g1 = 0;
+		var _g = seqPathStr.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			sequenceHash += seqPathStr.charCodeAt(i);
 		}
 		var randomSeed = sequenceHash + loopIndex + this.get_state().storySeed;
 		var random = new ink_random_ParkMiller(randomSeed);
 		var unpickedIndices = [];
 		var _g2 = 0;
 		while(_g2 < numElements) {
-			var i = _g2++;
-			unpickedIndices.push(i);
+			var i1 = _g2++;
+			unpickedIndices.push(i1);
 		}
 		var _g11 = 0;
 		var _g3 = iterationIndex + 1;
 		while(_g11 < _g3) {
-			var i1 = _g11++;
+			var i2 = _g11++;
 			var chosen = random.randomRange(0,unpickedIndices.length - 1);
 			var chosenIndex = unpickedIndices[chosen];
 			unpickedIndices.splice(chosen,1);
-			if(i1 == iterationIndex) return chosenIndex;
+			if(i2 == iterationIndex) return chosenIndex;
 		}
 		throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Should never reach here"));
 	}
