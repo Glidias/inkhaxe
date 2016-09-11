@@ -301,7 +301,16 @@ class DivertTargetValue extends Value<Path> {  // DONE!
 class VariablePointerValue extends Value<String> {  // DONE!
 
 	
-	public var variableName:String;
+	public var variableName(get, set):String;
+	function get_variableName():String 
+	{
+		 return this.value;
+	}
+	
+	function set_variableName(value:String):String 
+	{
+		return ( this.value = value);
+	}
     public override  function get_valueType():ValueType {  return ValueType.VariablePointer;  }
     public override  function get_isTruthy() {   throw new SystemException("Shouldn't be checking the truthiness of a variable pointer");  return false;  }
 	
@@ -342,5 +351,7 @@ class VariablePointerValue extends Value<String> {  // DONE!
 	{
 		return new VariablePointerValue (variableName, contextIndex);
 	}
+	
+	
 
 }

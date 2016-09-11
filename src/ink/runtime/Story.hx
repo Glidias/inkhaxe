@@ -560,11 +560,11 @@ class Story extends Object
 			// and rewind if necessary.
 			// This code is slightly fragile :-/ 
 			//
-			var limit:Int = 256;
+		
 			var count:Int = 0;
 			do {
-				count++;
-				if (count > limit) throw "Count iteration limit reached";
+
+				if (count++ > 99999) throw "Count iteration limit reached";
 			
 				
 				// Run main step function (walks through content)

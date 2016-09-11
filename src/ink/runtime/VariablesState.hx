@@ -73,7 +73,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	var _batchObservingVariableChanges:Bool;
 	
 	
-	// TODO: Link this! 
+	// TODO: Link this as Proxy! 
 	public function field(variableName:String):Dynamic {
 		var varContents:Dynamic;
 		if ( (varContents=LibUtil.tryGetValue(_globalVariables, variableName)) != null )
@@ -129,8 +129,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	public function CopyFrom( varState:VariablesState):Void  
 	{
 			
-		_globalVariables = LibUtil.cloneStrMap(_globalVariables); // _cloneMap (_globalVariables); // cloner.clone( varState._globalVariables );
-		
+		_globalVariables = LibUtil.cloneStrMap(varState._globalVariables); //  cloner.clone( varState._globalVariables );
 		variableChangedEvent = varState.variableChangedEvent;
 
 		if (varState.batchObservingVariableChanges != batchObservingVariableChanges) {
@@ -178,15 +177,13 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	function GetRawVariableWithName( name:String,  contextIndex:Int):Object
 	{
 		var varValue:Object = null;
-
 		// 0 context = global
 		if (contextIndex == 0 || contextIndex == -1) {
-		
 			if ( (varValue=LibUtil.tryGetValue(_globalVariables,  name) )  != null ) {
 				return varValue;
 			}
 			else {
-				trace("Global context search not found...Should exit out??", _globalVariables);
+				trace("Shouldn't we throw error for this case? Failed to retrieve global variable:"+name + ", from:"+_globalVariables);
 			}
 		} 
 
@@ -232,6 +229,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 
 		} 
 
+
 		// Assign to existing variable pointer?
 		// Then assign to the variable that the pointer is pointing to by name.
 		else {
@@ -248,7 +246,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 			} while(existingPointer!=null);
 		}
 
-
+		
 		if (setGlobal) {
 			SetGlobal (name, value);
 		} else {
@@ -266,6 +264,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 		//_globalVariables.TryGetValue (variableName, out oldValue);
 		
 		_globalVariables.set(variableName, value);
+		trace("Setting global variable:" + variableName + "="+value);
 		
 		if (variableChangedEvent != null && !value.Equals (oldValue)) {
 
@@ -289,7 +288,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 			contextIndex = GetContextIndexOfVariableNamed (varPointer.variableName);
 
 		var valueOfVariablePointedTo = GetRawVariableWithName (varPointer.variableName, contextIndex);
-
+		
 		// Extra layer of indirection:
 		// When accessing a pointer to a pointer (e.g. when calling nested or 
 		// recursive functions that take a variable references, ensure we don't create
@@ -318,7 +317,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	
 	
 
-	public var _globalVariables:Map<String, Object>;
+	 var _globalVariables:Map<String, Object>;
 		
    // Used for accessing temporary variables
 	var _callStack:CallStack;

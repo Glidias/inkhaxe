@@ -187,6 +187,7 @@ class CallStack
 		var varValue:Object = null;
 
 		var contextElement = callStack[contextIndex - 1];
+		//if (contextElement == null) throw "could not find context element at callstack:" + contextElement + " at index:"+contextIndex + " :: "+name;
 		
 		varValue = LibUtil.tryGetValue(contextElement.temporaryVariables, name);
 		if (varValue!=null) {  //contextElement.temporaryVariables.TryGetValue (name, out varValue)
@@ -201,7 +202,8 @@ class CallStack
 		if (contextIndex == -1)
 			contextIndex = currentElementIndex+1;
 
-		var contextElement = callStack[contextIndex-1];
+		var contextElement = callStack[contextIndex - 1];
+	
 		
 		if (!declareNew && !contextElement.temporaryVariables.exists(name)) {
 			throw new StoryException("Could not find temporary variable to set: " + name);

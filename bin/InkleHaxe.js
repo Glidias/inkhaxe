@@ -50,16 +50,16 @@ InkleRuntime.main = function() {
 };
 InkleRuntime.testCommandTypeEnum = function() {
 	var arrTest = ["index0","index1"];
-	haxe_Log.trace(arrTest[0],{ fileName : "InkleRuntime.hx", lineNumber : 37, className : "InkleRuntime", methodName : "testCommandTypeEnum"});
+	console.log(arrTest[0]);
 	var cmdType = 0;
-	haxe_Log.trace(cmdType,{ fileName : "InkleRuntime.hx", lineNumber : 39, className : "InkleRuntime", methodName : "testCommandTypeEnum"});
+	console.log(cmdType);
 	var cmdTypeE = 0;
-	haxe_Log.trace(Std.string(cmdTypeE),{ fileName : "InkleRuntime.hx", lineNumber : 41, className : "InkleRuntime", methodName : "testCommandTypeEnum"});
+	console.log(Std.string(cmdTypeE));
 	var map = new haxe_ds_StringMap();
 	var mapInt = new haxe_ds_IntMap();
 	var mapSet = new ink_runtime_HashSetString();
 	var dynStrMap = new haxe_ds_ObjectMap();
-	haxe_Log.trace("Std is dynamic:" + Std.string(js_Boot.__instanceof(dynStrMap,haxe_ds_ObjectMap)) + ", " + Std.string(js_Boot.__instanceof({ },haxe_ds_StringMap)),{ fileName : "InkleRuntime.hx", lineNumber : 49, className : "InkleRuntime", methodName : "testCommandTypeEnum"});
+	console.log("Std is dynamic:" + Std.string(js_Boot.__instanceof(dynStrMap,haxe_ds_ObjectMap)) + ", " + Std.string(js_Boot.__instanceof({ },haxe_ds_StringMap)));
 	mapSet.add("abc");
 	var strMapBool_h = { };
 	var value = new ink_runtime_Object();
@@ -68,22 +68,22 @@ InkleRuntime.testCommandTypeEnum = function() {
 	value1 = __map_reserved.abc != null?map.getReserved("abc"):map.h["abc"];
 	mapInt.h[1] = value1;
 	var json = { 'abc' : __map_reserved.abc != null?map.getReserved("abc"):map.h["abc"]};
-	haxe_Log.trace(ink_runtime_LibUtil.tryGetValue(map,"abc") == Reflect.field(json,"abc"),{ fileName : "InkleRuntime.hx", lineNumber : 61, className : "InkleRuntime", methodName : "testCommandTypeEnum"});
+	console.log(ink_runtime_LibUtil.tryGetValue(map,"abc") == Reflect.field(json,"abc"));
 };
 InkleRuntime.testDataTypeClasses = function() {
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create("abc")),{ fileName : "InkleRuntime.hx", lineNumber : 69, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create("1")),{ fileName : "InkleRuntime.hx", lineNumber : 70, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create("0")),{ fileName : "InkleRuntime.hx", lineNumber : 71, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create("1.0")),{ fileName : "InkleRuntime.hx", lineNumber : 72, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create("0.01")),{ fileName : "InkleRuntime.hx", lineNumber : 73, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create(1)),{ fileName : "InkleRuntime.hx", lineNumber : 74, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create(0)),{ fileName : "InkleRuntime.hx", lineNumber : 75, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create(1.0)),{ fileName : "InkleRuntime.hx", lineNumber : 76, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create(0.01)),{ fileName : "InkleRuntime.hx", lineNumber : 77, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create(true)),{ fileName : "InkleRuntime.hx", lineNumber : 78, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(Type.getClass(ink_runtime_Value.Create(false)),{ fileName : "InkleRuntime.hx", lineNumber : 79, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(4,{ fileName : "InkleRuntime.hx", lineNumber : 80, className : "InkleRuntime", methodName : "testDataTypeClasses"});
-	haxe_Log.trace(ink_runtime_Value.Create("1").get_isTruthy(),{ fileName : "InkleRuntime.hx", lineNumber : 81, className : "InkleRuntime", methodName : "testDataTypeClasses"});
+	console.log(Type.getClass(ink_runtime_Value.Create("abc")));
+	console.log(Type.getClass(ink_runtime_Value.Create("1")));
+	console.log(Type.getClass(ink_runtime_Value.Create("0")));
+	console.log(Type.getClass(ink_runtime_Value.Create("1.0")));
+	console.log(Type.getClass(ink_runtime_Value.Create("0.01")));
+	console.log(Type.getClass(ink_runtime_Value.Create(1)));
+	console.log(Type.getClass(ink_runtime_Value.Create(0)));
+	console.log(Type.getClass(ink_runtime_Value.Create(1.0)));
+	console.log(Type.getClass(ink_runtime_Value.Create(0.01)));
+	console.log(Type.getClass(ink_runtime_Value.Create(true)));
+	console.log(Type.getClass(ink_runtime_Value.Create(false)));
+	console.log(4);
+	console.log(ink_runtime_Value.Create("1").get_isTruthy());
 };
 var List = function() {
 	this.length = 0;
@@ -299,11 +299,6 @@ var haxe_IMap = function() { };
 haxe_IMap.__name__ = ["haxe","IMap"];
 haxe_IMap.prototype = {
 	__class__: haxe_IMap
-};
-var haxe_Log = function() { };
-haxe_Log.__name__ = ["haxe","Log"];
-haxe_Log.trace = function(v,infos) {
-	js_Boot.__trace(v,infos);
 };
 var haxe_ds_GenericCell = function(elt,next) {
 	this.elt = elt;
@@ -1709,7 +1704,7 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 		if(ink_runtime_NativeFunctionCall.CallExistsWithName(str)) return ink_runtime_NativeFunctionCall.CallWithName(str);
 		if(str == "->->") return ink_runtime_ControlCommand.PopTunnel(); else if(str == "~ret") return ink_runtime_ControlCommand.PopFunction();
 		if(str == "void") return new ink_runtime_VoidObj();
-		haxe_Log.trace("Failed to resolve String type!",{ fileName : "Json.hx", lineNumber : 214, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
+		console.log("Failed to resolve String type!");
 	}
 	if((token instanceof Array) && token.__enum__ == null) return ink_runtime_Json.JArrayToContainer(token);
 	if(Type["typeof"](token) == ValueType.TObject) {
@@ -1783,7 +1778,7 @@ ink_runtime_Json.JTokenToRuntimeObject = function(token) {
 			return varAss;
 		}
 		if(Reflect.field(obj,"originalChoicePath") != null) return ink_runtime_Json.JObjectToChoice(obj);
-		haxe_Log.trace("Failed to resolve TObject type!",{ fileName : "Json.hx", lineNumber : 334, className : "ink.runtime.Json", methodName : "JTokenToRuntimeObject"});
+		console.log("Failed to resolve TObject type!");
 	}
 	if(token == null) return null;
 	throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Failed to convert token to runtime object: " + Std.string(token) + " :: " + Std.string(Type["typeof"](token))));
@@ -2821,7 +2816,7 @@ var ink_runtime_Story = $hx_exports.ink.runtime.Story = function(jsonString) {
 	var versionObj = Reflect.field(rootObject,"inkVersion");
 	if(versionObj == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("ink version number not found. Are you sure it's a valid .ink.json file?"));
 	var formatFromFile = Std["int"](versionObj);
-	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) haxe_Log.trace("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.",{ fileName : "Story.hx", lineNumber : 98, className : "ink.runtime.Story", methodName : "new"});
+	if(formatFromFile > 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story was newer than the current verison of the engine")); else if(formatFromFile < 12) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Version of ink used to build story is too old to be loaded by this verison of the engine")); else if(formatFromFile != 12) console.log("WARNING: Version of ink used to build story doesn't match current version of engine. Non-critical, but recommend synchronising.");
 	var rootToken = Reflect.field(rootObject,"root");
 	if(rootToken == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Root node for ink not found. Are you sure it's a valid .ink.json file?"));
 	this._mainContentContainer = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(rootToken),ink_runtime_Container);
@@ -3091,11 +3086,9 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		this._state.variablesState.set_batchObservingVariableChanges(true);
 		try {
 			var stateAtLastNewline = null;
-			var limit = 256;
 			var count = 0;
 			do {
-				count++;
-				if(count > limit) throw new js__$Boot_HaxeError("Count iteration limit reached");
+				if(count++ > 99999) throw new js__$Boot_HaxeError("Count iteration limit reached");
 				this.Step();
 				if(!this.get_canContinue()) this.TryFollowDefaultInvisibleChoice();
 				if(!this.get_state().get_inStringEvaluation()) {
@@ -3179,8 +3172,8 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			var varPointer;
 			varPointer = js_Boot.__instanceof(currentContentObj,ink_runtime_VariablePointerValue)?currentContentObj:null;
 			if(varPointer != null && varPointer.contextIndex == -1) {
-				var contextIdx = this.get_state().callStack.ContextForVariableNamed(varPointer.variableName);
-				currentContentObj = new ink_runtime_VariablePointerValue(varPointer.variableName,contextIdx);
+				var contextIdx = this.get_state().callStack.ContextForVariableNamed(varPointer.get_variableName());
+				currentContentObj = new ink_runtime_VariablePointerValue(varPointer.get_variableName(),contextIdx);
 			}
 			if(this.get_state().get_inExpressionEvaluation()) this.get_state().PushEvaluationStack(currentContentObj); else this.get_state().PushToOutputStream(currentContentObj);
 		}
@@ -3453,7 +3446,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		return false;
 	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		haxe_Log.trace("This is a stub. Will be added soon!",{ fileName : "Story.hx", lineNumber : 1480, className : "ink.runtime.Story", methodName : "CallExternalFunction"});
+		console.log("This is a stub. Will be added soon!");
 	}
 	,ValidateExternalBindings: function() {
 	}
@@ -4063,7 +4056,13 @@ var ink_runtime_VariablePointerValue = function(variableName,contextIndex) {
 ink_runtime_VariablePointerValue.__name__ = ["ink","runtime","VariablePointerValue"];
 ink_runtime_VariablePointerValue.__super__ = ink_runtime_Value;
 ink_runtime_VariablePointerValue.prototype = $extend(ink_runtime_Value.prototype,{
-	get_valueType: function() {
+	get_variableName: function() {
+		return this.value;
+	}
+	,set_variableName: function(value) {
+		return this.value = value;
+	}
+	,get_valueType: function() {
 		return 4;
 	}
 	,get_isTruthy: function() {
@@ -4075,12 +4074,13 @@ ink_runtime_VariablePointerValue.prototype = $extend(ink_runtime_Value.prototype
 		throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Unexpected type cast of Value to new ValueType"));
 	}
 	,ToString: function() {
-		return "VariablePointerValue(" + this.variableName + ")";
+		return "VariablePointerValue(" + this.get_variableName() + ")";
 	}
 	,Copy: function() {
-		return new ink_runtime_VariablePointerValue(this.variableName,this.contextIndex);
+		return new ink_runtime_VariablePointerValue(this.get_variableName(),this.contextIndex);
 	}
 	,__class__: ink_runtime_VariablePointerValue
+	,__properties__: $extend(ink_runtime_Value.prototype.__properties__,{set_variableName:"set_variableName",get_variableName:"get_variableName"})
 });
 var ink_runtime_VariableAssignment = function(variableName,isNewDeclaration) {
 	if(isNewDeclaration == null) isNewDeclaration = false;
@@ -4178,7 +4178,8 @@ ink_runtime_VariablesState.prototype = {
 		this.SetGlobal(variableName,val);
 	}
 	,CopyFrom: function(varState) {
-		this._globalVariables = ink_runtime_LibUtil.cloneStrMap(this._globalVariables);
+		this._globalVariables = ink_runtime_LibUtil.cloneStrMap(varState._globalVariables);
+		console.log("RESTTing globalVars:" + this._globalVariables.toString());
 		this.variableChangedEvent = varState.variableChangedEvent;
 		if(varState.get_batchObservingVariableChanges() != this.get_batchObservingVariableChanges()) {
 			if(varState.get_batchObservingVariableChanges()) {
@@ -4209,14 +4210,14 @@ ink_runtime_VariablesState.prototype = {
 	,GetRawVariableWithName: function(name,contextIndex) {
 		var varValue = null;
 		if(contextIndex == 0 || contextIndex == -1) {
-			if((varValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,name)) != null) return varValue; else haxe_Log.trace("Global context search not found...Should exit out??",{ fileName : "VariablesState.hx", lineNumber : 189, className : "ink.runtime.VariablesState", methodName : "GetRawVariableWithName", customParams : [this._globalVariables]});
+			if((varValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,name)) != null) return varValue; else console.log("Shouldn't we throw error for this case? Failed to retrieve global variable:" + name + ", from:" + this._globalVariables.toString());
 		}
 		varValue = this._callStack.GetTemporaryVariableWithName(name,contextIndex);
 		if(varValue == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("RUNTIME ERROR: Variable '" + name + "' could not be found in context '" + contextIndex + "'. This shouldn't be possible so is a bug in the ink engine. Please try to construct a minimal story that reproduces the problem and report to inkle, thank you!"));
 		return varValue;
 	}
 	,ValueAtVariablePointer: function(pointer) {
-		return this._GetVariableWithName(pointer.variableName,pointer.contextIndex);
+		return this._GetVariableWithName(pointer.get_variableName(),pointer.contextIndex);
 	}
 	,Assign: function(varAss,value) {
 		var name = varAss.variableName;
@@ -4235,7 +4236,7 @@ ink_runtime_VariablesState.prototype = {
 			do {
 				existingPointer = ink_runtime_LibUtil["as"](this.GetRawVariableWithName(name,contextIndex),ink_runtime_VariablePointerValue);
 				if(existingPointer != null) {
-					name = existingPointer.variableName;
+					name = existingPointer.get_variableName();
 					contextIndex = existingPointer.contextIndex;
 					setGlobal = contextIndex == 0;
 				}
@@ -4247,17 +4248,18 @@ ink_runtime_VariablesState.prototype = {
 		var oldValue = null;
 		oldValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,variableName);
 		this._globalVariables.set(variableName,value);
+		console.log("Setting global variable:" + variableName + "=" + Std.string(value));
 		if(this.variableChangedEvent != null && !value.Equals(oldValue)) {
 			if(this.get_batchObservingVariableChanges()) this._changedVariables.add(variableName); else this.variableChangedEvent(variableName,value);
 		}
 	}
 	,ResolveVariablePointer: function(varPointer) {
 		var contextIndex = varPointer.contextIndex;
-		if(contextIndex == -1) contextIndex = this.GetContextIndexOfVariableNamed(varPointer.variableName);
-		var valueOfVariablePointedTo = this.GetRawVariableWithName(varPointer.variableName,contextIndex);
+		if(contextIndex == -1) contextIndex = this.GetContextIndexOfVariableNamed(varPointer.get_variableName());
+		var valueOfVariablePointedTo = this.GetRawVariableWithName(varPointer.get_variableName(),contextIndex);
 		var doubleRedirectionPointer;
 		doubleRedirectionPointer = js_Boot.__instanceof(valueOfVariablePointedTo,ink_runtime_VariablePointerValue)?valueOfVariablePointedTo:null;
-		if(doubleRedirectionPointer != null) return doubleRedirectionPointer; else return new ink_runtime_VariablePointerValue(varPointer.variableName,contextIndex);
+		if(doubleRedirectionPointer != null) return doubleRedirectionPointer; else return new ink_runtime_VariablePointerValue(varPointer.get_variableName(),contextIndex);
 	}
 	,GetContextIndexOfVariableNamed: function(varName) {
 		if(this._globalVariables.exists(varName)) return 0;
@@ -4287,25 +4289,6 @@ js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
 });
 var js_Boot = function() { };
 js_Boot.__name__ = ["js","Boot"];
-js_Boot.__unhtml = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-};
-js_Boot.__trace = function(v,i) {
-	var msg;
-	if(i != null) msg = i.fileName + ":" + i.lineNumber + ": "; else msg = "";
-	msg += js_Boot.__string_rec(v,"");
-	if(i != null && i.customParams != null) {
-		var _g = 0;
-		var _g1 = i.customParams;
-		while(_g < _g1.length) {
-			var v1 = _g1[_g];
-			++_g;
-			msg += "," + js_Boot.__string_rec(v1,"");
-		}
-	}
-	var d;
-	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js_Boot.__unhtml(msg) + "<br/>"; else if(typeof console != "undefined" && console.log != null) console.log(msg);
-};
 js_Boot.getClass = function(o) {
 	if((o instanceof Array) && o.__enum__ == null) return Array; else {
 		var cl = o.__class__;
