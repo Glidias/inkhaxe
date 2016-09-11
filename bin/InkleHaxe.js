@@ -450,23 +450,6 @@ haxe_ds_StringMap.prototype = {
 		}
 		return out;
 	}
-	,toString: function() {
-		var s = new StringBuf();
-		s.b += "{";
-		var keys = this.arrayKeys();
-		var _g1 = 0;
-		var _g = keys.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			var k = keys[i];
-			if(k == null) s.b += "null"; else s.b += "" + k;
-			s.b += " => ";
-			s.add(Std.string(__map_reserved[k] != null?this.getReserved(k):this.h[k]));
-			if(i < keys.length) s.b += ", ";
-		}
-		s.b += "}";
-		return s.b;
-	}
 	,__class__: haxe_ds_StringMap
 };
 var haxe_io_Error = { __ename__ : true, __constructs__ : ["Blocked","Overflow","OutsideBounds","Custom"] };
@@ -4179,7 +4162,6 @@ ink_runtime_VariablesState.prototype = {
 	}
 	,CopyFrom: function(varState) {
 		this._globalVariables = ink_runtime_LibUtil.cloneStrMap(varState._globalVariables);
-		console.log("RESTTing globalVars:" + this._globalVariables.toString());
 		this.variableChangedEvent = varState.variableChangedEvent;
 		if(varState.get_batchObservingVariableChanges() != this.get_batchObservingVariableChanges()) {
 			if(varState.get_batchObservingVariableChanges()) {
@@ -4210,7 +4192,7 @@ ink_runtime_VariablesState.prototype = {
 	,GetRawVariableWithName: function(name,contextIndex) {
 		var varValue = null;
 		if(contextIndex == 0 || contextIndex == -1) {
-			if((varValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,name)) != null) return varValue; else console.log("Shouldn't we throw error for this case? Failed to retrieve global variable:" + name + ", from:" + this._globalVariables.toString());
+			if((varValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,name)) != null) return varValue;
 		}
 		varValue = this._callStack.GetTemporaryVariableWithName(name,contextIndex);
 		if(varValue == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("RUNTIME ERROR: Variable '" + name + "' could not be found in context '" + contextIndex + "'. This shouldn't be possible so is a bug in the ink engine. Please try to construct a minimal story that reproduces the problem and report to inkle, thank you!"));
@@ -4248,7 +4230,6 @@ ink_runtime_VariablesState.prototype = {
 		var oldValue = null;
 		oldValue = ink_runtime_LibUtil.tryGetValue(this._globalVariables,variableName);
 		this._globalVariables.set(variableName,value);
-		console.log("Setting global variable:" + variableName + "=" + Std.string(value));
 		if(this.variableChangedEvent != null && !value.Equals(oldValue)) {
 			if(this.get_batchObservingVariableChanges()) this._changedVariables.add(variableName); else this.variableChangedEvent(variableName,value);
 		}

@@ -182,9 +182,6 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 			if ( (varValue=LibUtil.tryGetValue(_globalVariables,  name) )  != null ) {
 				return varValue;
 			}
-			else {
-				trace("Shouldn't we throw error for this case? Failed to retrieve global variable:"+name + ", from:"+_globalVariables);
-			}
 		} 
 
 		// Temporary
@@ -264,7 +261,6 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 		//_globalVariables.TryGetValue (variableName, out oldValue);
 		
 		_globalVariables.set(variableName, value);
-		trace("Setting global variable:" + variableName + "="+value);
 		
 		if (variableChangedEvent != null && !value.Equals (oldValue)) {
 
