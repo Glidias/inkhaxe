@@ -2998,9 +2998,10 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			var i = _g2++;
 			unpickedIndices.push(i);
 		}
-		var _g3 = 0;
-		while(_g3 < iterationIndex) {
-			var i1 = _g3++;
+		var _g11 = 0;
+		var _g3 = iterationIndex + 1;
+		while(_g11 < _g3) {
+			var i1 = _g11++;
 			var chosen = random.randomRange(0,unpickedIndices.length - 1);
 			var chosenIndex = unpickedIndices[chosen];
 			unpickedIndices.splice(chosen,1);
@@ -3067,41 +3068,34 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		this._state.ResetOutput();
 		this._state.didSafeExit = false;
 		this._state.variablesState.set_batchObservingVariableChanges(true);
-		try {
-			var stateAtLastNewline = null;
-			var count = 0;
-			do {
-				if(count++ > 99999) throw new js__$Boot_HaxeError("Count iteration limit reached");
-				this.Step();
-				if(!this.get_canContinue()) this.TryFollowDefaultInvisibleChoice();
-				if(!this.get_state().get_inStringEvaluation()) {
-					if(stateAtLastNewline != null) {
-						var currText = this.get_currentText();
-						var prevTextLength = stateAtLastNewline.get_currentText().length;
-						if(!(currText == stateAtLastNewline.get_currentText())) {
-							if(currText.length >= prevTextLength && currText.charAt(prevTextLength - 1) == "\n") {
-								this.RestoreStateSnapshot(stateAtLastNewline);
-								break;
-							} else stateAtLastNewline = null;
-						}
-					}
-					if(this.get_state().get_outputStreamEndsInNewline()) {
-						if(this.get_canContinue()) stateAtLastNewline = this.StateSnapshot(); else stateAtLastNewline = null;
+		var stateAtLastNewline = null;
+		var count = 0;
+		do {
+			if(count++ > 99999) throw new js__$Boot_HaxeError("Count iteration limit reached");
+			this.Step();
+			if(!this.get_canContinue()) this.TryFollowDefaultInvisibleChoice();
+			if(!this.get_state().get_inStringEvaluation()) {
+				if(stateAtLastNewline != null) {
+					var currText = this.get_currentText();
+					var prevTextLength = stateAtLastNewline.get_currentText().length;
+					if(!(currText == stateAtLastNewline.get_currentText())) {
+						if(currText.length >= prevTextLength && currText.charAt(prevTextLength - 1) == "\n") {
+							this.RestoreStateSnapshot(stateAtLastNewline);
+							break;
+						} else stateAtLastNewline = null;
 					}
 				}
-			} while(this.get_canContinue());
-			if(stateAtLastNewline != null) this.RestoreStateSnapshot(stateAtLastNewline);
-			if(!this.get_canContinue()) {
-				if(this.get_state().callStack.get_canPopThread()) this.Error("Thread available to pop, threads should always be flat by the end of evaluation?");
-				if(this.get_currentChoices().length == 0 && !this.get_state().didSafeExit && this._temporaryEvaluationContainer == null) {
-					if(this.get_state().callStack.CanPop(0)) this.Error("unexpectedly reached end of content. Do you need a '->->' to return from a tunnel?"); else if(this.get_state().callStack.CanPop(1)) this.Error("unexpectedly reached end of content. Do you need a '~ return'?"); else if(!this.get_state().callStack.get_canPop()) this.Error("ran out of content. Do you need a '-> DONE' or '-> END'?"); else this.Error("unexpectedly reached end of content for unknown reason. Please debug compiler!");
+				if(this.get_state().get_outputStreamEndsInNewline()) {
+					if(this.get_canContinue()) stateAtLastNewline = this.StateSnapshot(); else stateAtLastNewline = null;
 				}
 			}
-		} catch( e ) {
-			if (e instanceof js__$Boot_HaxeError) e = e.val;
-			if( js_Boot.__instanceof(e,ink_runtime_StoryException) ) {
-				this.AddError(e.msg,e.useEndLineNumber);
-			} else throw(e);
+		} while(this.get_canContinue());
+		if(stateAtLastNewline != null) this.RestoreStateSnapshot(stateAtLastNewline);
+		if(!this.get_canContinue()) {
+			if(this.get_state().callStack.get_canPopThread()) this.Error("Thread available to pop, threads should always be flat by the end of evaluation?");
+			if(this.get_currentChoices().length == 0 && !this.get_state().didSafeExit && this._temporaryEvaluationContainer == null) {
+				if(this.get_state().callStack.CanPop(0)) this.Error("unexpectedly reached end of content. Do you need a '->->' to return from a tunnel?"); else if(this.get_state().callStack.CanPop(1)) this.Error("unexpectedly reached end of content. Do you need a '~ return'?"); else if(!this.get_state().callStack.get_canPop()) this.Error("ran out of content. Do you need a '-> DONE' or '-> END'?"); else this.Error("unexpectedly reached end of content for unknown reason. Please debug compiler!");
+			}
 		}
 		this.get_state().didSafeExit = false;
 		this._state.variablesState.set_batchObservingVariableChanges(false);
