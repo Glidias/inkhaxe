@@ -388,13 +388,18 @@ class Story extends Object
             var seqPathStr = seqContainer.path.toString();
             var sequenceHash = 0;
 	
+			/*
             for ( c in seqPathStr.split("") ) {  //lazy method 
-                var resultI:Int =  Std.parseInt(c);
+                var resultI:Int =  c.charCodeAt(0);
 				
 				// tocheck: is this correct as of js versinons? Or issit based off addition of digits?
 				sequenceHash +=  resultI != null && !Math.isNaN(resultI) ? resultI :  0;  
 				//sequenceHash += c;
             }
+			*/
+			for ( i in 0...seqPathStr.length) {
+				sequenceHash += StringTools.fastCodeAt(seqPathStr, i);
+			}
             var randomSeed = sequenceHash + loopIndex + state.storySeed;
             var random = new ParkMiller (randomSeed);
 
