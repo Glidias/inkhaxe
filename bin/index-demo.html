@@ -133,10 +133,14 @@ table{
 		</h1>
 		<p style="font-size:11px;margin-bottom:15px">based off original demo file from <a href="http://yannick-lohse.fr/inkjs/" target="_blank">inkjs</a></p>
 		
-		<input type="file" id="file-input" accept=".json" />
-		<label for="file-input" class="loader">Load a .json file</label>
-		or
-		<button class="loader" onclick="loadSample()">play a sample story</button>
+		<input type="file" id="file-input" class="loadcomp" accept=".json" />
+		<label for="file-input" class="loader loadcomp">Load a .json file</label>
+		<span class="loadcomp">or</span>
+		<button class="loader loadcomp" onclick="loadSample()">play a sample story:&gt;</button>
+		<select id="sample-select" class="loadcomp">
+			<option value="intercept.ink.json">The Intercept</option>
+			<option value="tros.ink.json">TROSink!(POC)</option>
+		</select>
 	</div>
 	
 	<div id="play-area">
@@ -160,7 +164,7 @@ table{
 				var file = event.target.files[0];
 				
 				if (!file) return;
-				
+					$("#selection .loadcomp").css("display", "none");
 				var reader = new FileReader();
 				reader.onload = function(e) {
 					var inkFile = e.target.result;
@@ -172,7 +176,9 @@ table{
 		});
 		
 		function loadSample(){
-			fetch('tros.ink.json')
+			$("#selection .loadcomp").css("display", "none");
+			
+			fetch($("#sample-select").val())
 			.then(function(response){
 				
 				return response.text();
@@ -183,6 +189,7 @@ table{
 		}
 		
 		function startStory(inkFile){
+		
 			$playArea.find('p').remove();
 
 			myStory = new ink.runtime.Story(inkFile);
@@ -233,4 +240,4 @@ table{
 	</script>
 	<script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>
-</html>
+</html>	
