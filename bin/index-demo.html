@@ -108,6 +108,10 @@ table{
 			list-style: decimal;
 			list-style-position: outside;
 		}
+		#choices.disabled {
+			pointer-events:none;
+			opacity:.25;
+		}
 		#choices li{
 			margin: 12px 0;
 			cursor: pointer;
@@ -142,6 +146,7 @@ table{
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/3.2.2/es6-promise.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/1.0.0/fetch.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.19.0/TweenLite.min.js"></script>
 	<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 	<script src="InkleHaxe.js"></script>
 	<script>
@@ -213,10 +218,17 @@ table{
 			}
 		}
 		
+		var selectedIndex;
 		function onChoiceSelect(){
-			myStory.ChooseChoiceIndex($(this).index());
+			$choices.addClass("disabled");
+			selectedIndex = $(this).index();
+			TweenLite.delayedCall( 0.1,debounceChoiceSelect);
+		}
+		function debounceChoiceSelect() {
+			myStory.ChooseChoiceIndex(selectedIndex);
 			$choices.empty();
 			continueToNextChoice();
+			$choices.removeClass("disabled");
 		}
 	</script>
 	<script async defer src="https://buttons.github.io/buttons.js"></script>
