@@ -131,6 +131,8 @@ table{
 		
 		<input type="file" id="file-input" accept=".json" />
 		<label for="file-input" class="loader">Load a .json file</label>
+		or
+		<button class="loader" onclick="loadSample()">play a sample story</button>
 	</div>
 	
 	<div id="play-area">
@@ -165,7 +167,7 @@ table{
 		});
 		
 		function loadSample(){
-			fetch('intercept.ink.json')
+			fetch('tros.ink.json')
 			.then(function(response){
 				
 				return response.text();
