@@ -389,7 +389,7 @@ class Story extends Object
             var sequenceHash = 0;
 	
             for ( c in seqPathStr.split("") ) {  //lazy method 
-                var resultI:Int = Std.parseInt(c);
+                var resultI:Int =  Std.parseInt(c);
 				
 				// tocheck: is this correct as of js versinons? Or issit based off addition of digits?
 				sequenceHash +=  resultI != null && !Math.isNaN(resultI) ? resultI :  0;  
@@ -403,7 +403,7 @@ class Story extends Object
                 unpickedIndices.push (i);
             }
 
-            for (i in 0...iterationIndex) {  //int i = 0; i <= iterationIndex; ++i
+            for (i in 0...iterationIndex+1) {  //int i = 0; i <= iterationIndex; ++i
                 var chosen = random.randomRange(0, unpickedIndices.length - 1); // random.Next () % unpickedIndices.Count;
                 var chosenIndex = unpickedIndices [chosen];
                 unpickedIndices.splice(chosen, 1);  //unpickedIndices.removeAt(chosen);
@@ -544,7 +544,9 @@ class Story extends Object
 	
 		//_previousContainer = null;
 
-		try {
+		
+		// I'd rather leave it uncaught so i can see stacktrace better, even though it'll kill the app basically.
+		//try {  
 
 			var stateAtLastNewline:StoryState = null;
 
@@ -657,12 +659,10 @@ class Story extends Object
 			}
 
 
-		} catch ( e:StoryException) {
-			
-			AddError (e.msg, e.useEndLineNumber);
-			
-			
-		} 
+		//} 
+		//catch ( e:StoryException) {  
+		//	AddError (e.msg, e.useEndLineNumber);
+		//} 
 		
 		//finally {
 			
