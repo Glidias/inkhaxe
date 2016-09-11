@@ -466,9 +466,9 @@ class Story extends Object
 		// Move up callstack if possible
 		
 		//int i = state.callStack.elements.Count - 1; i >= 0; --i
-		i = state.callStack.elements.length;
+		i = state.callStack.elements.length - 1;
 		while (i>=0) {
-			var currentObj = state.callStack.elements [i].currentObject;
+			var currentObj = state.callStack.elements[i].currentObject;
 			if (currentObj!=null && currentObj.debugMetadata != null) {
 				return currentObj.debugMetadata;
 			}

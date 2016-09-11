@@ -3032,7 +3032,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			if(dm != null) return dm;
 		}
 		var i;
-		i = this.get_state().callStack.get_elements().length;
+		i = this.get_state().callStack.get_elements().length - 1;
 		while(i >= 0) {
 			var currentObj = this.get_state().callStack.get_elements()[i].get_currentObject();
 			if(currentObj != null && currentObj.get_debugMetadata() != null) return currentObj.get_debugMetadata();
