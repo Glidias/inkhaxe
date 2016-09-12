@@ -9,6 +9,8 @@ import ink.runtime.Value.DivertTargetValue;
 import ink.runtime.Value.IntValue;
 import ink.runtime.Value.StringValue;
 import ink.runtime.Value.VariablePointerValue;
+import ink.runtime.js.JSProxy;
+
 
 /**
  * done.. except for external functions support.
@@ -70,8 +72,14 @@ class Story extends Object
 		return state.variablesState;
 	}
 	
+	#if js
+	public function getVariableesStateProxy():JSProxy {
+		return state.variablesState.jsProxy;
+	}
+	#end
+	
 	public var state(get, null):StoryState;
-	function get_state():StoryState 
+	inline function get_state():StoryState 
 	{
 		return _state;
 	}
@@ -109,6 +117,15 @@ class Story extends Object
 		_mainContentContainer = LibUtil.as(Json.JTokenToRuntimeObject(rootToken) , Container);
 
 		ResetState ();
+
+
+		// es6 setters/getters
+		#if js
+		untyped window.Object.defineProperty(this, "canContinue", { get : get_canContinue  });
+		untyped window.Object.defineProperty(this, "currentChoices", { get : get_currentChoices  });
+		untyped window.Object.defineProperty(this, "state", { get : get_state  });
+		untyped window.Object.defineProperty(this, "variablesState", { get : getVariableesStateProxy  });
+		#end
 	}
 	
 	public static function createFromContainer(contentContainer:Container):Story {

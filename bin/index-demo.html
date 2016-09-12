@@ -156,6 +156,7 @@ table{
 	<script>
 		var myStory, $playArea, $choices;
 		
+		
 		$(function(){
 			$playArea = $('#play-area');
 			$choices = $('#choices');
@@ -193,18 +194,21 @@ table{
 			$playArea.find('p').remove();
 
 			myStory = new ink.runtime.Story(inkFile);
+			
 
 			//console.log(myStory.ToJsonString());
 			//setTimeout( continueToNextChoice, 1000);
 			
+			//myStory.variablesState["charPersonName_totalHealth"] = 100;  // testing variablesState setting
 			continueToNextChoice();
+			
 		}
 		
 		
 	
 		
 		function continueToNextChoice(){
-			while (myStory.get_canContinue()){
+			while (myStory.canContinue){
 			
 				var grafs = myStory.Continue().split("\n");
 				
@@ -213,7 +217,7 @@ table{
 				});
 			}
 
-			var choices = myStory.get_currentChoices();
+			var choices = myStory.currentChoices;
 			var len = choices.length;
 		
 			if (len > 0){

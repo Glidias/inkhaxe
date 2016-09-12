@@ -1,6 +1,8 @@
 package ink.runtime;
 import ink.runtime.MapCloner;
 import ink.runtime.Value.VariablePointerValue;
+import ink.runtime.js.JSProxy;
+import ink.runtime.js.JSProxyTrap;
 
 /**
  * Done!
@@ -113,7 +115,20 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	{
 		 _globalVariables = new Map<String, Object>();
         _callStack = callStack;
+		#if (js)
+			_jsProxy = new JSProxy( this,  new JSProxyTrap<VariablesState>() );
+		#end
 	}
+	
+
+	#if (js)
+	var _jsProxy:JSProxy;
+	public var jsProxy(get, null):JSProxy;
+	inline function get_jsProxy():JSProxy 
+	{
+		return _jsProxy;
+	}
+	#end
 
 	/*
 	function _cloneMap(map:Map<String,Dynamic>):Map<String, Object> {
@@ -310,6 +325,8 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 
 		return _callStack.currentElementIndex;
 	}
+	
+	
 	
 	
 

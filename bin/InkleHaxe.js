@@ -2563,6 +2563,10 @@ var ink_runtime_Story = $hx_exports.ink.runtime.Story = function(jsonString) {
 	if(rootToken == null) throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Root node for ink not found. Are you sure it's a valid .ink.json file?"));
 	this._mainContentContainer = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(rootToken),ink_runtime_Container);
 	this.ResetState();
+	window.Object.defineProperty(this,"canContinue",{ get : $bind(this,this.get_canContinue)});
+	window.Object.defineProperty(this,"currentChoices",{ get : $bind(this,this.get_currentChoices)});
+	window.Object.defineProperty(this,"state",{ get : $bind(this,this.get_state)});
+	window.Object.defineProperty(this,"variablesState",{ get : $bind(this,this.getVariableesStateProxy)});
 };
 ink_runtime_Story.__name__ = ["ink","runtime","Story"];
 ink_runtime_Story.createFromContainer = function(contentContainer) {
@@ -2594,16 +2598,19 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		return choices;
 	}
 	,get_currentText: function() {
-		return this.get_state().get_currentText();
+		return this._state.get_currentText();
 	}
 	,get_currentErrors: function() {
-		return this.get_state().currentErrors;
+		return this._state.currentErrors;
 	}
 	,get_hasError: function() {
-		return this.get_state().get_hasError();
+		return this._state.get_hasError();
 	}
 	,get_variablesState: function() {
-		return this.get_state().variablesState;
+		return this._state.variablesState;
+	}
+	,getVariableesStateProxy: function() {
+		return this._state.variablesState._jsProxy;
 	}
 	,get_state: function() {
 		return this._state;
@@ -2629,42 +2636,42 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	}
 	,ResetGlobals: function() {
 		if(this._mainContentContainer.namedContent.exists("global decl")) {
-			var originalPath = this.get_state().get_currentPath();
+			var originalPath = this._state.get_currentPath();
 			this.ChoosePathString("global decl");
 			this.ContinueInternal();
-			this.get_state().set_currentPath(originalPath);
+			this._state.set_currentPath(originalPath);
 		}
 	}
 	,BuildStringOfHierarchy: function() {
 		var sb = new StringBuf();
-		this.get_mainContentContainer().BuildStringOfHierarchy(sb,0,this.get_state().get_currentContentObject());
+		this.get_mainContentContainer().BuildStringOfHierarchy(sb,0,this._state.get_currentContentObject());
 		return sb.b;
 	}
 	,NextContent: function() {
-		this.get_state().set_previousContentObject(this.get_state().get_currentContentObject());
-		if(this.get_state().divertedTargetObject != null) {
-			this.get_state().set_currentContentObject(this.get_state().divertedTargetObject);
-			this.get_state().divertedTargetObject = null;
+		this._state.set_previousContentObject(this._state.get_currentContentObject());
+		if(this._state.divertedTargetObject != null) {
+			this._state.set_currentContentObject(this._state.divertedTargetObject);
+			this._state.divertedTargetObject = null;
 			this.VisitChangedContainersDueToDivert();
-			if(this.get_state().get_currentContentObject() != null) return;
+			if(this._state.get_currentContentObject() != null) return;
 		}
 		var successfulPointerIncrement = this.IncrementContentPointer();
 		if(!successfulPointerIncrement) {
 			var didPop = false;
-			if(this.get_state().callStack.CanPop(1)) {
-				this.get_state().callStack.Pop(1);
-				if(this.get_state().get_inExpressionEvaluation()) this.get_state().PushEvaluationStack(new ink_runtime_VoidObj());
+			if(this._state.callStack.CanPop(1)) {
+				this._state.callStack.Pop(1);
+				if(this._state.get_inExpressionEvaluation()) this._state.PushEvaluationStack(new ink_runtime_VoidObj());
 				didPop = true;
-			} else if(this.get_state().callStack.get_canPopThread()) {
-				this.get_state().callStack.PopThread();
+			} else if(this._state.callStack.get_canPopThread()) {
+				this._state.callStack.PopThread();
 				didPop = true;
 			}
-			if(didPop && this.get_state().get_currentContentObject() != null) this.NextContent();
+			if(didPop && this._state.get_currentContentObject() != null) this.NextContent();
 		}
 	}
 	,IncrementContentPointer: function() {
 		var successfulIncrement = true;
-		var currEl = this.get_state().callStack.get_currentElement();
+		var currEl = this._state.callStack.get_currentElement();
 		currEl.currentContentIndex++;
 		while(currEl.currentContentIndex >= currEl.currentContainer._content.length) {
 			successfulIncrement = false;
@@ -2696,46 +2703,38 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		}
 		var count = 0;
 		var containerPathStr = container.get_path().toString();
-		var tryCount;
-		var this1 = this.get_state().visitCounts;
-		tryCount = this1.get(containerPathStr);
+		var tryCount = this._state.visitCounts.get(containerPathStr);
 		if(tryCount != null && !isNaN(tryCount)) count = tryCount;
 		return count;
 	}
 	,IncrementVisitCountForContainer: function(container) {
 		var count = 0;
 		var containerPathStr = container.get_path().toString();
-		var tryCount;
-		var this1 = this.get_state().visitCounts;
-		tryCount = this1.get(containerPathStr);
+		var tryCount = this._state.visitCounts.get(containerPathStr);
 		if(tryCount != null && !isNaN(tryCount)) count = tryCount;
 		count++;
-		var this2 = this.get_state().visitCounts;
-		this2.set(containerPathStr,count);
+		this._state.visitCounts.set(containerPathStr,count);
 	}
 	,RecordTurnIndexVisitToContainer: function(container) {
 		var containerPathStr = container.get_path().toString();
-		var this1 = this.get_state().turnIndices;
-		var value = this.get_state().currentTurnIndex;
-		this1.set(containerPathStr,value);
+		this._state.turnIndices.set(containerPathStr,this._state.currentTurnIndex);
 	}
 	,TurnsSinceForContainer: function(container) {
 		if(!container.turnIndexShouldBeCounted) this.Error("TURNS_SINCE() for target (" + container.name + " - on " + Std.string(container.get_debugMetadata()) + ") unknown. The story may need to be compiled with countAllVisits flag (-c).");
 		var index = 0;
 		var containerPathStr = container.get_path().toString();
-		var this1 = this.get_state().turnIndices;
-		index = this1.get(containerPathStr);
-		if(index != null && !isNaN(index)) return this.get_state().currentTurnIndex - index; else return -1;
+		index = this._state.turnIndices.get(containerPathStr);
+		if(index != null && !isNaN(index)) return this._state.currentTurnIndex - index; else return -1;
 	}
 	,NextSequenceShuffleIndex: function() {
-		var numElementsIntVal = ink_runtime_LibUtil["as"](this.get_state().PopEvaluationStack(),ink_runtime_IntValue);
+		var numElementsIntVal = ink_runtime_LibUtil["as"](this._state.PopEvaluationStack(),ink_runtime_IntValue);
 		if(numElementsIntVal == null) {
 			this.Error("expected number of elements in sequence for shuffle index");
 			return 0;
 		}
-		var seqContainer = this.get_state().get_currentContainer();
+		var seqContainer = this._state.get_currentContainer();
 		var numElements = numElementsIntVal.value;
-		var seqCountVal = ink_runtime_LibUtil["as"](this.get_state().PopEvaluationStack(),ink_runtime_IntValue);
+		var seqCountVal = ink_runtime_LibUtil["as"](this._state.PopEvaluationStack(),ink_runtime_IntValue);
 		var seqCount = seqCountVal.value;
 		var loopIndex = seqCount / numElements | 0;
 		var iterationIndex = seqCount % numElements;
@@ -2747,7 +2746,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			var i = _g1++;
 			sequenceHash += seqPathStr.charCodeAt(i);
 		}
-		var randomSeed = sequenceHash + loopIndex + this.get_state().storySeed;
+		var randomSeed = sequenceHash + loopIndex + this._state.storySeed;
 		var random = new ink_random_ParkMiller(randomSeed);
 		var unpickedIndices = [];
 		var _g2 = 0;
@@ -2779,26 +2778,26 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			if(useEndLineNumber) lineNum = dm.endLineNumber; else lineNum = dm.startLineNumber;
 			message = "RUNTIME ERROR: '" + dm.fileName + "' line " + lineNum + ": " + message;
 		} else message = "RUNTIME ERROR: " + message;
-		this.get_state().AddError(message);
-		this.get_state().ForceEndFlow();
+		this._state.AddError(message);
+		this._state.ForceEndFlow();
 	}
 	,get_currentDebugMetadata: function() {
 		var dm;
-		var currentContent = this.get_state().get_currentContentObject();
+		var currentContent = this._state.get_currentContentObject();
 		if(currentContent != null) {
 			dm = currentContent.get_debugMetadata();
 			if(dm != null) return dm;
 		}
 		var i;
-		i = this.get_state().callStack.get_elements().length - 1;
+		i = this._state.callStack.get_elements().length - 1;
 		while(i >= 0) {
-			var currentObj = this.get_state().callStack.get_elements()[i].get_currentObject();
+			var currentObj = this._state.callStack.get_elements()[i].get_currentObject();
 			if(currentObj != null && currentObj.get_debugMetadata() != null) return currentObj.get_debugMetadata();
 			--i;
 		}
-		i = this.get_state().get_outputStream().length - 1;
+		i = this._state.get_outputStream().length - 1;
 		while(i >= 0) {
-			var outputObj = this.get_state().get_outputStream()[i];
+			var outputObj = this._state.get_outputStream()[i];
 			dm = outputObj.get_debugMetadata();
 			if(dm != null) return dm;
 			--i;
@@ -2831,7 +2830,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			if(count++ > 99999) throw new js__$Boot_HaxeError("Count iteration limit reached");
 			this.Step();
 			if(!this.get_canContinue()) this.TryFollowDefaultInvisibleChoice();
-			if(!this.get_state().get_inStringEvaluation()) {
+			if(!this._state.get_inStringEvaluation()) {
 				if(stateAtLastNewline != null) {
 					var currText = this.get_currentText();
 					var prevTextLength = stateAtLastNewline.get_currentText().length;
@@ -2842,24 +2841,24 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 						} else stateAtLastNewline = null;
 					}
 				}
-				if(this.get_state().get_outputStreamEndsInNewline()) {
+				if(this._state.get_outputStreamEndsInNewline()) {
 					if(this.get_canContinue()) stateAtLastNewline = this.StateSnapshot(); else stateAtLastNewline = null;
 				}
 			}
 		} while(this.get_canContinue());
 		if(stateAtLastNewline != null) this.RestoreStateSnapshot(stateAtLastNewline);
 		if(!this.get_canContinue()) {
-			if(this.get_state().callStack.get_canPopThread()) this.Error("Thread available to pop, threads should always be flat by the end of evaluation?");
-			if(this.get_currentChoices().length == 0 && !this.get_state().didSafeExit && this._temporaryEvaluationContainer == null) {
-				if(this.get_state().callStack.CanPop(0)) this.Error("unexpectedly reached end of content. Do you need a '->->' to return from a tunnel?"); else if(this.get_state().callStack.CanPop(1)) this.Error("unexpectedly reached end of content. Do you need a '~ return'?"); else if(!this.get_state().callStack.get_canPop()) this.Error("ran out of content. Do you need a '-> DONE' or '-> END'?"); else this.Error("unexpectedly reached end of content for unknown reason. Please debug compiler!");
+			if(this._state.callStack.get_canPopThread()) this.Error("Thread available to pop, threads should always be flat by the end of evaluation?");
+			if(this.get_currentChoices().length == 0 && !this._state.didSafeExit && this._temporaryEvaluationContainer == null) {
+				if(this._state.callStack.CanPop(0)) this.Error("unexpectedly reached end of content. Do you need a '->->' to return from a tunnel?"); else if(this._state.callStack.CanPop(1)) this.Error("unexpectedly reached end of content. Do you need a '~ return'?"); else if(!this._state.callStack.get_canPop()) this.Error("ran out of content. Do you need a '-> DONE' or '-> END'?"); else this.Error("unexpectedly reached end of content for unknown reason. Please debug compiler!");
 			}
 		}
-		this.get_state().didSafeExit = false;
+		this._state.didSafeExit = false;
 		this._state.variablesState.set_batchObservingVariableChanges(false);
 		return this.get_currentText();
 	}
 	,get_canContinue: function() {
-		return this.get_state().get_currentContentObject() != null && !this.get_state().get_hasError();
+		return this._state.get_currentContentObject() != null && !this._state.get_hasError();
 	}
 	,ContinueMaximally: function() {
 		var sb = new StringBuf();
@@ -2870,14 +2869,14 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		return this.get_mainContentContainer().ContentAtPath(path);
 	}
 	,StateSnapshot: function() {
-		return this.get_state().Copy();
+		return this._state.Copy();
 	}
 	,RestoreStateSnapshot: function(state) {
 		this._state = state;
 	}
 	,Step: function() {
 		var shouldAddToStream = true;
-		var currentContentObj = this.get_state().get_currentContentObject();
+		var currentContentObj = this._state.get_currentContentObject();
 		if(currentContentObj == null) return;
 		var currentContainer;
 		currentContainer = js_Boot.__instanceof(currentContentObj,ink_runtime_Container)?currentContentObj:null;
@@ -2885,19 +2884,19 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			this.VisitContainer(currentContainer,true);
 			if(currentContainer._content.length == 0) break;
 			currentContentObj = currentContainer._content[0];
-			this.get_state().callStack.get_currentElement().currentContentIndex = 0;
-			this.get_state().callStack.get_currentElement().currentContainer = currentContainer;
+			this._state.callStack.get_currentElement().currentContentIndex = 0;
+			this._state.callStack.get_currentElement().currentContainer = currentContainer;
 			currentContainer = js_Boot.__instanceof(currentContentObj,ink_runtime_Container)?currentContentObj:null;
 		}
-		currentContainer = this.get_state().callStack.get_currentElement().currentContainer;
+		currentContainer = this._state.callStack.get_currentElement().currentContainer;
 		var isLogicOrFlowControl = this.PerformLogicAndFlowControl(currentContentObj);
-		if(this.get_state().get_currentContentObject() == null) return;
+		if(this._state.get_currentContentObject() == null) return;
 		if(isLogicOrFlowControl) shouldAddToStream = false;
 		var choicePoint;
 		choicePoint = js_Boot.__instanceof(currentContentObj,ink_runtime_ChoicePoint)?currentContentObj:null;
 		if(choicePoint != null) {
 			var choice = this.ProcessChoice(choicePoint);
-			if(choice != null) this.get_state().currentChoices.add(choice);
+			if(choice != null) this._state.currentChoices.add(choice);
 			currentContentObj = null;
 			shouldAddToStream = false;
 		}
@@ -2906,15 +2905,15 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			var varPointer;
 			varPointer = js_Boot.__instanceof(currentContentObj,ink_runtime_VariablePointerValue)?currentContentObj:null;
 			if(varPointer != null && varPointer.contextIndex == -1) {
-				var contextIdx = this.get_state().callStack.ContextForVariableNamed(varPointer.get_variableName());
+				var contextIdx = this._state.callStack.ContextForVariableNamed(varPointer.get_variableName());
 				currentContentObj = new ink_runtime_VariablePointerValue(varPointer.get_variableName(),contextIdx);
 			}
-			if(this.get_state().get_inExpressionEvaluation()) this.get_state().PushEvaluationStack(currentContentObj); else this.get_state().PushToOutputStream(currentContentObj);
+			if(this._state.get_inExpressionEvaluation()) this._state.PushEvaluationStack(currentContentObj); else this._state.PushToOutputStream(currentContentObj);
 		}
 		this.NextContent();
 		var controlCmd;
 		controlCmd = js_Boot.__instanceof(currentContentObj,ink_runtime_ControlCommand)?currentContentObj:null;
-		if(controlCmd != null && controlCmd.commandType == 14) this.get_state().callStack.PushThread();
+		if(controlCmd != null && controlCmd.commandType == 14) this._state.callStack.PushThread();
 	}
 	,VisitContainer: function(container,atStart) {
 		if(!container.countingAtStartOnly || atStart) {
@@ -2925,17 +2924,17 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	,ProcessChoice: function(choicePoint) {
 		var showChoice = true;
 		if(choicePoint.hasCondition) {
-			var conditionValue = this.get_state().PopEvaluationStack();
+			var conditionValue = this._state.PopEvaluationStack();
 			if(!this.IsTruthy(conditionValue)) showChoice = false;
 		}
 		var startText = "";
 		var choiceOnlyText = "";
 		if(choicePoint.hasChoiceOnlyContent) {
-			var choiceOnlyStrVal = ink_runtime_LibUtil["as"](this.get_state().PopEvaluationStack(),ink_runtime_StringValue);
+			var choiceOnlyStrVal = ink_runtime_LibUtil["as"](this._state.PopEvaluationStack(),ink_runtime_StringValue);
 			choiceOnlyText = choiceOnlyStrVal.value;
 		}
 		if(choicePoint.hasStartContent) {
-			var startStrVal = ink_runtime_LibUtil["as"](this.get_state().PopEvaluationStack(),ink_runtime_StringValue);
+			var startStrVal = ink_runtime_LibUtil["as"](this._state.PopEvaluationStack(),ink_runtime_StringValue);
 			startText = startStrVal.value;
 		}
 		if(choicePoint.onceOnly) {
@@ -2943,7 +2942,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			if(visitCount > 0) showChoice = false;
 		}
 		var choice = ink_runtime_Choice.create(choicePoint);
-		choice.threadAtGeneration = this.get_state().callStack.get_currentThread().Copy();
+		choice.threadAtGeneration = this._state.callStack.get_currentThread().Copy();
 		if(!showChoice) return null;
 		choice.text = startText + choiceOnlyText;
 		return choice;
@@ -2967,12 +2966,12 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		if(js_Boot.__instanceof(contentObj,ink_runtime_Divert)) {
 			var currentDivert = contentObj;
 			if(currentDivert.isConditional) {
-				var conditionValue = this.get_state().PopEvaluationStack();
+				var conditionValue = this._state.PopEvaluationStack();
 				if(!this.IsTruthy(conditionValue)) return true;
 			}
 			if(currentDivert.get_hasVariableTarget()) {
 				var varName = currentDivert.variableDivertName;
-				var varContents = this.get_state().variablesState.GetVariableWithName(varName);
+				var varContents = this._state.variablesState.GetVariableWithName(varName);
 				if(!js_Boot.__instanceof(varContents,ink_runtime_DivertTargetValue)) {
 					var intContent;
 					intContent = js_Boot.__instanceof(varContents,ink_runtime_IntValue)?varContents:null;
@@ -2981,13 +2980,13 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					this.Error(errorMessage);
 				}
 				var target = varContents;
-				this.get_state().divertedTargetObject = this.ContentAtPath(target.get_targetPath());
+				this._state.divertedTargetObject = this.ContentAtPath(target.get_targetPath());
 			} else if(currentDivert.isExternal) {
 				this.CallExternalFunction(currentDivert.get_targetPathString(),currentDivert.externalArgs);
 				return true;
-			} else this.get_state().divertedTargetObject = currentDivert.get_targetContent();
-			if(currentDivert.pushesToStack) this.get_state().callStack.Push(currentDivert.stackPushType);
-			if(this.get_state().divertedTargetObject == null && !currentDivert.isExternal) {
+			} else this._state.divertedTargetObject = currentDivert.get_targetContent();
+			if(currentDivert.pushesToStack) this._state.callStack.Push(currentDivert.stackPushType);
+			if(this._state.divertedTargetObject == null && !currentDivert.isExternal) {
 				if(currentDivert != null && currentDivert.get_debugMetadata().sourceName != null) this.Error("Divert target doesn't exist: " + currentDivert.get_debugMetadata().sourceName); else this.Error("Divert resolution failed: " + Std.string(currentDivert));
 			}
 			return true;
@@ -2996,54 +2995,54 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			var _g = evalCommand.commandType;
 			switch(_g) {
 			case 0:
-				ink_runtime_Assert.bool(this.get_state().get_inExpressionEvaluation() == false,"Already in expression evaluation?");
-				this.get_state().set_inExpressionEvaluation(true);
+				ink_runtime_Assert.bool(this._state.get_inExpressionEvaluation() == false,"Already in expression evaluation?");
+				this._state.set_inExpressionEvaluation(true);
 				break;
 			case 2:
-				ink_runtime_Assert.bool(this.get_state().get_inExpressionEvaluation() == true,"Not in expression evaluation mode");
-				this.get_state().set_inExpressionEvaluation(false);
+				ink_runtime_Assert.bool(this._state.get_inExpressionEvaluation() == true,"Not in expression evaluation mode");
+				this._state.set_inExpressionEvaluation(false);
 				break;
 			case 1:
-				if(this.get_state().evaluationStack.length > 0) {
-					var output = this.get_state().PopEvaluationStack();
+				if(this._state.evaluationStack.length > 0) {
+					var output = this._state.PopEvaluationStack();
 					if(!js_Boot.__instanceof(output,ink_runtime_VoidObj)) {
 						var text = new ink_runtime_StringValue(Std.string(output));
-						this.get_state().PushToOutputStream(text);
+						this._state.PushToOutputStream(text);
 					}
 				}
 				break;
 			case 9:
 				break;
 			case 3:
-				this.get_state().PushEvaluationStack(this.get_state().PeekEvaluationStack());
+				this._state.PushEvaluationStack(this._state.PeekEvaluationStack());
 				break;
 			case 4:
-				this.get_state().PopEvaluationStack();
+				this._state.PopEvaluationStack();
 				break;
 			case 5:case 6:
 				var popType;
 				if(evalCommand.commandType == 5) popType = 1; else popType = 0;
-				if(this.get_state().callStack.get_currentElement().type != popType || !this.get_state().callStack.get_canPop()) {
+				if(this._state.callStack.get_currentElement().type != popType || !this._state.callStack.get_canPop()) {
 					var names = new haxe_ds_IntMap();
 					names.h[1] = "function return statement (~ return)";
 					names.h[0] = "tunnel onwards statement (->->)";
-					var expected = names.get(this.get_state().callStack.get_currentElement().type);
-					if(!this.get_state().callStack.get_canPop()) expected = "end of flow (-> END or choice)";
+					var expected = names.get(this._state.callStack.get_currentElement().type);
+					if(!this._state.callStack.get_canPop()) expected = "end of flow (-> END or choice)";
 					var errorMsg = "Found " + names.h[popType] + ", when expected " + expected;
 					this.Error(errorMsg);
-				} else this.get_state().callStack.Pop();
+				} else this._state.callStack.Pop();
 				break;
 			case 7:
-				this.get_state().PushToOutputStream(evalCommand);
-				ink_runtime_Assert.bool(this.get_state().get_inExpressionEvaluation() == true,"Expected to be in an expression when evaluating a string");
-				this.get_state().set_inExpressionEvaluation(false);
+				this._state.PushToOutputStream(evalCommand);
+				ink_runtime_Assert.bool(this._state.get_inExpressionEvaluation() == true,"Expected to be in an expression when evaluating a string");
+				this._state.set_inExpressionEvaluation(false);
 				break;
 			case 8:
 				var contentStackForString = new haxe_ds_GenericStack();
 				var outputCountConsumed = 0;
-				var i = this.get_state().get_outputStream().length - 1;
+				var i = this._state.get_outputStream().length - 1;
 				while(i >= 0) {
-					var obj = this.get_state().get_outputStream()[i];
+					var obj = this._state.get_outputStream()[i];
 					outputCountConsumed++;
 					var command;
 					command = js_Boot.__instanceof(obj,ink_runtime_ControlCommand)?obj:null;
@@ -3051,22 +3050,22 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					if(js_Boot.__instanceof(obj,ink_runtime_StringValue)) contentStackForString.head = new haxe_ds_GenericCell(obj,contentStackForString.head);
 					i--;
 				}
-				this.get_state().get_outputStream().splice(this.get_state().get_outputStream().length - outputCountConsumed,outputCountConsumed);
+				this._state.get_outputStream().splice(this._state.get_outputStream().length - outputCountConsumed,outputCountConsumed);
 				var sb = new StringBuf();
 				var $it0 = contentStackForString.iterator();
 				while( $it0.hasNext() ) {
 					var c = $it0.next();
 					sb.b += Std.string(Std.string(c));
 				}
-				this.get_state().set_inExpressionEvaluation(true);
-				this.get_state().PushEvaluationStack(new ink_runtime_StringValue(Std.string(sb)));
+				this._state.set_inExpressionEvaluation(true);
+				this._state.PushEvaluationStack(new ink_runtime_StringValue(Std.string(sb)));
 				break;
 			case 10:
 				var choiceCount = this.get_currentChoices().length;
-				this.get_state().PushEvaluationStack(new ink_runtime_IntValue(choiceCount));
+				this._state.PushEvaluationStack(new ink_runtime_IntValue(choiceCount));
 				break;
 			case 11:
-				var target1 = this.get_state().PopEvaluationStack();
+				var target1 = this._state.PopEvaluationStack();
 				if(!js_Boot.__instanceof(target1,ink_runtime_DivertTargetValue)) {
 					var extraNote = "";
 					if(js_Boot.__instanceof(target1,ink_runtime_IntValue)) extraNote = ". Did you accidentally pass a read count ('knot_name') instead of a target ('-> knot_name')?";
@@ -3076,24 +3075,24 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					divertTarget = js_Boot.__instanceof(target1,ink_runtime_DivertTargetValue)?target1:null;
 					var container = ink_runtime_LibUtil["as"](this.ContentAtPath(divertTarget.get_targetPath()),ink_runtime_Container);
 					var turnCount = this.TurnsSinceForContainer(container);
-					this.get_state().PushEvaluationStack(new ink_runtime_IntValue(turnCount));
+					this._state.PushEvaluationStack(new ink_runtime_IntValue(turnCount));
 				}
 				break;
 			case 12:
-				var count = this.VisitCountForContainer(this.get_state().get_currentContainer()) - 1;
-				this.get_state().PushEvaluationStack(new ink_runtime_IntValue(count));
+				var count = this.VisitCountForContainer(this._state.get_currentContainer()) - 1;
+				this._state.PushEvaluationStack(new ink_runtime_IntValue(count));
 				break;
 			case 13:
 				var shuffleIndex = this.NextSequenceShuffleIndex();
-				this.get_state().PushEvaluationStack(new ink_runtime_IntValue(shuffleIndex));
+				this._state.PushEvaluationStack(new ink_runtime_IntValue(shuffleIndex));
 				break;
 			case 14:
 				break;
 			case 15:
-				if(this.get_state().callStack.get_canPopThread()) this.get_state().callStack.PopThread(); else this.get_state().didSafeExit = true;
+				if(this._state.callStack.get_canPopThread()) this._state.callStack.PopThread(); else this._state.didSafeExit = true;
 				break;
 			case 16:
-				this.get_state().ForceEndFlow();
+				this._state.ForceEndFlow();
 				break;
 			default:
 				this.Error("unhandled ControlCommand: " + Std.string(evalCommand));
@@ -3101,8 +3100,8 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			return true;
 		} else if(js_Boot.__instanceof(contentObj,ink_runtime_VariableAssignment)) {
 			var varAss = contentObj;
-			var assignedVal = this.get_state().PopEvaluationStack();
-			this.get_state().variablesState.Assign(varAss,assignedVal);
+			var assignedVal = this._state.PopEvaluationStack();
+			this._state.variablesState.Assign(varAss,assignedVal);
 			return true;
 		} else if(js_Boot.__instanceof(contentObj,ink_runtime_VariableReference)) {
 			var varRef = contentObj;
@@ -3112,19 +3111,19 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 				var count1 = this.VisitCountForContainer(container1);
 				foundValue = new ink_runtime_IntValue(count1);
 			} else {
-				foundValue = this.get_state().variablesState.GetVariableWithName(varRef.name);
+				foundValue = this._state.variablesState.GetVariableWithName(varRef.name);
 				if(foundValue == null) {
 					this.Error("Uninitialised variable: " + varRef.name);
 					foundValue = new ink_runtime_IntValue(0);
 				}
 			}
-			this.get_state().evaluationStack.push(foundValue);
+			this._state.evaluationStack.push(foundValue);
 			return true;
 		} else if(js_Boot.__instanceof(contentObj,ink_runtime_NativeFunctionCall)) {
 			var func = contentObj;
-			var funcParams = this.get_state().PopEvaluationStack1(func.get_numberOfParameters());
+			var funcParams = this._state.PopEvaluationStack1(func.get_numberOfParameters());
 			var result = func.Call(ink_runtime_LibUtil.arrayToList(funcParams));
-			this.get_state().evaluationStack.push(result);
+			this._state.evaluationStack.push(result);
 			return true;
 		}
 		return false;
@@ -3133,12 +3132,12 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		this.ChoosePath(ink_runtime_Path.createFromString(path));
 	}
 	,ChoosePath: function(path) {
-		this.get_state().SetChosenPath(path);
+		this._state.SetChosenPath(path);
 		this.VisitChangedContainersDueToDivert();
 	}
 	,VisitChangedContainersDueToDivert: function() {
-		var previousContentObject = this.get_state().get_previousContentObject();
-		var newContentObject = this.get_state().get_currentContentObject();
+		var previousContentObject = this._state.get_previousContentObject();
+		var newContentObject = this._state.get_currentContentObject();
 		if(!(newContentObject != null)) return;
 		var prevContainerSet = new ink_runtime_HashSet();
 		if(previousContentObject != null) {
@@ -3165,7 +3164,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		var choices = this.get_currentChoices();
 		ink_runtime_Assert.bool(choiceIdx >= 0 && choiceIdx < choices.length,"choice out of range");
 		var choiceToChoose = choices[choiceIdx];
-		this.get_state().callStack.set_currentThread(choiceToChoose.threadAtGeneration);
+		this._state.callStack.set_currentThread(choiceToChoose.threadAtGeneration);
 		this.ChoosePath(choiceToChoose.choicePoint.get_choiceTarget().get_path());
 	}
 	,HasFunction: function(functionName) {
@@ -3865,6 +3864,7 @@ var ink_runtime_VariablesState = function(callStack) {
 	this.variableChangedEventCallbacks = [];
 	this._globalVariables = new haxe_ds_StringMap();
 	this._callStack = callStack;
+	this._jsProxy = new Proxy(this,new ink_runtime_js_JSProxyTrap());
 };
 ink_runtime_VariablesState.__name__ = ["ink","runtime","VariablesState"];
 ink_runtime_VariablesState.__interfaces__ = [ink_runtime_IProxy];
@@ -3910,6 +3910,9 @@ ink_runtime_VariablesState.prototype = {
 			if(value == null) throw new js__$Boot_HaxeError(new ink_runtime_StoryException("Cannot pass null to VariableState")); else throw new js__$Boot_HaxeError(new ink_runtime_StoryException("Invalid value passed to VariableState: " + Std.string(value)));
 		}
 		this.SetGlobal(variableName,val);
+	}
+	,get_jsProxy: function() {
+		return this._jsProxy;
 	}
 	,CopyFrom: function(varState) {
 		this._globalVariables = ink_runtime_LibUtil.cloneStrMap(varState._globalVariables);
@@ -3998,7 +4001,7 @@ ink_runtime_VariablesState.prototype = {
 		return this._callStack.get_currentElementIndex();
 	}
 	,__class__: ink_runtime_VariablesState
-	,__properties__: {set_jsonToken:"set_jsonToken",get_jsonToken:"get_jsonToken",set_batchObservingVariableChanges:"set_batchObservingVariableChanges",get_batchObservingVariableChanges:"get_batchObservingVariableChanges"}
+	,__properties__: {set_jsonToken:"set_jsonToken",get_jsonToken:"get_jsonToken",get_jsProxy:"get_jsProxy",set_batchObservingVariableChanges:"set_batchObservingVariableChanges",get_batchObservingVariableChanges:"get_batchObservingVariableChanges"}
 };
 var ink_runtime_VoidObj = function() {
 	ink_runtime_Object.call(this);
@@ -4008,6 +4011,18 @@ ink_runtime_VoidObj.__super__ = ink_runtime_Object;
 ink_runtime_VoidObj.prototype = $extend(ink_runtime_Object.prototype,{
 	__class__: ink_runtime_VoidObj
 });
+var ink_runtime_js_JSProxyTrap = function() {
+};
+ink_runtime_js_JSProxyTrap.__name__ = ["ink","runtime","js","JSProxyTrap"];
+ink_runtime_js_JSProxyTrap.prototype = {
+	get: function(target,property) {
+		return target.field(property);
+	}
+	,set: function(target,property,value) {
+		target.setField(property,value);
+	}
+	,__class__: ink_runtime_js_JSProxyTrap
+};
 var js__$Boot_HaxeError = function(val) {
 	Error.call(this);
 	this.val = val;
