@@ -139,7 +139,7 @@ table{
 		<button class="loader loadcomp" onclick="loadSample()">play a sample story:&gt;</button>
 		<select id="sample-select" class="loadcomp">
 			<option value="intercept.ink.json">The Intercept</option>
-			<option value="tros.ink.json">TROSink!(POCwip)</option>
+			<option value="tros.ink.json">TROSink!(POC)</option>
 		</select>
 	</div>
 	
@@ -155,6 +155,7 @@ table{
 	<script src="InkleHaxe.js"></script>
 	<script>
 		var myStory, $playArea, $choices;
+		
 		
 		$(function(){
 			$playArea = $('#play-area');
@@ -193,18 +194,21 @@ table{
 			$playArea.find('p').remove();
 
 			myStory = new ink.runtime.Story(inkFile);
+			
 
 			//console.log(myStory.ToJsonString());
 			//setTimeout( continueToNextChoice, 1000);
 			
+			//myStory.variablesState["charPersonName_totalHealth"] = 100;  // testing variablesState setting
 			continueToNextChoice();
+			
 		}
 		
 		
 	
 		
 		function continueToNextChoice(){
-			while (myStory.get_canContinue()){
+			while (myStory.canContinue){
 			
 				var grafs = myStory.Continue().split("\n");
 				
@@ -213,7 +217,7 @@ table{
 				});
 			}
 
-			var choices = myStory.get_currentChoices();
+			var choices = myStory.currentChoices;
 			var len = choices.length;
 		
 			if (len > 0){
