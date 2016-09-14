@@ -117,9 +117,9 @@ class Story extends RObject
 	
 		_mainContentContainer = LibUtil.as(Json.JTokenToRuntimeObject(rootToken) , Container);
 
-		#if !devTesting
+		
 		ResetState ();
-		#end
+		
 
 		// es6 setters/getters
 		#if js
