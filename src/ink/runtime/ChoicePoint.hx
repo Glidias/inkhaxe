@@ -5,7 +5,7 @@ import ink.runtime.Container;
  * Done!
  * @author Glidias
  */
-class ChoicePoint extends Object
+class ChoicePoint extends RObject
 {
 	/// <summary>
     /// The ChoicePoint represents the point within the Story where

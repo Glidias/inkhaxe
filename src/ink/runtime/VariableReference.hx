@@ -4,7 +4,7 @@ package ink.runtime;
  * Done!
  * @author Glidias
  */
-class VariableReference extends Object
+class VariableReference extends RObject
 {
 	
 	// Normal named variable

@@ -7,6 +7,7 @@ import haxe.ds.StringMap;
  * ...
  * @author Glidias
  */
+@:expose
 class HashSetString 
 {
 	var map:StringMap<Bool> = new StringMap<Bool>();

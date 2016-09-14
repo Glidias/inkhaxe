@@ -13,9 +13,7 @@ import ink.runtime.js.JSProxy;
 
 
 /**
- * done.. except for external functions support.
- *  TODO: Runtime initialization of es5/6 getters/setters and proxies for javascript target
- * Time to test it...
+ * Done!
  * 
  * @author Glidias
  */
@@ -23,11 +21,12 @@ import ink.runtime.js.JSProxy;
 //public delegate object ExternalFunction(object[] args);
 typedef ExternalFunction = Array<Dynamic>->Dynamic;	
 
+
 // public delegate void VariableObserver(string variableName, object newValue);
 typedef VariableObserver = String->Dynamic->Void;
 
 @:expose
-class Story extends Object
+class Story extends RObject
 {
 	static public inline var inkVersionCurrent:Int = 12;
 	public static inline var inkVersionMinimumCompatible:Int = 12;
@@ -60,13 +59,14 @@ class Story extends Object
 		return state.currentErrors;
 	}
 	
-	public var hasError(get, null):Bool;
-	function get_hasError():Bool 
+	public var hasErrorThrow(get, null):Bool;
+	function get_hasErrorThrow():Bool 
 	{
 		return state.hasError;
 	}
 	
 	public var variablesState(get, null):VariablesState;
+	//@:getter(variablesState)
 	function get_variablesState():VariablesState 
 	{
 		return state.variablesState;
@@ -79,6 +79,7 @@ class Story extends Object
 	#end
 	
 	public var state(get, null):StoryState;
+	//@:getter(state)
 	inline function get_state():StoryState 
 	{
 		return _state;
@@ -116,8 +117,9 @@ class Story extends Object
 	
 		_mainContentContainer = LibUtil.as(Json.JTokenToRuntimeObject(rootToken) , Container);
 
+		#if !devTesting
 		ResetState ();
-
+		#end
 
 		// es6 setters/getters
 		#if js
@@ -206,6 +208,7 @@ class Story extends Object
 
 		private function NextContent():Void
 		{
+				
             // Setting previousContentObject is critical for VisitChangedContainersDueToDivert
             state.previousContentObject = state.currentContentObject;
 
@@ -232,7 +235,7 @@ class Story extends Object
                 // to the end of a container - e.g. a Conditional that's re-joining
 			}
 			
-			
+		
 
             var successfulPointerIncrement:Bool = IncrementContentPointer ();
 		
@@ -330,14 +333,14 @@ class Story extends Object
         function VisitCountForContainer( container:Container):Int
         {
             if( !container.visitsShouldBeCounted ) {
-                Error ("Read count for target ("+container.name+" - on "+container.debugMetadata+") unknown. The story may need to be compiled with countAllVisits flag (-c).");
+                ErrorThrow ("Read count for target ("+container.name+" - on "+container.debugMetadata+") unknown. The story may need to be compiled with countAllVisits flag (-c).");
                 return 0;
             }
 
             var count:Int = 0;
             var containerPathStr = container.path.toString();
             var tryCount:Int = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
-			if (tryCount != null && !Math.isNaN(tryCount)) {
+			if ( LibUtil.validInt(tryCount) ) {
 				count = tryCount;
 			}
             return count;
@@ -348,7 +351,7 @@ class Story extends Object
             var count = 0;
             var containerPathStr = container.path.toString();
 			 var tryCount:Int = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
-			if (tryCount != null && !Math.isNaN(tryCount)) {
+			if ( LibUtil.validInt(tryCount) ) {
 				count = tryCount;
 			}
 			count++;
@@ -365,13 +368,13 @@ class Story extends Object
         function TurnsSinceForContainer( container:Container):Int
         {
             if( !container.turnIndexShouldBeCounted ) {
-                Error ("TURNS_SINCE() for target ("+container.name+" - on "+container.debugMetadata+") unknown. The story may need to be compiled with countAllVisits flag (-c).");
+                ErrorThrow ("TURNS_SINCE() for target ("+container.name+" - on "+container.debugMetadata+") unknown. The story may need to be compiled with countAllVisits flag (-c).");
             }
 
             var index:Int = 0;
             var containerPathStr = container.path.toString();
 			index = state.turnIndices.get(containerPathStr);  //state.turnIndices.TryGetValue (containerPathStr, out index)
-            if (index != null && !Math.isNaN(index)) {
+            if ( LibUtil.validInt(index) ) {
                 return state.currentTurnIndex - index;
             } else {
                 return -1;
@@ -385,7 +388,7 @@ class Story extends Object
         {
             var numElementsIntVal =LibUtil.as( state.PopEvaluationStack () , IntValue);
             if (numElementsIntVal == null) {
-                Error ("expected number of elements in sequence for shuffle index");
+                ErrorThrow ("expected number of elements in sequence for shuffle index");
                 return 0;
             }
 
@@ -441,7 +444,7 @@ class Story extends Object
 	
 	// Throw an exception that gets caught and causes AddError to be called,
 	// then exits the flow.
-	function Error( message:String,  useEndLineNumber:Bool = false)
+	function ErrorThrow( message:String,  useEndLineNumber:Bool = false)
 	{
 		var e = new StoryException (message);
 		e.useEndLineNumber = useEndLineNumber;
@@ -450,7 +453,7 @@ class Story extends Object
 	 
 		
 	
-	function AddError ( message:String,  useEndLineNumber:Bool)
+	function AddErrorThrow ( message:String,  useEndLineNumber:Bool)
 	{
 		var dm = currentDebugMetadata;
 
@@ -518,7 +521,7 @@ class Story extends Object
 
 	
 
-	function VariableStateDidChangeEvent( variableName:String, newValueObj:Object):Void
+	function VariableStateDidChangeEvent( variableName:String, newValueObj:RObject):Void
 	{
 		if (_variableObservers == null)
 			return;
@@ -540,7 +543,7 @@ class Story extends Object
 	
 	
 	
-		public function Continue():String
+	public function Continue():String
 	{
 		// TODO: Should we leave this to the client, since it could be
 		// slow to iterate through all the content an extra time?
@@ -663,18 +666,18 @@ class Story extends Object
 			if( !canContinue ) {
 
 				if( state.callStack.canPopThread ) {
-					Error("Thread available to pop, threads should always be flat by the end of evaluation?");
+					ErrorThrow("Thread available to pop, threads should always be flat by the end of evaluation?");
 				}
 
 				if( currentChoices.length == 0 && !state.didSafeExit && _temporaryEvaluationContainer == null ) {
 					if( state.callStack.CanPop(PushPopType.Tunnel) ) {
-						Error("unexpectedly reached end of content. Do you need a '->->' to return from a tunnel?");
+						ErrorThrow("unexpectedly reached end of content. Do you need a '->->' to return from a tunnel?");
 					} else if( state.callStack.CanPop(PushPopType.Function) ) {
-						Error("unexpectedly reached end of content. Do you need a '~ return'?");
+						ErrorThrow("unexpectedly reached end of content. Do you need a '~ return'?");
 					} else if( !state.callStack.canPop ) {
-						Error("ran out of content. Do you need a '-> DONE' or '-> END'?");
+						ErrorThrow("ran out of content. Do you need a '-> DONE' or '-> END'?");
 					} else {
-						Error("unexpectedly reached end of content for unknown reason. Please debug compiler!");
+						ErrorThrow("unexpectedly reached end of content for unknown reason. Please debug compiler!");
 					}
 				}
 
@@ -683,7 +686,7 @@ class Story extends Object
 
 		//} 
 		//catch ( e:StoryException) {  
-		//	AddError (e.msg, e.useEndLineNumber);
+		//	AddErrorThrow (e.msg, e.useEndLineNumber);
 		//} 
 		
 		//finally {
@@ -700,6 +703,7 @@ class Story extends Object
 	}
 
 	
+	//@:getter(canContinue) 
 	public var canContinue(get, null):Bool;
 	function get_canContinue():Bool 
 	{
@@ -719,7 +723,7 @@ class Story extends Object
 		return sb.toString ();
 	}
 	
-	public function ContentAtPath(path:Path):Object
+	public function ContentAtPath(path:Path):RObject
 	{
 		
 		return mainContentContainer.ContentAtPath (path);
@@ -902,7 +906,7 @@ class Story extends Object
 
 	// Does the expression result represented by this object evaluate to true?
 	// e.g. is it a Number that's not equal to 1?
-	function IsTruthy( obj:Object):Bool
+	function IsTruthy( obj:RObject):Bool
 	{
 		var truthy = false;
 		if (Std.is(obj,  Value) ) {
@@ -912,7 +916,7 @@ class Story extends Object
 			
 			if (Std.is(val, DivertTargetValue) ) {
 				var divTarget:DivertTargetValue = cast val;
-				Error ("Shouldn't use a divert target (to " + divTarget.targetPath + ") as a conditional value. Did you intend a function call 'likeThis()' or a read count check 'likeThis'? (no arrows)");
+				ErrorThrow ("Shouldn't use a divert target (to " + divTarget.targetPath + ") as a conditional value. Did you intend a function call 'likeThis()' or a read count check 'likeThis'? (no arrows)");
 				return false;
 			}
 
@@ -922,7 +926,7 @@ class Story extends Object
 	}
 	
 	
-	function PerformLogicAndFlowControl( contentObj:Object):Bool
+	function PerformLogicAndFlowControl( contentObj:RObject):Bool
 	{
 		
 		if( contentObj == null ) {
@@ -958,7 +962,7 @@ class Story extends Object
 						errorMessage += "contained '" + varContents + "'.";
 					}
 
-					Error (errorMessage);
+					ErrorThrow (errorMessage);
 				}
 
 				var target:DivertTargetValue = cast varContents;  //(DivertTargetValue)
@@ -979,9 +983,9 @@ class Story extends Object
 				
 				// Human readable name available - runtime divert is part of a hard-written divert that to missing content
 				if (currentDivert!= null && currentDivert.debugMetadata.sourceName != null) {
-					Error ("Divert target doesn't exist: " + currentDivert.debugMetadata.sourceName);
+					ErrorThrow ("Divert target doesn't exist: " + currentDivert.debugMetadata.sourceName);
 				} else {
-					Error ("Divert resolution failed: " + currentDivert);
+					ErrorThrow ("Divert resolution failed: " + currentDivert);
 				}
 			}
 
@@ -1052,7 +1056,7 @@ class Story extends Object
 
 					var errorMsg = "Found " + names.get(popType) + ", when expected " + expected;
 
-					Error (errorMsg);
+					ErrorThrow (errorMsg);
 				} 
 
 				else {
@@ -1072,7 +1076,7 @@ class Story extends Object
 				// Since we're iterating backward through the content,
 				// build a stack so that when we build the string,
 				// it's in the right order
-				var contentStackForString = new GenericStack<Object> ();
+				var contentStackForString = new GenericStack<RObject> ();
 
 				var outputCountConsumed = 0;
 				
@@ -1120,7 +1124,7 @@ class Story extends Object
 					var extraNote = "";
 					if( Std.is(target , IntValue) )
 						extraNote = ". Did you accidentally pass a read count ('knot_name') instead of a target ('-> knot_name')?";
-					Error("TURNS_SINCE expected a divert target (knot, stitch, label name), but saw "+target+extraNote);
+					ErrorThrow("TURNS_SINCE expected a divert target (knot, stitch, label name), but saw "+target+extraNote);
 					//break;
 				}
 				else {	// required else because no breka avialable..
@@ -1168,7 +1172,7 @@ class Story extends Object
 				//break;
 
 			default:
-				Error ("unhandled ControlCommand: " + evalCommand);
+				ErrorThrow ("unhandled ControlCommand: " + evalCommand);
 				//break;
 			}
 
@@ -1194,7 +1198,7 @@ class Story extends Object
 		else if ( Std.is( contentObj , VariableReference) ) {
 			
 			var varRef:VariableReference = cast contentObj; //(VariableReference)
-			var foundValue:Object = null;
+			var foundValue:RObject = null;
 
 
 			// Explicit read count value
@@ -1212,7 +1216,7 @@ class Story extends Object
 				foundValue = state.variablesState.GetVariableWithName (varRef.name);
 				
 				if (foundValue == null) {
-					Error("Uninitialised variable: " + varRef.name);
+					ErrorThrow("Uninitialised variable: " + varRef.name);
 					foundValue = new IntValue (0);
 				}
 			}
@@ -1272,7 +1276,7 @@ class Story extends Object
 
             // If the new object is a container itself, it will be visited automatically at the next actual
             // content step. However, we need to walk up the new ancestry to see if there are more new containers
-           var currentChildOfContainer:Object = newContentObject;
+           var currentChildOfContainer:RObject = newContentObject;
             var currentContainerAncestor:Container = LibUtil.as( currentChildOfContainer.parent , Container);
             while (currentContainerAncestor !=null && !prevContainerSet.contains(currentContainerAncestor)) {
 
@@ -1497,36 +1501,33 @@ class Story extends Object
 		
 		
 
-// TODO: externals-funcionality section below:
 
-	function CallExternalFunction( funcName:String,  numberOfArguments:Int) {
-		trace( "This is a stub. Will be added soon!");
-	}
-	function ValidateExternalBindings() {
-		//trace( "This is a stub. Will be added soon!");
-	}
 
-/*
- /// <summary>
+
+
+
+	public var allowExternalFunctionFallbacks:Bool; // { get; set; }
+
+		/// <summary>
         /// An ink file can provide a fallback functions for when when an EXTERNAL has been left
         /// unbound by the client, and the fallback function will be called instead. Useful when
         /// testing a story in playmode, when it's not possible to write a client-side C# external
         /// function, but you don't want it to fail to run.
         /// </summary>
-        public bool allowExternalFunctionFallbacks { get; set; }
+      
 
-        internal void CallExternalFunction(string funcName, int numberOfArguments)
+		public function CallExternalFunction( funcName:String,  numberOfArguments:Int):Void
         {
-            ExternalFunction func = null;
-            Container fallbackFunctionContainer = null;
-
-            var foundExternal = _externals.TryGetValue (funcName, out func);
+            var func:ExternalFunction = null;
+            var fallbackFunctionContainer:Container = null;
+			func =  _externals.get(funcName);
+            var foundExternal = func != null; // _externals.TryGetValue (funcName, out func);
 
             // Try to use fallback function?
             if (!foundExternal) {
                 if (allowExternalFunctionFallbacks) {
-                    fallbackFunctionContainer = ContentAtPath (new Path (funcName)) as Container;
-                    Assert (fallbackFunctionContainer != null, "Trying to call EXTERNAL function '" + funcName + "' which has not been bound, and fallback ink function could not be found.");
+                    fallbackFunctionContainer = LibUtil.as( ContentAtPath ( Path.createFromString(funcName)) , Container);
+                    Assert.bool(fallbackFunctionContainer != null, "Trying to call EXTERNAL function '" + funcName + "' which has not been bound, and fallback ink function could not be found.");
 
                     // Divert direct into fallback function and we're done
                     state.callStack.Push (PushPopType.Function);
@@ -1534,66 +1535,53 @@ class Story extends Object
                     return;
 
                 } else {
-                    Assert (false, "Trying to call EXTERNAL function '" + funcName + "' which has not been bound (and ink fallbacks disabled).");
+                    Assert.bool(false, "Trying to call EXTERNAL function '" + funcName + "' which has not been bound (and ink fallbacks disabled).");
                 }
             }
 
             // Pop arguments
-            var arguments = new List<object>();
-            for (int i = 0; i < numberOfArguments; ++i) {
-                var poppedObj = state.PopEvaluationStack () as Value;
+            var arguments = new Array<Dynamic>();// new List<object>();
+            for (i in 0...numberOfArguments) {  //int i = 0; i < numberOfArguments; ++i
+                var poppedObj = LibUtil.as( state.PopEvaluationStack () , Value);
                 var valueObj = poppedObj.valueObject;
-                arguments.Add (valueObj);
+				arguments.push(valueObj); // arguments.Add (valueObj);
             }
 
             // Reverse arguments from the order they were popped,
             // so they're the right way round again.
-            arguments.Reverse ();
+            arguments.reverse();  //arguments.Reverse ();
+			
 
             // Run the function!
-            object funcResult = func (arguments.ToArray());
+            var funcResult:Dynamic = func (arguments);  //arguments.ToArray()
 
             // Convert return value (if any) to the a type that the ink engine can use
-            Runtime.Object returnObj = null;
+            var returnObj:RObject = null;
             if (funcResult != null) {
                 returnObj = Value.Create (funcResult);
-                Assert (returnObj != null, "Could not create ink value from returned object of type " + funcResult.GetType());
+                Assert.bool(returnObj != null, "Could not create ink value from returned object of type " + Type.getClassName(Type.getClass(funcResult)));
             } else {
-                returnObj = new Runtime.Void ();
+                returnObj = new VoidObj();
             }
                 
             state.PushEvaluationStack (returnObj);
         }
 
+
 		
 
-        /// <summary>
-        /// General purpose delegate definition for bound EXTERNAL function definitions
-        /// from ink. Note that this version isn't necessary if you have a function
-        /// with three arguments or less - see the overloads of BindExternalFunction.
-        /// </summary>
-        public delegate object ExternalFunction(object[] args);
-
-        /// <summary>
-        /// Most general form of function binding that returns an object
-        /// and takes an array of object parameters.
-        /// The only way to bind a function with more than 3 arguments.
-        /// </summary>
-        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
-        /// <param name="func">The C# function to bind.</param>
-        public void BindExternalFunctionGeneral(string funcName, ExternalFunction func)
-        {
-            Assert (!_externals.ContainsKey (funcName), "Function '" + funcName + "' has already been bound.");
-            _externals [funcName] = func;
-        }
-
-        object TryCoerce<T>(object value)
+		inline
+		function TryCoerce<T>(value:Dynamic):Dynamic	// is this really needed since already returning Dynamic?? Engine/haxe will hopefully coerce if necessary...
         {  
+			/*
+			var casted:T;
             if (value == null)
                 return null;
 
-            if (value is T)
-                return (T) value;
+            if (Std.is(value,  T) ) {
+                casted  = cast T;  //(T) value;
+				return casted;
+			}
 
             if (value is float && typeof(T) == typeof(int)) {
                 int intVal = (int)Math.Round ((float)value);
@@ -1614,200 +1602,141 @@ class Story extends Object
                 return value.ToString ();
             }
 
-            Assert (false, "Failed to cast " + value.GetType ().Name + " to " + typeof(T).Name);
+            Assert.bool(false, "Failed to cast " + value.GetType ().Name + " to " + typeof(T).Name);
 
             return null;
+			*/
+			
+			return value;// vakyel
         }
+
+	
+		
+        /// <summary>
+        /// General purpose delegate definition for bound EXTERNAL function definitions
+        /// from ink. Note that this version isn't necessary if you have a function
+        /// with three arguments or less - see the overloads of BindExternalFunction.
+        /// </summary>
+        //public delegate object ExternalFunction(object[] args);
+		//typedef ExternalFunction:Array->Dynamic;
+		
+
+        /// <summary>
+        /// Most general form of function binding that returns an object
+        /// and takes an array of object parameters.
+        /// The only way to bind a function with more than 3 arguments.
+        /// </summary>
+        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
+        /// <param name="func">The C# function to bind.</param>
+        public function BindExternalFunctionGeneral( funcName:String,  func:ExternalFunction):Void
+        {
+            Assert.bool(!_externals.exists (funcName), "Function '" + funcName + "' has already been bound.");
+            _externals.set(funcName,  func);
+        }
+
 
         // Convenience overloads for standard functions and actions of various arities
         // Is there a better way of doing this?!
+	
+		// Haxe doesn't allow overloading, so must explicitly specify the number of params or use BindExternalFunctionGeneral!
 
         /// <summary>
         /// Bind a C# function to an ink EXTERNAL function declaration.
         /// </summary>
         /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
         /// <param name="func">The C# function to bind.</param>
-        public void BindExternalFunction(string funcName, Func<object> func)
+        public function BindExternalFunction0( funcName:String, func:Void->Dynamic):Void   // Func<object> func
         {
-			Assert(func != null, "Can't bind a null function");
+			Assert.bool(func != null, "Can't bind a null function");
 
-            BindExternalFunctionGeneral (funcName, (object[] args) => {
-                Assert(args.Length == 0, "External function expected no arguments");
+            BindExternalFunctionGeneral (funcName, function(args:Array<Dynamic>):Dynamic   {  // (object[] args) =>
+                Assert.bool(args.length == 0, "External function expected no arguments");
                 return func();
             });
         }
-
-        /// <summary>
-        /// Bind a C# Action to an ink EXTERNAL function declaration.
-        /// </summary>
-        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
-        /// <param name="act">The C# action to bind.</param>
-        public void BindExternalFunction(string funcName, Action act)
+		 public function BindExternalFunction1<T1>( funcName:String, func:T1->Dynamic):Void   // Func<object> func
         {
-			Assert(act != null, "Can't bind a null function");
+			Assert.bool(func != null, "Can't bind a null function");
 
-            BindExternalFunctionGeneral (funcName, (object[] args) => {
-                Assert(args.Length == 0, "External function expected no arguments");
-                act();
-                return null;
+            BindExternalFunctionGeneral (funcName, function(args:Array<Dynamic>):Dynamic   {  // (object[] args) =>
+                Assert.bool(args.length == 1, "External function expected 1 argument");
+				var param1:T1 = args[0];
+                return func(param1);
+            });
+        }
+		public function BindExternalFunction2<T1, T2>( funcName:String, func:T1->T2->Dynamic):Void   // Func<object> func
+        {
+			Assert.bool(func != null, "Can't bind a null function");
+
+            BindExternalFunctionGeneral (funcName, function(args:Array<Dynamic>):Dynamic   {  // (object[] args) =>
+                Assert.bool(args.length == 2, "External function expected 2 arguments");
+				var param1:T1 = args[0];
+				var param2:T2 = args[1];
+                return func(param1, param2);
+            });
+        }
+		public function BindExternalFunction3<T1,T2,T3>( funcName:String, func:T1->T2->T3->Dynamic):Void   // Func<object> func
+        {
+			Assert.bool(func != null, "Can't bind a null function");
+
+            BindExternalFunctionGeneral (funcName, function(args:Array<Dynamic>):Dynamic   {  // (object[] args) =>
+                Assert.bool(args.length == 3, "External function expected 3 arguments");
+				var param1:T1 = args[0];
+				var param2:T2 = args[1];
+				var param3:T3 = args[2];
+                return func(param1, param2, param3);
             });
         }
 
-        /// <summary>
-        /// Bind a C# function to an ink EXTERNAL function declaration.
-        /// </summary>
-        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
-        /// <param name="func">The C# function to bind.</param>
-        public void BindExternalFunction<T>(string funcName, Func<T, object> func)
-        {
-			Assert(func != null, "Can't bind a null function");
-
-            BindExternalFunctionGeneral (funcName, (object[] args) => {
-                Assert(args.Length == 1, "External function expected one argument");
-                return func( (T)TryCoerce<T>(args[0]) );
-            });
-        }
-
-        /// <summary>
-        /// Bind a C# action to an ink EXTERNAL function declaration.
-        /// </summary>
-        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
-        /// <param name="act">The C# action to bind.</param>
-        public void BindExternalFunction<T>(string funcName, Action<T> act)
-        {
-			Assert(act != null, "Can't bind a null function");
-
-            BindExternalFunctionGeneral (funcName, (object[] args) => {
-                Assert(args.Length == 1, "External function expected one argument");
-                act( (T)TryCoerce<T>(args[0]) );
-                return null;
-            });
-        }
-
-
-        /// <summary>
-        /// Bind a C# function to an ink EXTERNAL function declaration.
-        /// </summary>
-        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
-        /// <param name="func">The C# function to bind.</param>
-        public void BindExternalFunction<T1, T2>(string funcName, Func<T1, T2, object> func)
-        {
-			Assert(func != null, "Can't bind a null function");
-
-            BindExternalFunctionGeneral (funcName, (object[] args) => {
-                Assert(args.Length == 2, "External function expected two arguments");
-                return func(
-                    (T1)TryCoerce<T1>(args[0]), 
-                    (T2)TryCoerce<T2>(args[1])
-                );
-            });
-        }
-
-        /// <summary>
-        /// Bind a C# action to an ink EXTERNAL function declaration.
-        /// </summary>
-        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
-        /// <param name="act">The C# action to bind.</param>
-        public void BindExternalFunction<T1, T2>(string funcName, Action<T1, T2> act)
-        {
-			Assert(act != null, "Can't bind a null function");
-
-            BindExternalFunctionGeneral (funcName, (object[] args) => {
-                Assert(args.Length == 2, "External function expected two arguments");
-                act(
-                    (T1)TryCoerce<T1>(args[0]), 
-                    (T2)TryCoerce<T2>(args[1])
-                );
-                return null;
-            });
-        }
-
-        /// <summary>
-        /// Bind a C# function to an ink EXTERNAL function declaration.
-        /// </summary>
-        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
-        /// <param name="func">The C# function to bind.</param>
-        public void BindExternalFunction<T1, T2, T3>(string funcName, Func<T1, T2, T3, object> func)
-        {
-			Assert(func != null, "Can't bind a null function");
-
-            BindExternalFunctionGeneral (funcName, (object[] args) => {
-                Assert(args.Length == 3, "External function expected two arguments");
-                return func(
-                    (T1)TryCoerce<T1>(args[0]), 
-                    (T2)TryCoerce<T2>(args[1]),
-                    (T3)TryCoerce<T3>(args[2])
-                );
-            });
-        }
-
-        /// <summary>
-        /// Bind a C# action to an ink EXTERNAL function declaration.
-        /// </summary>
-        /// <param name="funcName">EXTERNAL ink function name to bind to.</param>
-        /// <param name="act">The C# action to bind.</param>
-        public void BindExternalFunction<T1, T2, T3>(string funcName, Action<T1, T2, T3> act)
-        {
-			Assert(act != null, "Can't bind a null function");
-
-            BindExternalFunctionGeneral (funcName, (object[] args) => {
-                Assert(args.Length == 3, "External function expected two arguments");
-                act(
-                    (T1)TryCoerce<T1>(args[0]), 
-                    (T2)TryCoerce<T2>(args[1]),
-                    (T3)TryCoerce<T3>(args[2])
-                );
-                return null;
-            });
-        }
 
         /// <summary>
         /// Remove a binding for a named EXTERNAL ink function.
         /// </summary>
-        public void UnbindExternalFunction(string funcName)
+        public function UnbindExternalFunction( funcName:String):Void
         {
-            Assert (_externals.ContainsKey (funcName), "Function '" + funcName + "' has not been bound.");
-            _externals.Remove (funcName);
+            Assert.bool (_externals.exists (funcName), "Function '" + funcName + "' has not been bound.");
+            _externals.remove (funcName);
         }
 
         /// <summary>
         /// Check that all EXTERNAL ink functions have a valid bound C# function.
         /// Note that this is automatically called on the first call to Continue().
         /// </summary>
-        public void ValidateExternalBindings()
+        public function ValidateExternalBindings():Void
         {
-            ValidateExternalBindings (_mainContentContainer);
+            ValidateExternalBindingsC (_mainContentContainer);
             _hasValidatedExternals = true;
         }
 
-        void ValidateExternalBindings(Container c)
+        function ValidateExternalBindingsC( c:Container):Void
         {
-            foreach (var innerContent in c.content) {
-                ValidateExternalBindings (innerContent);
+            for ( innerContent in c.content) {
+                ValidateExternalBindingsO(innerContent);
             }
-            foreach (var innerKeyValue in c.namedContent) {
-                ValidateExternalBindings (innerKeyValue.Value as Runtime.Object);
+            for ( value in c.namedContent) {  //innerKeyValue
+                ValidateExternalBindingsO(LibUtil.as(value , RObject));  //innerKeyValue.Value
             }
         }
 
-        void ValidateExternalBindings(Runtime.Object o)
+        function  ValidateExternalBindingsO(o:RObject):Void
         {
-            var container = o as Container;
-            if (container) {
-                ValidateExternalBindings (container);
+            var container = LibUtil.as( o , Container);
+            if (container != null) {
+                ValidateExternalBindingsC(container);
                 return;
             }
 
-            var divert = o as Divert;
-            if (divert && divert.isExternal) {
+            var divert = LibUtil.as(o , Divert);
+            if (divert!=null && divert.isExternal) {
                 var name = divert.targetPathString;
 
-                if (!_externals.ContainsKey (name)) {
+                if (!_externals.exists (name)) {
 
-                    INamedContent fallbackFunction = null;
-                    bool fallbackFound = mainContentContainer.namedContent.TryGetValue (name, out fallbackFunction);
+                    var fallbackFunction:INamedContent = null;
+					fallbackFunction = mainContentContainer.namedContent.get(name);
+                    var fallbackFound:Bool = fallbackFunction!=null;  //mainContentContainer.namedContent.TryGetValue (name, out fallbackFunction);
 
-                    string message = null;
+                    var message:String = null;
                     if (!allowExternalFunctionFallbacks)
                         message = "Missing function binding for external '" + name + "' (ink fallbacks disabled)";
                     else if( !fallbackFound ) {
@@ -1815,9 +1744,9 @@ class Story extends Object
                     }
 
                     if (message != null) {
-                        string errorPreamble = "ERROR: ";
+                        var errorPreamble = "ERROR: ";
                         if (divert.debugMetadata != null) {
-                            errorPreamble += string.Format ("'{0}' line {1}: ", divert.debugMetadata.fileName, divert.debugMetadata.startLineNumber);
+                            errorPreamble += "'" + divert.debugMetadata.fileName+"' line " + divert.debugMetadata.startLineNumber + ": ";
                         }
 
                         throw new StoryException (errorPreamble + message);
@@ -1826,6 +1755,47 @@ class Story extends Object
                 }
             }
         }
-	*/
+		
+		
+		// Added (Glidias)
+		// Untested method atm..to use when you gotta need it. 
+		// You can try to use this to Reflect required external bindings of current Story to a HashSet
+		
+		 /// <summary>
+        /// Check for all EXTERNAL ink functions and apply it to an array of strings! Useful to automate auto-binding process to your own library of methods.
+		///  The automation process to link the list of methods are left up to you.
+		/// If array function parameter is left undefined, the function will return a new array instance consisting of function names to bind, otherwise it returns the existing array you provided..
+        /// </summary>
+        public function ReflectExternalBindings(array:Array<String>=null):Array<String>
+        {
+			if (array == null) array = new Array<String>();
+            ReflectExternalBindingsC (_mainContentContainer, array);
+			return array;
+        }
+
+        function ReflectExternalBindingsC( c:Container, array:Array<String>):Void
+        {
+            for ( innerContent in c.content) {
+                ReflectExternalBindingsO(innerContent, array);
+            }
+            for ( value in c.namedContent) {  //innerKeyValue
+                ReflectExternalBindingsO(LibUtil.as(value , RObject), array);  //innerKeyValue.Value
+            }
+        }
+
+        function  ReflectExternalBindingsO(o:RObject, array:Array<String>):Void
+        {
+            var container = LibUtil.as( o , Container);
+            if (container != null) {
+               ReflectExternalBindingsC(container, array);
+                return;
+            }
+
+            var divert = LibUtil.as(o , Divert);
+            if (divert!=null && divert.isExternal) {
+				array.push(divert.targetPathString);
+            }
+        }
+	
 	
 }

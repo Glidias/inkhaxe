@@ -4,7 +4,7 @@ package ink.runtime;
  * Done!
  * @author Glidias
  */
-class Divert extends Object
+class Divert extends RObject
 {
 	public var targetPath(get, set):Path;
 	function get_targetPath():Path 
@@ -28,8 +28,8 @@ class Divert extends Object
 	var _targetPath:Path;
 	
 	
-	public var  targetContent(get, null):Object;
-	function get_targetContent():Object 
+	public var  targetContent(get, null):RObject;
+	function get_targetContent():RObject 
 	{
 			if (_targetContent == null) {
 				_targetContent = ResolvePath (_targetPath);
@@ -37,7 +37,7 @@ class Divert extends Object
 
 			return _targetContent;
 	}
-	var _targetContent:Object;
+	var _targetContent:RObject;
 	
    public var  targetPathString(get, set):String;
    	function get_targetPathString():String 
@@ -91,7 +91,7 @@ class Divert extends Object
 		return me;
 	}
 
-	public override function Equals ( obj:Object):Bool
+	public override function Equals ( obj:RObject):Bool
 	{
 		var otherDivert = LibUtil.as(obj,Divert);
 		if (otherDivert!=null) {
@@ -131,7 +131,7 @@ class Divert extends Object
 			var sb = new StringBuf ();
 
 			var targetStr:String= targetPath.toString();
-			var targetLineNum:Int = DebugLineNumberOfPath (targetPath);
+			var targetLineNum:Dynamic = DebugLineNumberOfPath (targetPath);
 			if (targetLineNum != null) {
 				targetStr = "line " + targetLineNum;
 			}

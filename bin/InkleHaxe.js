@@ -193,6 +193,9 @@ ValueType.TUnknown.toString = $estr;
 ValueType.TUnknown.__enum__ = ValueType;
 var Type = function() { };
 Type.__name__ = ["Type"];
+Type.getClass = function(o) {
+	if(o == null) return null; else return js_Boot.getClass(o);
+};
 Type.getClassName = function(c) {
 	var a = c.__name__;
 	if(a == null) return null;
@@ -409,6 +412,9 @@ haxe_ds_StringMap.prototype = {
 		}
 		return out;
 	}
+	,iterator: function() {
+		return new haxe_ds__$StringMap_StringMapIterator(this,this.arrayKeys());
+	}
 	,__class__: haxe_ds_StringMap
 };
 var haxe_io_Error = { __ename__ : true, __constructs__ : ["Blocked","Overflow","OutsideBounds","Custom"] };
@@ -510,7 +516,7 @@ ink_runtime_CallStack.prototype = {
 		return this._threads.last();
 	}
 	,set_currentThread: function(value) {
-		ink_runtime_Assert.bool(this._threads.length == 1,"Shouldn't be directly setting the current thread when we have a stack of them");
+		if(!(this._threads.length == 1)) throw new js__$Boot_HaxeError("Shouldn't be directly setting the current thread when we have a stack of them");
 		this._threads.clear();
 		this._threads.add(value);
 		return value;
@@ -756,16 +762,16 @@ ink_runtime_Thread.prototype = {
 	,__class__: ink_runtime_Thread
 	,__properties__: {get_jsonToken:"get_jsonToken"}
 };
-var ink_runtime_Object = function() {
+var ink_runtime_RObject = function() {
 };
-ink_runtime_Object.__name__ = ["ink","runtime","Object"];
-ink_runtime_Object.EQUALS = function(a,b) {
+ink_runtime_RObject.__name__ = ["ink","runtime","RObject"];
+ink_runtime_RObject.EQUALS = function(a,b) {
 	return a == b;
 };
-ink_runtime_Object.notEquals = function(a,b) {
+ink_runtime_RObject.notEquals = function(a,b) {
 	return !(a == b);
 };
-ink_runtime_Object.prototype = {
+ink_runtime_RObject.prototype = {
 	get_debugMetadata: function() {
 		if(this._debugMetadata == null) {
 			if(this.parent != null) return this.parent.get_debugMetadata();
@@ -810,9 +816,9 @@ ink_runtime_Object.prototype = {
 			var nearestContainer;
 			nearestContainer = js_Boot.__instanceof(this,ink_runtime_Container)?this:null;
 			if(nearestContainer == null) {
-				ink_runtime_Assert.bool(this.parent != null,"Can't resolve relative path because we don't have a parent");
+				if(!(this.parent != null)) throw new js__$Boot_HaxeError("Can't resolve relative path because we don't have a parent");
 				nearestContainer = ink_runtime_LibUtil["as"](this.parent,ink_runtime_Container);
-				ink_runtime_Assert.bool(nearestContainer != null,"Expected parent to be a container");
+				if(!(nearestContainer != null)) throw new js__$Boot_HaxeError("Expected parent to be a container");
 				ink_runtime_Assert.bool(path.components[0].get_isParent(),"Is parent assertion failed");
 				path = path.get_tail();
 			}
@@ -882,11 +888,11 @@ ink_runtime_Object.prototype = {
 	,Equals: function(obj) {
 		return obj == this;
 	}
-	,__class__: ink_runtime_Object
+	,__class__: ink_runtime_RObject
 	,__properties__: {get_rootContentContainer:"get_rootContentContainer",get_path:"get_path",set_debugMetadata:"set_debugMetadata",get_debugMetadata:"get_debugMetadata"}
 };
 var ink_runtime_Choice = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 };
 ink_runtime_Choice.__name__ = ["ink","runtime","Choice"];
 ink_runtime_Choice.create = function(choice) {
@@ -894,16 +900,16 @@ ink_runtime_Choice.create = function(choice) {
 	me.choicePoint = choice;
 	return me;
 };
-ink_runtime_Choice.__super__ = ink_runtime_Object;
-ink_runtime_Choice.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_Choice.__super__ = ink_runtime_RObject;
+ink_runtime_Choice.prototype = $extend(ink_runtime_RObject.prototype,{
 	get_pathStringOnChoice: function() {
 		return this.choicePoint.get_pathStringOnChoice();
 	}
 	,__class__: ink_runtime_Choice
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_pathStringOnChoice:"get_pathStringOnChoice"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{get_pathStringOnChoice:"get_pathStringOnChoice"})
 });
 var ink_runtime_ChoicePoint = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this.onceOnly = true;
 };
 ink_runtime_ChoicePoint.__name__ = ["ink","runtime","ChoicePoint"];
@@ -912,8 +918,8 @@ ink_runtime_ChoicePoint.createOnceOnly = function(onceOnly) {
 	me.onceOnly = onceOnly;
 	return me;
 };
-ink_runtime_ChoicePoint.__super__ = ink_runtime_Object;
-ink_runtime_ChoicePoint.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_ChoicePoint.__super__ = ink_runtime_RObject;
+ink_runtime_ChoicePoint.prototype = $extend(ink_runtime_RObject.prototype,{
 	get_choiceTarget: function() {
 		return ink_runtime_LibUtil.asNoInline(this.ResolvePath(this.pathOnChoice),ink_runtime_Container);
 	}
@@ -949,7 +955,7 @@ ink_runtime_ChoicePoint.prototype = $extend(ink_runtime_Object.prototype,{
 		return "Choice: -> " + targetString;
 	}
 	,__class__: ink_runtime_ChoicePoint
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{set_flags:"set_flags",get_flags:"get_flags",set_pathStringOnChoice:"set_pathStringOnChoice",get_pathStringOnChoice:"get_pathStringOnChoice",get_choiceTarget:"get_choiceTarget"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{set_flags:"set_flags",get_flags:"get_flags",set_pathStringOnChoice:"set_pathStringOnChoice",get_pathStringOnChoice:"get_pathStringOnChoice",get_choiceTarget:"get_choiceTarget"})
 });
 var ink_runtime_Cloner = function() {
 	this.stringMapCloner = new ink_runtime_MapCloner(this,haxe_ds_StringMap);
@@ -1053,14 +1059,14 @@ ink_runtime_INamedContent.prototype = {
 	,__properties__: {get_hasValidName:"get_hasValidName"}
 };
 var ink_runtime_Container = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this._content = [];
 	this.namedContent = new haxe_ds_StringMap();
 };
 ink_runtime_Container.__name__ = ["ink","runtime","Container"];
 ink_runtime_Container.__interfaces__ = [ink_runtime_INamedContent];
-ink_runtime_Container.__super__ = ink_runtime_Object;
-ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_Container.__super__ = ink_runtime_RObject;
+ink_runtime_Container.prototype = $extend(ink_runtime_RObject.prototype,{
 	get_content: function() {
 		return this._content;
 	}
@@ -1125,7 +1131,7 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 		return this.name != null && this.name.length > 0;
 	}
 	,AddToNamedContentOnly: function(namedContentObj) {
-		ink_runtime_Assert.bool(js_Boot.__instanceof(namedContentObj,ink_runtime_Object),"Can only add Runtime.Objects to a Runtime.Container");
+		ink_runtime_Assert.bool(js_Boot.__instanceof(namedContentObj,ink_runtime_RObject),"Can only add Runtime.Objects to a Runtime.Container");
 		var runtimeObj = namedContentObj;
 		runtimeObj.parent = this;
 		this.namedContent.set(namedContentObj.name,namedContentObj);
@@ -1264,10 +1270,10 @@ ink_runtime_Container.prototype = $extend(ink_runtime_Object.prototype,{
 		return sb.b;
 	}
 	,__class__: ink_runtime_Container
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_hasValidName:"get_hasValidName",set_countFlags:"set_countFlags",get_countFlags:"get_countFlags",set_namedOnlyContent:"set_namedOnlyContent",get_namedOnlyContent:"get_namedOnlyContent",set_content:"set_content",get_content:"get_content"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{get_hasValidName:"get_hasValidName",set_countFlags:"set_countFlags",get_countFlags:"get_countFlags",set_namedOnlyContent:"set_namedOnlyContent",get_namedOnlyContent:"get_namedOnlyContent",set_content:"set_content",get_content:"get_content"})
 });
 var ink_runtime_ControlCommand = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this.commandType = -1;
 };
 ink_runtime_ControlCommand.__name__ = ["ink","runtime","ControlCommand"];
@@ -1327,8 +1333,8 @@ ink_runtime_ControlCommand.Done = function() {
 ink_runtime_ControlCommand.End = function() {
 	return ink_runtime_ControlCommand.createFromCommandType(16);
 };
-ink_runtime_ControlCommand.__super__ = ink_runtime_Object;
-ink_runtime_ControlCommand.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_ControlCommand.__super__ = ink_runtime_RObject;
+ink_runtime_ControlCommand.prototype = $extend(ink_runtime_RObject.prototype,{
 	Copy: function() {
 		return ink_runtime_ControlCommand.createFromCommandType(this.commandType);
 	}
@@ -1354,7 +1360,7 @@ ink_runtime_DebugMetadata.prototype = {
 	,__class__: ink_runtime_DebugMetadata
 };
 var ink_runtime_Divert = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this.pushesToStack = false;
 };
 ink_runtime_Divert.__name__ = ["ink","runtime","Divert"];
@@ -1364,8 +1370,8 @@ ink_runtime_Divert.createFromPushType = function(stackPushType) {
 	me.stackPushType = stackPushType;
 	return me;
 };
-ink_runtime_Divert.__super__ = ink_runtime_Object;
-ink_runtime_Divert.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_Divert.__super__ = ink_runtime_RObject;
+ink_runtime_Divert.prototype = $extend(ink_runtime_RObject.prototype,{
 	get_targetPath: function() {
 		if(this._targetPath != null && this._targetPath.isRelative) {
 			var targetObj = this.get_targetContent();
@@ -1410,7 +1416,7 @@ ink_runtime_Divert.prototype = $extend(ink_runtime_Object.prototype,{
 			var sb_b = "";
 			var targetStr = this.get_targetPath().toString();
 			var targetLineNum = this.DebugLineNumberOfPath(this.get_targetPath());
-			if(targetLineNum != null) targetStr = "line " + targetLineNum;
+			if(targetLineNum != null) targetStr = "line " + Std.string(targetLineNum);
 			sb_b += "Divert";
 			if(this.pushesToStack) {
 				if(this.stackPushType == 1) sb_b += " function"; else sb_b += " tunnel";
@@ -1422,7 +1428,7 @@ ink_runtime_Divert.prototype = $extend(ink_runtime_Object.prototype,{
 		}
 	}
 	,__class__: ink_runtime_Divert
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_hasVariableTarget:"get_hasVariableTarget",set_targetPathString:"set_targetPathString",get_targetPathString:"get_targetPathString",get_targetContent:"get_targetContent",set_targetPath:"set_targetPath",get_targetPath:"get_targetPath"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{get_hasVariableTarget:"get_hasVariableTarget",set_targetPathString:"set_targetPathString",get_targetPathString:"get_targetPathString",get_targetContent:"get_targetContent",set_targetPath:"set_targetPath",get_targetPath:"get_targetPath"})
 });
 var ink_runtime_GlueType = { __ename__ : true, __constructs__ : ["Bidirectional","Left","Right"] };
 ink_runtime_GlueType.Bidirectional = ["Bidirectional",0];
@@ -1435,12 +1441,12 @@ ink_runtime_GlueType.Right = ["Right",2];
 ink_runtime_GlueType.Right.toString = $estr;
 ink_runtime_GlueType.Right.__enum__ = ink_runtime_GlueType;
 var ink_runtime_Glue = function(type) {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this.glueType = type;
 };
 ink_runtime_Glue.__name__ = ["ink","runtime","Glue"];
-ink_runtime_Glue.__super__ = ink_runtime_Object;
-ink_runtime_Glue.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_Glue.__super__ = ink_runtime_RObject;
+ink_runtime_Glue.prototype = $extend(ink_runtime_RObject.prototype,{
 	get_isLeft: function() {
 		return this.glueType == ink_runtime_GlueType.Left;
 	}
@@ -1463,7 +1469,7 @@ ink_runtime_Glue.prototype = $extend(ink_runtime_Object.prototype,{
 		return "UnexpectedGlueType";
 	}
 	,__class__: ink_runtime_Glue
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_isRight:"get_isRight",get_isBi:"get_isBi",get_isLeft:"get_isLeft"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{get_isRight:"get_isRight",get_isBi:"get_isBi",get_isLeft:"get_isLeft"})
 });
 var ink_runtime_HashSet = function() {
 	this.map = new haxe_ds_ObjectMap();
@@ -1481,7 +1487,7 @@ ink_runtime_HashSet.prototype = {
 	}
 	,__class__: ink_runtime_HashSet
 };
-var ink_runtime_HashSetString = function() {
+var ink_runtime_HashSetString = $hx_exports.ink.runtime.HashSetString = function() {
 	this.map = new haxe_ds_StringMap();
 };
 ink_runtime_HashSetString.__name__ = ["ink","runtime","HashSetString"];
@@ -1564,7 +1570,7 @@ ink_runtime_Json.JArrayToRuntimeObjList = function(jArray,skipLast) {
 	while(_g < count) {
 		var i = _g++;
 		var jTok = jArray[i];
-		var runtimeObj = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(jTok),ink_runtime_Object);
+		var runtimeObj = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(jTok),ink_runtime_RObject);
 		list.add(runtimeObj);
 	}
 	return list;
@@ -1578,7 +1584,7 @@ ink_runtime_Json.JArrayToRuntimeObjArray = function(jArray,skipLast) {
 	while(_g < count) {
 		var i = _g++;
 		var jTok = jArray[i];
-		var runtimeObj = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(jTok),ink_runtime_Object);
+		var runtimeObj = ink_runtime_LibUtil["as"](ink_runtime_Json.JTokenToRuntimeObject(jTok),ink_runtime_RObject);
 		list.push(runtimeObj);
 	}
 	return list;
@@ -1588,7 +1594,7 @@ ink_runtime_Json.DictionaryRuntimeObjsToJObject = function(dictionary) {
 	var $it0 = dictionary.keys();
 	while( $it0.hasNext() ) {
 		var k = $it0.next();
-		var runtimeObj = ink_runtime_LibUtil["as"](__map_reserved[k] != null?dictionary.getReserved(k):dictionary.h[k],ink_runtime_Object);
+		var runtimeObj = ink_runtime_LibUtil["as"](__map_reserved[k] != null?dictionary.getReserved(k):dictionary.h[k],ink_runtime_RObject);
 		if(runtimeObj != null) Reflect.setField(jsonObj,k,ink_runtime_Json.RuntimeObjectToJToken(runtimeObj));
 	}
 	return jsonObj;
@@ -1883,6 +1889,9 @@ ink_runtime_Json.ChoiceToJObject = function(choice) {
 };
 var ink_runtime_LibUtil = function() { };
 ink_runtime_LibUtil.__name__ = ["ink","runtime","LibUtil"];
+ink_runtime_LibUtil.validInt = function(val) {
+	return val != null && !isNaN(val);
+};
 ink_runtime_LibUtil["as"] = function(obj,type) {
 	if(js_Boot.__instanceof(obj,type)) return obj; else return null;
 };
@@ -2086,7 +2095,7 @@ ink_runtime_MapCloner.prototype = {
 	,__class__: ink_runtime_MapCloner
 };
 var ink_runtime_NativeFunctionCall = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	ink_runtime_NativeFunctionCall.GenerateNativeFunctionsIfNecessary();
 };
 ink_runtime_NativeFunctionCall.__name__ = ["ink","runtime","NativeFunctionCall"];
@@ -2253,8 +2262,8 @@ ink_runtime_NativeFunctionCall.AddStringBinaryOpConcat = function(name,op) {
 ink_runtime_NativeFunctionCall.AddFloatUnaryOp = function(name,op) {
 	ink_runtime_NativeFunctionCall.AddOpToNativeFunc(name,1,1,op);
 };
-ink_runtime_NativeFunctionCall.__super__ = ink_runtime_Object;
-ink_runtime_NativeFunctionCall.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_NativeFunctionCall.__super__ = ink_runtime_RObject;
+ink_runtime_NativeFunctionCall.prototype = $extend(ink_runtime_RObject.prototype,{
 	get_name: function() {
 		return this._name;
 	}
@@ -2376,10 +2385,10 @@ ink_runtime_NativeFunctionCall.prototype = $extend(ink_runtime_Object.prototype,
 		return "Native '" + this._name + "'";
 	}
 	,__class__: ink_runtime_NativeFunctionCall
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{set_numberOfParameters:"set_numberOfParameters",get_numberOfParameters:"get_numberOfParameters",set_name:"set_name",get_name:"get_name"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{set_numberOfParameters:"set_numberOfParameters",get_numberOfParameters:"get_numberOfParameters",set_name:"set_name",get_name:"get_name"})
 });
 var ink_runtime_Path = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this.components = [];
 };
 ink_runtime_Path.__name__ = ["ink","runtime","Path"];
@@ -2419,8 +2428,8 @@ ink_runtime_Path.get_self = function() {
 	path.isRelative = true;
 	return path;
 };
-ink_runtime_Path.__super__ = ink_runtime_Object;
-ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_Path.__super__ = ink_runtime_RObject;
+ink_runtime_Path.prototype = $extend(ink_runtime_RObject.prototype,{
 	PathByAppendingPath: function(pathToAppend) {
 		var p = new ink_runtime_Path();
 		var upwardMoves = 0;
@@ -2505,7 +2514,7 @@ ink_runtime_Path.prototype = $extend(ink_runtime_Object.prototype,{
 		return ink_runtime_LibUtil.arraySequenceEquals(otherPath.components,this.components);
 	}
 	,__class__: ink_runtime_Path
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{set_componentsString:"set_componentsString",get_componentsString:"get_componentsString",get_containsNamedComponent:"get_containsNamedComponent",get_lastComponent:"get_lastComponent",get_length:"get_length",get_tail:"get_tail",get_head:"get_head"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{set_componentsString:"set_componentsString",get_componentsString:"get_componentsString",get_containsNamedComponent:"get_containsNamedComponent",get_lastComponent:"get_lastComponent",get_length:"get_length",get_tail:"get_tail",get_head:"get_head"})
 });
 var ink_runtime_Component = function() {
 };
@@ -2513,14 +2522,14 @@ ink_runtime_Component.__name__ = ["ink","runtime","Component"];
 ink_runtime_Component.__interfaces__ = [ink_runtime_IEquatable];
 ink_runtime_Component.createFromIndex = function(index) {
 	var me = new ink_runtime_Component();
-	ink_runtime_Assert.bool(index >= 0,"assertion failed index >=0");
+	if(!(index >= 0)) throw new js__$Boot_HaxeError("assertion failed index >=0");
 	me.index = index;
 	me.name = null;
 	return me;
 };
 ink_runtime_Component.createFromName = function(name) {
 	var me = new ink_runtime_Component();
-	ink_runtime_Assert.bool(name != null && name.length > 0,"assertion failed:name != null && name.Length > 0");
+	if(!(name != null && name.length > 0)) throw new js__$Boot_HaxeError("assertion failed:name != null && name.Length > 0");
 	me.name = name;
 	me.index = -1;
 	return me;
@@ -2551,7 +2560,7 @@ ink_runtime_Component.prototype = {
 	,__properties__: {get_isParent:"get_isParent",get_isIndex:"get_isIndex"}
 };
 var ink_runtime_Story = $hx_exports.ink.runtime.Story = function(jsonString) {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this._mainContentContainer = null;
 	this._externals = new haxe_ds_StringMap();
 	var rootObject = JSON.parse(jsonString);
@@ -2575,8 +2584,8 @@ ink_runtime_Story.createFromContainer = function(contentContainer) {
 	me._externals = new haxe_ds_StringMap();
 	return me;
 };
-ink_runtime_Story.__super__ = ink_runtime_Object;
-ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_Story.__super__ = ink_runtime_RObject;
+ink_runtime_Story.prototype = $extend(ink_runtime_RObject.prototype,{
 	get_currentChoices: function() {
 		var choices = [];
 		var _g_head = this._state.currentChoices.h;
@@ -2603,7 +2612,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	,get_currentErrors: function() {
 		return this._state.currentErrors;
 	}
-	,get_hasError: function() {
+	,get_hasErrorThrow: function() {
 		return this._state.get_hasError();
 	}
 	,get_variablesState: function() {
@@ -2698,7 +2707,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	}
 	,VisitCountForContainer: function(container) {
 		if(!container.visitsShouldBeCounted) {
-			this.Error("Read count for target (" + container.name + " - on " + Std.string(container.get_debugMetadata()) + ") unknown. The story may need to be compiled with countAllVisits flag (-c).");
+			this.ErrorThrow("Read count for target (" + container.name + " - on " + Std.string(container.get_debugMetadata()) + ") unknown. The story may need to be compiled with countAllVisits flag (-c).");
 			return 0;
 		}
 		var count = 0;
@@ -2720,7 +2729,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		this._state.turnIndices.set(containerPathStr,this._state.currentTurnIndex);
 	}
 	,TurnsSinceForContainer: function(container) {
-		if(!container.turnIndexShouldBeCounted) this.Error("TURNS_SINCE() for target (" + container.name + " - on " + Std.string(container.get_debugMetadata()) + ") unknown. The story may need to be compiled with countAllVisits flag (-c).");
+		if(!container.turnIndexShouldBeCounted) this.ErrorThrow("TURNS_SINCE() for target (" + container.name + " - on " + Std.string(container.get_debugMetadata()) + ") unknown. The story may need to be compiled with countAllVisits flag (-c).");
 		var index = 0;
 		var containerPathStr = container.get_path().toString();
 		index = this._state.turnIndices.get(containerPathStr);
@@ -2729,7 +2738,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	,NextSequenceShuffleIndex: function() {
 		var numElementsIntVal = ink_runtime_LibUtil["as"](this._state.PopEvaluationStack(),ink_runtime_IntValue);
 		if(numElementsIntVal == null) {
-			this.Error("expected number of elements in sequence for shuffle index");
+			this.ErrorThrow("expected number of elements in sequence for shuffle index");
 			return 0;
 		}
 		var seqContainer = this._state.get_currentContainer();
@@ -2765,13 +2774,13 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		}
 		throw new js__$Boot_HaxeError(new ink_runtime_SystemException("Should never reach here"));
 	}
-	,Error: function(message,useEndLineNumber) {
+	,ErrorThrow: function(message,useEndLineNumber) {
 		if(useEndLineNumber == null) useEndLineNumber = false;
 		var e = new ink_runtime_StoryException(message);
 		e.useEndLineNumber = useEndLineNumber;
 		throw new js__$Boot_HaxeError(e);
 	}
-	,AddError: function(message,useEndLineNumber) {
+	,AddErrorThrow: function(message,useEndLineNumber) {
 		var dm = this.get_currentDebugMetadata();
 		if(dm != null) {
 			var lineNum;
@@ -2848,9 +2857,9 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		} while(this.get_canContinue());
 		if(stateAtLastNewline != null) this.RestoreStateSnapshot(stateAtLastNewline);
 		if(!this.get_canContinue()) {
-			if(this._state.callStack.get_canPopThread()) this.Error("Thread available to pop, threads should always be flat by the end of evaluation?");
+			if(this._state.callStack.get_canPopThread()) this.ErrorThrow("Thread available to pop, threads should always be flat by the end of evaluation?");
 			if(this.get_currentChoices().length == 0 && !this._state.didSafeExit && this._temporaryEvaluationContainer == null) {
-				if(this._state.callStack.CanPop(0)) this.Error("unexpectedly reached end of content. Do you need a '->->' to return from a tunnel?"); else if(this._state.callStack.CanPop(1)) this.Error("unexpectedly reached end of content. Do you need a '~ return'?"); else if(!this._state.callStack.get_canPop()) this.Error("ran out of content. Do you need a '-> DONE' or '-> END'?"); else this.Error("unexpectedly reached end of content for unknown reason. Please debug compiler!");
+				if(this._state.callStack.CanPop(0)) this.ErrorThrow("unexpectedly reached end of content. Do you need a '->->' to return from a tunnel?"); else if(this._state.callStack.CanPop(1)) this.ErrorThrow("unexpectedly reached end of content. Do you need a '~ return'?"); else if(!this._state.callStack.get_canPop()) this.ErrorThrow("ran out of content. Do you need a '-> DONE' or '-> END'?"); else this.ErrorThrow("unexpectedly reached end of content for unknown reason. Please debug compiler!");
 			}
 		}
 		this._state.didSafeExit = false;
@@ -2954,7 +2963,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			val = js_Boot.__instanceof(obj,ink_runtime_Value)?obj:null;
 			if(js_Boot.__instanceof(val,ink_runtime_DivertTargetValue)) {
 				var divTarget = val;
-				this.Error("Shouldn't use a divert target (to " + Std.string(divTarget.get_targetPath()) + ") as a conditional value. Did you intend a function call 'likeThis()' or a read count check 'likeThis'? (no arrows)");
+				this.ErrorThrow("Shouldn't use a divert target (to " + Std.string(divTarget.get_targetPath()) + ") as a conditional value. Did you intend a function call 'likeThis()' or a read count check 'likeThis'? (no arrows)");
 				return false;
 			}
 			return val.get_isTruthy();
@@ -2977,7 +2986,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					intContent = js_Boot.__instanceof(varContents,ink_runtime_IntValue)?varContents:null;
 					var errorMessage = "Tried to divert to a target from a variable, but the variable (" + varName + ") didn't contain a divert target, it ";
 					if(intContent != null && intContent.value == 0) errorMessage += "was empty/null (the value 0)."; else errorMessage += "contained '" + Std.string(varContents) + "'.";
-					this.Error(errorMessage);
+					this.ErrorThrow(errorMessage);
 				}
 				var target = varContents;
 				this._state.divertedTargetObject = this.ContentAtPath(target.get_targetPath());
@@ -2987,7 +2996,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			} else this._state.divertedTargetObject = currentDivert.get_targetContent();
 			if(currentDivert.pushesToStack) this._state.callStack.Push(currentDivert.stackPushType);
 			if(this._state.divertedTargetObject == null && !currentDivert.isExternal) {
-				if(currentDivert != null && currentDivert.get_debugMetadata().sourceName != null) this.Error("Divert target doesn't exist: " + currentDivert.get_debugMetadata().sourceName); else this.Error("Divert resolution failed: " + Std.string(currentDivert));
+				if(currentDivert != null && currentDivert.get_debugMetadata().sourceName != null) this.ErrorThrow("Divert target doesn't exist: " + currentDivert.get_debugMetadata().sourceName); else this.ErrorThrow("Divert resolution failed: " + Std.string(currentDivert));
 			}
 			return true;
 		} else if(js_Boot.__instanceof(contentObj,ink_runtime_ControlCommand)) {
@@ -3029,7 +3038,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 					var expected = names.get(this._state.callStack.get_currentElement().type);
 					if(!this._state.callStack.get_canPop()) expected = "end of flow (-> END or choice)";
 					var errorMsg = "Found " + names.h[popType] + ", when expected " + expected;
-					this.Error(errorMsg);
+					this.ErrorThrow(errorMsg);
 				} else this._state.callStack.Pop();
 				break;
 			case 7:
@@ -3069,7 +3078,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 				if(!js_Boot.__instanceof(target1,ink_runtime_DivertTargetValue)) {
 					var extraNote = "";
 					if(js_Boot.__instanceof(target1,ink_runtime_IntValue)) extraNote = ". Did you accidentally pass a read count ('knot_name') instead of a target ('-> knot_name')?";
-					this.Error("TURNS_SINCE expected a divert target (knot, stitch, label name), but saw " + Std.string(target1) + extraNote);
+					this.ErrorThrow("TURNS_SINCE expected a divert target (knot, stitch, label name), but saw " + Std.string(target1) + extraNote);
 				} else {
 					var divertTarget;
 					divertTarget = js_Boot.__instanceof(target1,ink_runtime_DivertTargetValue)?target1:null;
@@ -3095,7 +3104,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 				this._state.ForceEndFlow();
 				break;
 			default:
-				this.Error("unhandled ControlCommand: " + Std.string(evalCommand));
+				this.ErrorThrow("unhandled ControlCommand: " + Std.string(evalCommand));
 			}
 			return true;
 		} else if(js_Boot.__instanceof(contentObj,ink_runtime_VariableAssignment)) {
@@ -3113,7 +3122,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 			} else {
 				foundValue = this._state.variablesState.GetVariableWithName(varRef.name);
 				if(foundValue == null) {
-					this.Error("Uninitialised variable: " + varRef.name);
+					this.ErrorThrow("Uninitialised variable: " + varRef.name);
 					foundValue = new ink_runtime_IntValue(0);
 				}
 			}
@@ -3162,7 +3171,7 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 	}
 	,ChooseChoiceIndex: function(choiceIdx) {
 		var choices = this.get_currentChoices();
-		ink_runtime_Assert.bool(choiceIdx >= 0 && choiceIdx < choices.length,"choice out of range");
+		if(!(choiceIdx >= 0 && choiceIdx < choices.length)) throw new js__$Boot_HaxeError("choice out of range");
 		var choiceToChoose = choices[choiceIdx];
 		this._state.callStack.set_currentThread(choiceToChoose.threadAtGeneration);
 		this.ChoosePath(choiceToChoose.choicePoint.get_choiceTarget().get_path());
@@ -3179,12 +3188,157 @@ ink_runtime_Story.prototype = $extend(ink_runtime_Object.prototype,{
 		return false;
 	}
 	,CallExternalFunction: function(funcName,numberOfArguments) {
-		console.log("This is a stub. Will be added soon!");
+		var func = null;
+		var fallbackFunctionContainer = null;
+		func = this._externals.get(funcName);
+		var foundExternal = func != null;
+		if(!foundExternal) {
+			if(this.allowExternalFunctionFallbacks) {
+				fallbackFunctionContainer = ink_runtime_LibUtil["as"](this.ContentAtPath(ink_runtime_Path.createFromString(funcName)),ink_runtime_Container);
+				if(!(fallbackFunctionContainer != null)) throw new js__$Boot_HaxeError("Trying to call EXTERNAL function '" + funcName + "' which has not been bound, and fallback ink function could not be found.");
+				this._state.callStack.Push(1);
+				this._state.divertedTargetObject = fallbackFunctionContainer;
+				return;
+			} else throw new js__$Boot_HaxeError("Trying to call EXTERNAL function '" + funcName + "' which has not been bound (and ink fallbacks disabled).");
+		}
+		var $arguments = [];
+		var _g = 0;
+		while(_g < numberOfArguments) {
+			var i = _g++;
+			var poppedObj = ink_runtime_LibUtil["as"](this._state.PopEvaluationStack(),ink_runtime_Value);
+			var valueObj = poppedObj.get_valueObject();
+			$arguments.push(valueObj);
+		}
+		$arguments.reverse();
+		var funcResult = func($arguments);
+		var returnObj = null;
+		if(funcResult != null) {
+			returnObj = ink_runtime_Value.Create(funcResult);
+			ink_runtime_Assert.bool(returnObj != null,"Could not create ink value from returned object of type " + Type.getClassName(Type.getClass(funcResult)));
+		} else returnObj = new ink_runtime_VoidObj();
+		this._state.PushEvaluationStack(returnObj);
+	}
+	,TryCoerce: function(value) {
+		return value;
+	}
+	,BindExternalFunctionGeneral: function(funcName,func) {
+		ink_runtime_Assert.bool(!this._externals.exists(funcName),"Function '" + funcName + "' has already been bound.");
+		this._externals.set(funcName,func);
+	}
+	,BindExternalFunction0: function(funcName,func) {
+		if(!(func != null)) throw new js__$Boot_HaxeError("Can't bind a null function");
+		this.BindExternalFunctionGeneral(funcName,function(args) {
+			if(!(args.length == 0)) throw new js__$Boot_HaxeError("External function expected no arguments");
+			return func();
+		});
+	}
+	,BindExternalFunction1: function(funcName,func) {
+		if(!(func != null)) throw new js__$Boot_HaxeError("Can't bind a null function");
+		this.BindExternalFunctionGeneral(funcName,function(args) {
+			if(!(args.length == 1)) throw new js__$Boot_HaxeError("External function expected 1 argument");
+			var param1 = args[0];
+			return func(param1);
+		});
+	}
+	,BindExternalFunction2: function(funcName,func) {
+		if(!(func != null)) throw new js__$Boot_HaxeError("Can't bind a null function");
+		this.BindExternalFunctionGeneral(funcName,function(args) {
+			if(!(args.length == 2)) throw new js__$Boot_HaxeError("External function expected 2 arguments");
+			var param1 = args[0];
+			var param2 = args[1];
+			return func(param1,param2);
+		});
+	}
+	,BindExternalFunction3: function(funcName,func) {
+		if(!(func != null)) throw new js__$Boot_HaxeError("Can't bind a null function");
+		this.BindExternalFunctionGeneral(funcName,function(args) {
+			if(!(args.length == 3)) throw new js__$Boot_HaxeError("External function expected 3 arguments");
+			var param1 = args[0];
+			var param2 = args[1];
+			var param3 = args[2];
+			return func(param1,param2,param3);
+		});
+	}
+	,UnbindExternalFunction: function(funcName) {
+		ink_runtime_Assert.bool(this._externals.exists(funcName),"Function '" + funcName + "' has not been bound.");
+		this._externals.remove(funcName);
 	}
 	,ValidateExternalBindings: function() {
+		this.ValidateExternalBindingsC(this._mainContentContainer);
+		this._hasValidatedExternals = true;
+	}
+	,ValidateExternalBindingsC: function(c) {
+		var _g = 0;
+		var _g1 = c._content;
+		while(_g < _g1.length) {
+			var innerContent = _g1[_g];
+			++_g;
+			this.ValidateExternalBindingsO(innerContent);
+		}
+		var $it0 = c.namedContent.iterator();
+		while( $it0.hasNext() ) {
+			var value = $it0.next();
+			this.ValidateExternalBindingsO(js_Boot.__instanceof(value,ink_runtime_RObject)?value:null);
+		}
+	}
+	,ValidateExternalBindingsO: function(o) {
+		var container;
+		container = js_Boot.__instanceof(o,ink_runtime_Container)?o:null;
+		if(container != null) {
+			this.ValidateExternalBindingsC(container);
+			return;
+		}
+		var divert;
+		divert = js_Boot.__instanceof(o,ink_runtime_Divert)?o:null;
+		if(divert != null && divert.isExternal) {
+			var name = divert.get_targetPathString();
+			if(!this._externals.exists(name)) {
+				var fallbackFunction = null;
+				var this1 = this.get_mainContentContainer().namedContent;
+				fallbackFunction = this1.get(name);
+				var fallbackFound = fallbackFunction != null;
+				var message = null;
+				if(!this.allowExternalFunctionFallbacks) message = "Missing function binding for external '" + name + "' (ink fallbacks disabled)"; else if(!fallbackFound) message = "Missing function binding for external '" + name + "', and no fallback ink function found.";
+				if(message != null) {
+					var errorPreamble = "ERROR: ";
+					if(divert.get_debugMetadata() != null) errorPreamble += "'" + divert.get_debugMetadata().fileName + "' line " + divert.get_debugMetadata().startLineNumber + ": ";
+					throw new js__$Boot_HaxeError(new ink_runtime_StoryException(errorPreamble + message));
+				}
+			}
+		}
+	}
+	,ReflectExternalBindings: function(array) {
+		if(array == null) array = [];
+		this.ReflectExternalBindingsC(this._mainContentContainer,array);
+		return array;
+	}
+	,ReflectExternalBindingsC: function(c,array) {
+		var _g = 0;
+		var _g1 = c._content;
+		while(_g < _g1.length) {
+			var innerContent = _g1[_g];
+			++_g;
+			this.ReflectExternalBindingsO(innerContent,array);
+		}
+		var $it0 = c.namedContent.iterator();
+		while( $it0.hasNext() ) {
+			var value = $it0.next();
+			this.ReflectExternalBindingsO(js_Boot.__instanceof(value,ink_runtime_RObject)?value:null,array);
+		}
+	}
+	,ReflectExternalBindingsO: function(o,array) {
+		var container;
+		container = js_Boot.__instanceof(o,ink_runtime_Container)?o:null;
+		if(container != null) {
+			this.ReflectExternalBindingsC(container,array);
+			return;
+		}
+		var divert;
+		divert = js_Boot.__instanceof(o,ink_runtime_Divert)?o:null;
+		if(divert != null && divert.isExternal) array.push(divert.get_targetPathString());
 	}
 	,__class__: ink_runtime_Story
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_mainContentContainer:"get_mainContentContainer",get_canContinue:"get_canContinue",get_currentDebugMetadata:"get_currentDebugMetadata",get_state:"get_state",get_variablesState:"get_variablesState",get_hasError:"get_hasError",get_currentErrors:"get_currentErrors",get_currentText:"get_currentText",get_currentChoices:"get_currentChoices"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{get_mainContentContainer:"get_mainContentContainer",get_canContinue:"get_canContinue",get_currentDebugMetadata:"get_currentDebugMetadata",get_state:"get_state",get_variablesState:"get_variablesState",get_hasErrorThrow:"get_hasErrorThrow",get_currentErrors:"get_currentErrors",get_currentText:"get_currentText",get_currentChoices:"get_currentChoices"})
 });
 var ink_runtime_StoryException = function(message) {
 	ink_runtime_SystemException.call(this,message);
@@ -3227,7 +3381,7 @@ ink_runtime_StoryState.prototype = {
 	,VisitCountAtPathString: function(pathString) {
 		var visitCountOut;
 		visitCountOut = this.visitCounts.get(pathString);
-		if(visitCountOut != null) return visitCountOut;
+		if(visitCountOut != null && !isNaN(visitCountOut)) return visitCountOut;
 		return 0;
 	}
 	,get_outputStream: function() {
@@ -3635,7 +3789,7 @@ ink_runtime_StoryState.prototype = {
 	,__properties__: {get_inStringEvaluation:"get_inStringEvaluation",get_outputStreamContainsContent:"get_outputStreamContainsContent",get_outputStreamEndsInNewline:"get_outputStreamEndsInNewline",get_currentGlueIndex:"get_currentGlueIndex",set_jsonToken:"set_jsonToken",get_jsonToken:"get_jsonToken",set_inExpressionEvaluation:"set_inExpressionEvaluation",get_inExpressionEvaluation:"get_inExpressionEvaluation",get_currentText:"get_currentText",get_hasError:"get_hasError",set_previousContentObject:"set_previousContentObject",get_previousContentObject:"get_previousContentObject",get_currentContainer:"get_currentContainer",set_currentContentObject:"set_currentContentObject",get_currentContentObject:"get_currentContentObject",set_currentPath:"set_currentPath",get_currentPath:"get_currentPath",get_outputStream:"get_outputStream"}
 };
 var ink_runtime_Value = function(val) {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this.value = val;
 };
 ink_runtime_Value.__name__ = ["ink","runtime","Value"];
@@ -3647,8 +3801,8 @@ ink_runtime_Value.Create = function(val) {
 	if(((val | 0) === val)) return new ink_runtime_IntValue(val); else if(typeof(val) == "number") return new ink_runtime_FloatValue(val); else if(typeof(val) == "string") return new ink_runtime_StringValue(val); else if(js_Boot.__instanceof(val,ink_runtime_Path)) return new ink_runtime_DivertTargetValue(val);
 	return null;
 };
-ink_runtime_Value.__super__ = ink_runtime_Object;
-ink_runtime_Value.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_Value.__super__ = ink_runtime_RObject;
+ink_runtime_Value.prototype = $extend(ink_runtime_RObject.prototype,{
 	Cast: function(newType) {
 		return null;
 	}
@@ -3671,7 +3825,7 @@ ink_runtime_Value.prototype = $extend(ink_runtime_Object.prototype,{
 		return this.value;
 	}
 	,__class__: ink_runtime_Value
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{get_valueObject:"get_valueObject",get_isTruthy:"get_isTruthy",get_valueType:"get_valueType"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{get_valueObject:"get_valueObject",get_isTruthy:"get_isTruthy",get_valueType:"get_valueType"})
 });
 var ink_runtime_IntValue = function(val) {
 	if(val == null) val = 0;
@@ -3817,20 +3971,20 @@ ink_runtime_VariablePointerValue.prototype = $extend(ink_runtime_Value.prototype
 });
 var ink_runtime_VariableAssignment = function(variableName,isNewDeclaration) {
 	if(isNewDeclaration == null) isNewDeclaration = false;
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 	this.variableName = variableName;
 	this.isNewDeclaration = isNewDeclaration;
 };
 ink_runtime_VariableAssignment.__name__ = ["ink","runtime","VariableAssignment"];
-ink_runtime_VariableAssignment.__super__ = ink_runtime_Object;
-ink_runtime_VariableAssignment.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_VariableAssignment.__super__ = ink_runtime_RObject;
+ink_runtime_VariableAssignment.prototype = $extend(ink_runtime_RObject.prototype,{
 	toString: function() {
 		return "VarAssign to " + this.variableName;
 	}
 	,__class__: ink_runtime_VariableAssignment
 });
 var ink_runtime_VariableReference = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 };
 ink_runtime_VariableReference.__name__ = ["ink","runtime","VariableReference"];
 ink_runtime_VariableReference.create = function(name) {
@@ -3838,8 +3992,8 @@ ink_runtime_VariableReference.create = function(name) {
 	me.name = name;
 	return me;
 };
-ink_runtime_VariableReference.__super__ = ink_runtime_Object;
-ink_runtime_VariableReference.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_VariableReference.__super__ = ink_runtime_RObject;
+ink_runtime_VariableReference.prototype = $extend(ink_runtime_RObject.prototype,{
 	get_containerForCount: function() {
 		return ink_runtime_LibUtil["as"](this.ResolvePath(this.pathForCount),ink_runtime_Container);
 	}
@@ -3858,7 +4012,7 @@ ink_runtime_VariableReference.prototype = $extend(ink_runtime_Object.prototype,{
 		}
 	}
 	,__class__: ink_runtime_VariableReference
-	,__properties__: $extend(ink_runtime_Object.prototype.__properties__,{set_pathStringForCount:"set_pathStringForCount",get_pathStringForCount:"get_pathStringForCount",get_containerForCount:"get_containerForCount"})
+	,__properties__: $extend(ink_runtime_RObject.prototype.__properties__,{set_pathStringForCount:"set_pathStringForCount",get_pathStringForCount:"get_pathStringForCount",get_containerForCount:"get_containerForCount"})
 });
 var ink_runtime_VariablesState = function(callStack) {
 	this.variableChangedEventCallbacks = [];
@@ -4004,11 +4158,11 @@ ink_runtime_VariablesState.prototype = {
 	,__properties__: {set_jsonToken:"set_jsonToken",get_jsonToken:"get_jsonToken",get_jsProxy:"get_jsProxy",set_batchObservingVariableChanges:"set_batchObservingVariableChanges",get_batchObservingVariableChanges:"get_batchObservingVariableChanges"}
 };
 var ink_runtime_VoidObj = function() {
-	ink_runtime_Object.call(this);
+	ink_runtime_RObject.call(this);
 };
 ink_runtime_VoidObj.__name__ = ["ink","runtime","VoidObj"];
-ink_runtime_VoidObj.__super__ = ink_runtime_Object;
-ink_runtime_VoidObj.prototype = $extend(ink_runtime_Object.prototype,{
+ink_runtime_VoidObj.__super__ = ink_runtime_RObject;
+ink_runtime_VoidObj.prototype = $extend(ink_runtime_RObject.prototype,{
 	__class__: ink_runtime_VoidObj
 });
 var ink_runtime_js_JSProxyTrap = function() {

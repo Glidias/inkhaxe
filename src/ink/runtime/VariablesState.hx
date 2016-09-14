@@ -19,15 +19,15 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	// tocheck, contextualisation
 	//internal delegate void VariableChanged(string variableName, Runtime.Object newValue);
 	//internal event VariableChanged variableChangedEvent;
-	public var variableChangedEvent:String->Object->Void;
-	public var variableChangedEventCallbacks:Array<String->Object->Void> = [];
+	public var variableChangedEvent:String->RObject->Void;
+	public var variableChangedEventCallbacks:Array<String->RObject->Void> = [];
 	/**
 	 * This function is specific to the haxe/js version of ink. It allows to register a callback that will be called when a variable changes. The original code uses `state.variableChangedEvent += callback` instead.
 	 * @param {function} callback 
 	 */
-	public function ObserveVariableChange(callback:String->Object->Void){
+	public function ObserveVariableChange(callback:String->RObject->Void){
 		if (this.variableChangedEvent == null){
-			this.variableChangedEvent = function(variableName:String, newValue:Object):Void  {
+			this.variableChangedEvent = function(variableName:String, newValue:RObject):Void  {
 				/*
 				this.variableChangedEventCallbacks.forEach(cb => {
 					cb(variableName, newValue);
@@ -113,7 +113,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 		
 	public function new(callStack:CallStack) 
 	{
-		 _globalVariables = new Map<String, Object>();
+		 _globalVariables = new Map<String, RObject>();
         _callStack = callStack;
 		#if (js)
 			_jsProxy = new JSProxy( this,  new JSProxyTrap<VariablesState>() );
@@ -171,14 +171,14 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 		return (_globalVariables = Json.JObjectToDictionaryRuntimeObjs (value));
 	}
 	
-	public function GetVariableWithName( name:String):Object {
+	public function GetVariableWithName( name:String):RObject {
 		
 		return _GetVariableWithName(name, -1);
 	}
 		
-	 function _GetVariableWithName( name:String,  contextIndex:Int):Object
+	 function _GetVariableWithName( name:String,  contextIndex:Int):RObject
 	{
-	   var varValue:Object = GetRawVariableWithName (name, contextIndex);
+	   var varValue:RObject = GetRawVariableWithName (name, contextIndex);
 
 		// Get value from pointer?
 		var varPointer = LibUtil.as(varValue , VariablePointerValue);
@@ -189,9 +189,9 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 		return varValue;
 	}
 	
-	function GetRawVariableWithName( name:String,  contextIndex:Int):Object
+	function GetRawVariableWithName( name:String,  contextIndex:Int):RObject
 	{
-		var varValue:Object = null;
+		var varValue:RObject = null;
 		// 0 context = global
 		if (contextIndex == 0 || contextIndex == -1) {
 			if ( (varValue=LibUtil.tryGetValue(_globalVariables,  name) )  != null ) {
@@ -209,14 +209,14 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	}
 		
 		
-	public function ValueAtVariablePointer( pointer:VariablePointerValue):Object
+	public function ValueAtVariablePointer( pointer:VariablePointerValue):RObject
 	{
 		return _GetVariableWithName (pointer.variableName, pointer.contextIndex);
 	}
 
 		
 		
-	public function Assign( varAss:VariableAssignment, value:Object):Void
+	public function Assign( varAss:VariableAssignment, value:RObject):Void
 	{
 		var name = varAss.variableName;
 		var contextIndex:Int = -1;
@@ -268,9 +268,9 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	
 	
 	
-	function SetGlobal( variableName:String,  value:Object):Void
+	function SetGlobal( variableName:String,  value:RObject):Void
 	{
-		var oldValue:Object = null;
+		var oldValue:RObject = null;
 		
 		oldValue = LibUtil.tryGetValue(_globalVariables, variableName);
 		//_globalVariables.TryGetValue (variableName, out oldValue);
@@ -330,7 +330,7 @@ class VariablesState implements IProxy //implements IEnumberable<String>
 	
 	
 
-	 var _globalVariables:Map<String, Object>;
+	 var _globalVariables:Map<String, RObject>;
 		
    // Used for accessing temporary variables
 	var _callStack:CallStack;

@@ -4,7 +4,7 @@ package ink.runtime;
  * Done!
  * @author Glidias
  */
-class VoidObj extends Object
+class VoidObj extends RObject
 {
 
 	public function new() 

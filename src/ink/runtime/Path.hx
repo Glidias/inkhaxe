@@ -1,13 +1,13 @@
 package ink.runtime;
 import haxe.ds.GenericStack;
 import ink.runtime.Path;
-import ink.runtime.Path.Component;
+
 
 /**
  * Done!
  * @author Glidias
  */
-class Path extends Object implements IEquatable<Path>
+class Path extends RObject implements IEquatable//<Path>
 {
 	public static var parentId:String = "^";  // should this be inlined as  constant?
 
@@ -190,7 +190,7 @@ class Path extends Object implements IEquatable<Path>
 		for (str in componentStrings) {
 			var index:Int;
 			index = Std.parseInt(str);
-			if (index != null && !Math.isNaN(index)) {  //int.TryParse (str , out index)
+			if ( LibUtil.validInt(index) ) {  //int.TryParse (str , out index)
 				components.push ( Component.createFromIndex(index));
 			} else {
 				components.push ( Component.createFromName(str));
@@ -246,7 +246,7 @@ class Path extends Object implements IEquatable<Path>
 	
 }
 
-class Component implements IEquatable<Component>
+class Component implements IEquatable
 {
 
 	public var index:Int;  //x { get; private set; }

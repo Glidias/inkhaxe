@@ -1,6 +1,6 @@
 package ink.runtime;
 import haxe.ds.StringMap;
-import ink.runtime.Object;
+import ink.runtime.RObject;
 
 
 /**
@@ -10,6 +10,9 @@ import ink.runtime.Object;
 class LibUtil
 {
 
+	public static inline function validInt(?val:Int):Bool {
+		return val != null && !Math.isNaN(val);
+	}
 	public static inline function as<T>( obj:Dynamic, type:Class<T> ):T {
 		return Std.is( obj, type ) ? cast obj : null;
 	}
@@ -24,7 +27,7 @@ class LibUtil
 		return Std.parseInt(val); // TOCHECK: across all platforms validity
 	}
 	
-	public static inline function tryGetValue<V:Object>(map:StringMap<V>, prop:String ):V {
+	public static inline function tryGetValue<V:RObject>(map:StringMap<V>, prop:String ):V {
 		return map.get(prop); 
 	}
 	public static inline function tryGetValueINamedContent<V:INamedContent>(map:StringMap<V>, prop:String ):INamedContent {
@@ -110,7 +113,7 @@ class LibUtil
 		#end
 	}
 
-	public static function arraySequenceEquals<T:IEquatable<T>>(arr1:Array<T>, arr2:Array<T>):Bool {
+	public static function arraySequenceEquals<T:IEquatable>(arr1:Array<T>, arr2:Array<T>):Bool {  //<T>
 		if (arr1.length != arr2.length) return false;
 		for (i in 0...arr1.length) {
 			if (!arr1[i].Equals(arr2[i])) {  // enforced IEquatable constraint

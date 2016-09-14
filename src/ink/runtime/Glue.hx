@@ -11,7 +11,7 @@ enum GlueType
 	Right;
 }
 	
-class Glue extends Object
+class Glue extends RObject
 {
 	public var glueType:GlueType; //{ get; set; }
 	public var isLeft(get, null):Bool;

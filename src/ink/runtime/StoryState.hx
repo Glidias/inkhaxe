@@ -57,7 +57,7 @@ class StoryState
 	{
 		var visitCountOut:Int;
 		visitCountOut = visitCounts.get(pathString);  // tocheck:, StringMap for int... does return null for Flash target
-		if (visitCountOut != null) //visitCounts.TryGetValue (pathString, out visitCountOut))
+		if ( LibUtil.validInt(visitCountOut)  ) //visitCounts.TryGetValue (pathString, out visitCountOut))  //visitCountOut != null
 			return visitCountOut;
 
 		return 0;
@@ -67,8 +67,8 @@ class StoryState
 	// When adding state, update the Copy method, and serialisation.
 	// REMEMBER! REMEMBER! REMEMBER!
 
-	public var  outputStream(get, null):Array<Object>; //{ get { } }
-	function get_outputStream():Array<Object> 
+	public var  outputStream(get, null):Array<RObject>; //{ get { } }
+	function get_outputStream():Array<RObject> 
 	{
 		 return _outputStream;
 	}
@@ -77,8 +77,8 @@ class StoryState
 	public var  currentErrors:List<String>; //{ get; private set; }
 	public var  variablesState:VariablesState; //{ get; private set; }
 	public var  callStack:CallStack; //{ get; set; }
-	public var  evaluationStack:Array<Object>; // List<Object>; //{ get; private set; }
-	public var  divertedTargetObject:Object;// { get; set; }
+	public var  evaluationStack:Array<RObject>; // List<Object>; //{ get; private set; }
+	public var  divertedTargetObject:RObject;// { get; set; }
 	public var visitCounts:Map<String, Int>;  //{ get; private set; }
 	public var turnIndices:Map<String, Int>;// { get; private set; }
 	public var  currentTurnIndex:Int; // { get; private set; }
@@ -105,12 +105,12 @@ class StoryState
 		return currentContentObject != null ? currentContentObject.path : null;
 	}
 	
-	public var  currentContentObject(get, set):Object;
-	function get_currentContentObject():Object 
+	public var  currentContentObject(get, set):RObject;
+	function get_currentContentObject():RObject 
 	{
 			return callStack.currentElement.currentObject;
 	}
-	function set_currentContentObject(value:Object):Object 
+	function set_currentContentObject(value:RObject):RObject 
 	{
 		callStack.currentElement.currentObject = value;
 		return value;
@@ -124,11 +124,11 @@ class StoryState
 	}
 
 	
-	public var previousContentObject(get, set):Object;
-	function get_previousContentObject():Object {
+	public var previousContentObject(get, set):RObject;
+	function get_previousContentObject():RObject {
 		return callStack.currentThread.previousContentObject;
 	}
-	function set_previousContentObject(value:Object):Object {
+	function set_previousContentObject(value:RObject):RObject {
 		callStack.currentThread.previousContentObject = value;
 		return value;
 	}
@@ -171,9 +171,9 @@ class StoryState
 	{
 		 this.story = story;
 
-		_outputStream = new Array<Object> ();
+		_outputStream = new Array<RObject> ();
 
-		evaluationStack = new Array<Object> ();
+		evaluationStack = new Array<RObject> ();
 
 		callStack =  CallStack.createCallStack(story.rootContentContainer);
 		variablesState = new VariablesState (callStack);
@@ -382,7 +382,7 @@ class StoryState
 	
 	// Push to output stream, but split out newlines in text for consistency
 	// in dealing with them later.
-	public function PushToOutputStream( obj:Object):Void
+	public function PushToOutputStream( obj:RObject):Void
 	{
 		var text = LibUtil.as(obj, StringValue);
 		if (text!=null) {
@@ -482,7 +482,7 @@ class StoryState
 	}
 
 	
-	function PushToOutputStreamIndividual( obj:Object):Void
+	function PushToOutputStreamIndividual( obj:RObject):Void
 	{
 		var glue = LibUtil.as(obj, Glue);
 		var text = LibUtil.as(obj, StringValue);
@@ -695,12 +695,12 @@ class StoryState
 	}
 	
 
-	public function  PushEvaluationStack(obj:Object):Void
+	public function  PushEvaluationStack(obj:RObject):Void
 	{
 		evaluationStack.push(obj);
 	}
 
-	public function  PopEvaluationStack():Object
+	public function  PopEvaluationStack():RObject
 	{
 		//var obj =  evaluationStack [evaluationStack.length - 1];
 		//evaluationStack.pop(); // evaluationStack.RemoveAt (evaluationStack.length - 1);
@@ -709,12 +709,12 @@ class StoryState
 		return evaluationStack.pop();
 	}
 
-	public function PeekEvaluationStack():Object
+	public function PeekEvaluationStack():RObject
 	{
 		return evaluationStack [evaluationStack.length - 1];
 	}
 
-	public function PopEvaluationStack1( numberOfObjects:Int):Array<Object> //List<Object>
+	public function PopEvaluationStack1( numberOfObjects:Int):Array<RObject> //List<Object>
 	{
 		if(numberOfObjects > evaluationStack.length) {
 			throw new SystemException ("trying to pop too many objects");
@@ -767,7 +767,7 @@ class StoryState
 	// When adding state, update the Copy method and serialisation
 	// REMEMBER! REMEMBER! REMEMBER!
 		
-	var _outputStream:Array<Object>;  // formerly list. consider: after everything's done. de.polydonal.ds List implementation
+	var _outputStream:Array<RObject>;  // formerly list. consider: after everything's done. de.polydonal.ds List implementation
 	var _currentRightGlue:Glue;
 	
 }

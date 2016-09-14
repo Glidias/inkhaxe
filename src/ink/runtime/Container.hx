@@ -23,30 +23,30 @@ class CountFlags {
 	public static inline var CountStartOnly:Int = 4;
 }
 
-class Container extends Object implements INamedContent
+class Container extends RObject implements INamedContent
 {
 
 	public var name:String;
-	public var content(get, set):Array<Object>;
-	inline function  get_content():Array<Object> 
+	public var content(get, set):Array<RObject>;
+	inline function  get_content():Array<RObject> 
 	{
 			return _content;
 	}
 	
-	inline function  set_content(value:Array<Object>):Array<Object> 
+	inline function  set_content(value:Array<RObject>):Array<RObject> 
 	{
 
 		AddContentList(value);
 		return _content;
 	}
-	private var _content:Array<Object>;
+	private var _content:Array<RObject>;
 	
 	public var namedContent:Map<String, INamedContent>; //{ get; set; }
 	
-	public var namedOnlyContent(get, set):Map<String,Object>;
-	function get_namedOnlyContent():Map<String, Object> 
+	public var namedOnlyContent(get, set):Map<String,RObject>;
+	function get_namedOnlyContent():Map<String, RObject> 
 	{
-		var namedOnlyContent = new Map<String, Object>();
+		var namedOnlyContent = new Map<String, RObject>();
 		for  (k in namedContent.keys()) {
 			namedOnlyContent.set(k, cast namedContent.get(k));
 		}
@@ -66,7 +66,7 @@ class Container extends Object implements INamedContent
 		return namedOnlyContent;
 	}
 	
-	function set_namedOnlyContent(value:Map<String, Object>):Map<String, Object> 
+	function set_namedOnlyContent(value:Map<String, RObject>):Map<String, RObject> 
 	{
 		var existingNamedOnly = this.namedOnlyContent;// get_namedOnlyContent();
 		if (existingNamedOnly != null) {
@@ -166,14 +166,14 @@ class Container extends Object implements INamedContent
 		this.countingAtStartOnly = false;
 		*/
 		
-		_content = new Array<Object>();
+		_content = new Array<RObject>();
 		namedContent = new Map<String, INamedContent>();
 	}
 	
 	
 	
 	public function AddToNamedContentOnly( namedContentObj:INamedContent):Void {
-		Assert.bool( Std.is(namedContentObj, Object), "Can only add Runtime.Objects to a Runtime.Container");
+		Assert.bool( Std.is(namedContentObj, RObject), "Can only add Runtime.Objects to a Runtime.Container");
 		var runtimeObj = cast namedContentObj;
 		runtimeObj.parent = this;
 		namedContent.set(namedContentObj.name, namedContentObj); // namedContent[namedContentObj.name] = namedContentObj;
@@ -181,7 +181,7 @@ class Container extends Object implements INamedContent
 	
 	
 
-	public function AddContent(contentObj:Object):Void {
+	public function AddContent(contentObj:RObject):Void {
 		_content.push(contentObj);
 		 if (contentObj.parent!=null) {
 			 throw new SystemException ("content is already in " + contentObj.parent);
@@ -191,7 +191,7 @@ class Container extends Object implements INamedContent
 		TryAddNamedContent (contentObj);
 	}
 
-	public function AddContentList(contentList:Array<Object>):Void {
+	public function AddContentList(contentList:Array<RObject>):Void {
 		for ( c in contentList) {
             AddContent (c);
         }
@@ -199,7 +199,7 @@ class Container extends Object implements INamedContent
 	
 
 	// tocheck: how many calls are made to this. Verify if performance optimziation to "content.insert" for Array is worth looking into if used fequently.
-	 public function InsertContent( contentObj:Object,  index:Int):Void
+	 public function InsertContent( contentObj:RObject,  index:Int):Void
 	{
 		
 		content.insert(index, contentObj);
@@ -214,7 +214,7 @@ class Container extends Object implements INamedContent
 	}
 
 	
-	public function TryAddNamedContent( contentObj:Object):Void
+	public function TryAddNamedContent( contentObj:RObject):Void
 	{
 		var namedContentObj = LibUtil.as(contentObj , INamedContent);
 		if (namedContentObj != null && namedContentObj.hasValidName) {
@@ -231,7 +231,7 @@ class Container extends Object implements INamedContent
 		}
 	}
 
-	function  ContentWithPathComponent(component:Component):Object
+	function  ContentWithPathComponent(component:Component):RObject
 	{
 		if (component.isIndex) {
 
@@ -265,13 +265,13 @@ class Container extends Object implements INamedContent
 	
 	
 	
-	public function ContentAtPath(path:Path, partialPathLength:Int=-1):Object
+	public function ContentAtPath(path:Path, partialPathLength:Int=-1):RObject
 	{
 	  if (partialPathLength == -1)
 			partialPathLength = path.components.length;
 		
 		var currentContainer:Container = this;
-		var currentObj:Object = this;
+		var currentObj:RObject = this;
 
 		for (i in 0...partialPathLength) {  //int i = 0; i < partialPathLength; ++i
 			var comp = path.components [i];
@@ -286,7 +286,7 @@ class Container extends Object implements INamedContent
 	
 
 	//StringBuilder
-  public function BuildStringOfHierarchy( sb:StringBuf,  indentation:Int, pointedObj:Object)
+  public function BuildStringOfHierarchy( sb:StringBuf,  indentation:Int, pointedObj:RObject)
 	{
 		
 		var appendIndentation = function():Void { 

@@ -4,7 +4,7 @@ package ink.runtime;
  * Done!
  * @author Glidias
  */
-class VariableAssignment extends Object
+class VariableAssignment extends RObject
 {
 	
 	public var variableName:String; // { get; protected set; }

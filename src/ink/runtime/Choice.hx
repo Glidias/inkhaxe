@@ -9,7 +9,7 @@ import ink.runtime.CallStack.Thread;
     /// separated.
  * @author Glidias
  */
-class Choice extends Object
+class Choice extends RObject
 {
 
 

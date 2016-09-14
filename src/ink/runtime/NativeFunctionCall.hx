@@ -17,7 +17,7 @@ typedef StringBinaryOpConcat = String->String->String;
 typedef FloatUnaryOp = Float->Float;
 typedef BinaryOpPath = Path->Path->Int;
 
-class NativeFunctionCall extends Object
+class NativeFunctionCall extends RObject
 {
 
 	public static inline var Add      = "+";
@@ -85,7 +85,7 @@ class NativeFunctionCall extends Object
 	var _numberOfParameters:Int;
 	
 	
-	public function Call(parameters:List<Object>):Object
+	public function Call(parameters:List<RObject>):RObject
     {
 		if (_prototype!=null) {
 			return _prototype.Call(parameters);
@@ -170,7 +170,7 @@ class NativeFunctionCall extends Object
 	}
 	
 	
-	function CoerceValuesToSingleType<T>( parametersIn:List<Object>):List<Value<T>>
+	function CoerceValuesToSingleType<T>( parametersIn:List<RObject>):List<Value<T>>
 	{
 		var valType:ValueType = ValueType.IntType;
 		var valTypeInt:Int = cast valType;

@@ -4,7 +4,7 @@ package ink.runtime;
  * Done!
  * @author Glidias
  */
-class ControlCommand extends Object
+class ControlCommand extends RObject
 {
 
 	public var commandType:CommandType;  // CommandType { get; protected set; }
@@ -21,7 +21,7 @@ class ControlCommand extends Object
 		return me;
 	}
 	
-	override public function  Copy():Object
+	override public function  Copy():RObject
 	{
 		return  ControlCommand.createFromCommandType(commandType);
 	}

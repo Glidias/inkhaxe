@@ -33,7 +33,7 @@ class ValueType
 
 
 
-class Value<T> extends Object
+class Value<T> extends RObject
 {
 	public var value:T;
 	
@@ -81,7 +81,7 @@ class Value<T> extends Object
 	}
 	
 
-	public override function Copy():Object
+	public override function Copy():RObject
 	{
 		return Create(valueObject);
 	}
@@ -347,7 +347,7 @@ class VariablePointerValue extends Value<String> {  // DONE!
 		return "VariablePointerValue(" + variableName + ")";
 	}
 	
-	public override function Copy():Object
+	public override function Copy():RObject
 	{
 		return new VariablePointerValue (variableName, contextIndex);
 	}

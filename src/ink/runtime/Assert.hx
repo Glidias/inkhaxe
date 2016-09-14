@@ -4,12 +4,15 @@ package ink.runtime;
  * Done
  * @author Glidias
  */
+/*
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.ExprTools;
+*/
 
 class Assert {
     /* Static assert */
+	/*
     macro static public function s(expr:Expr, ?error:String):Expr {
         if (error == null) {
             error = "";
@@ -33,8 +36,9 @@ class Assert {
 
         return macro { };
     }
+	*/
 	
-	static public function bool(result:Bool, ?error:String):Void {
+	static inline public  function bool(result:Bool, ?error:String):Void {
 		if (!result) throw error;
 	}
 }

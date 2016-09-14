@@ -179,12 +179,12 @@ class CallStack
 
 
 	// Get variable value, dereferencing a variable pointer if necessary
-	public function GetTemporaryVariableWithName( name:String,  contextIndex:Int = -1):Object
+	public function GetTemporaryVariableWithName( name:String,  contextIndex:Int = -1):RObject
 	{
 		if (contextIndex == -1)
 			contextIndex = currentElementIndex+1;
 		
-		var varValue:Object = null;
+		var varValue:RObject = null;
 
 		var contextElement = callStack[contextIndex - 1];
 		//if (contextElement == null) throw "could not find context element at callstack:" + contextElement + " at index:"+contextIndex + " :: "+name;
@@ -197,7 +197,7 @@ class CallStack
 		}
 	}
 		
-	public function SetTemporaryVariable( name:String, value:Object,  declareNew:Bool,  contextIndex:Int = -1)
+	public function SetTemporaryVariable( name:String, value:RObject,  declareNew:Bool,  contextIndex:Int = -1)
 	{
 		if (contextIndex == -1)
 			contextIndex = currentElementIndex+1;
@@ -262,11 +262,11 @@ class Element
 	 public var currentContentIndex:Int;
 
 	public var inExpressionEvaluation:Bool;
-	public var temporaryVariables:Map<String, Object>; 
+	public var temporaryVariables:Map<String, RObject>; 
 	public var type:PushPopType;
 	
-	public var currentObject(get, set):Object;
-	function get_currentObject():Object 
+	public var currentObject(get, set):RObject;
+	function get_currentObject():RObject 
 	{
 		 if (currentContainer != null && currentContentIndex < currentContainer.content.length) {
 			// trace("Returning:"+currentContainer.content[currentContentIndex].path + ", at:"+currentContainer.name);
@@ -275,7 +275,7 @@ class Element
 		//trace("Returning null..");
 		return null;
 	}
-	function set_currentObject(value:Object):Object 
+	function set_currentObject(value:RObject):RObject 
 	{
 		 var currentObj = value;
 		if (currentObj == null) {
@@ -303,7 +303,7 @@ class Element
 		this.currentContainer = container;
 		this.currentContentIndex = contentIndex;
 		this.inExpressionEvaluation = inExpressionEvaluation;
-		this.temporaryVariables = new Map<String, Object>();
+		this.temporaryVariables = new Map<String, RObject>();
 		this.type = type;
 	}
 
@@ -331,7 +331,7 @@ class Thread
 
 	public var callstack:Array<Element>; // Array<Element>; //List<Element>   
 	public var  threadIndex:Int;
-	public var previousContentObject:Object;
+	public var previousContentObject:RObject;
 
 	public function new() {
 		callstack = new Array<Element>();

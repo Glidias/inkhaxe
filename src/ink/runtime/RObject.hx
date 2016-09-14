@@ -7,9 +7,9 @@ import ink.runtime.StoryException.SystemNotImplementedException;
  * Done!
  * @author Glidias
  */
-class Object
+class RObject
 {
-	public var parent:Object;
+	public var parent:RObject;
 
 	 
 	public var debugMetadata(get, set):DebugMetadata;
@@ -97,7 +97,7 @@ class Object
 	}
 	private var _path:Path;
 	
-	private function ResolvePath(path:Path):Object 	
+	private function ResolvePath(path:Path):RObject 	
 	{
 		if (path.isRelative) {
 			var nearestContainer:Container = LibUtil.as(this, Container);
@@ -183,7 +183,7 @@ class Object
 	public var  rootContentContainer(get, null):Container;
 	function get_rootContentContainer():Container  // done
 	{
-			var ancestor:Object = this;
+			var ancestor:RObject = this;
 			
 			while (ancestor.parent!=null) {
 				ancestor = ancestor.parent;
@@ -196,7 +196,7 @@ class Object
 	
 
 	
-	public function Copy():Object {
+	public function Copy():RObject {
 		//GetType ().Name 
 		 throw new SystemNotImplementedException( Type.typeof(this).getName() + " doesn't support copying");
 	}
@@ -204,7 +204,7 @@ class Object
 	
 	
 	//ref T obj
-	function SetChildReturnValue<T:Object>(obj:T, value:T):T //where T : Runtime.Object
+	function SetChildReturnValue<T:RObject>(obj:T, value:T):T //where T : Runtime.Object
 	{
 
 		if (obj != null)
@@ -231,14 +231,14 @@ class Object
 
 	/// Required for implicit bool comparison
 	
-	public static function EQUALS(a:Object, b:Object):Bool
+	public static function EQUALS(a:RObject, b:RObject):Bool
 	{
 		return a == b; // object.ReferenceEquals (a, b);
 	}
 
 	/// Required for implicit bool comparison
 	//operator !=
-	public static function notEquals(a:Object, b:Object):Bool
+	public static function notEquals(a:RObject, b:RObject):Bool
 	{
 		return !(a == b);
 	}

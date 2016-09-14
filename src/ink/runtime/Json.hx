@@ -15,7 +15,7 @@ import ink.runtime.VariableReference;
 class Json
 {
 
-	public static function ListToJArray<T:Object>(serialisables:List<T>):Array<Dynamic> {
+	public static function ListToJArray<T:RObject>(serialisables:List<T>):Array<Dynamic> {
 		 var jArray = new Array<Dynamic>();
 		for (s in serialisables) {
 			jArray.push(RuntimeObjectToJToken(s));
@@ -23,7 +23,7 @@ class Json
 		return jArray;
 	}
 	
-	public static inline function ArrayToJArray<T:Object>(serialisables:Array<T>):Array<Dynamic> {
+	public static inline function ArrayToJArray<T:RObject>(serialisables:Array<T>):Array<Dynamic> {
 		 var jArray = new Array<Dynamic>();
 		for (s in serialisables) {
 			jArray.push(RuntimeObjectToJToken(s));
@@ -31,34 +31,34 @@ class Json
 		return jArray;
 	}
 	
-	public static function JArrayToRuntimeObjList(jArray:Array<Dynamic>, skipLast:Bool=false):List<Object>
+	public static function JArrayToRuntimeObjList(jArray:Array<Dynamic>, skipLast:Bool=false):List<RObject>
 	{
 		var count:Int = jArray.length;
 		if (skipLast)
 			count--;
 
-		var list = new List<Object>();  //jArray.Count
+		var list = new List<RObject>();  //jArray.Count
 
 		for (i in 0...count) {
 			var jTok = jArray[i];
-			var runtimeObj = LibUtil.as( JTokenToRuntimeObject (jTok), Object);
+			var runtimeObj = LibUtil.as( JTokenToRuntimeObject (jTok), RObject);
 			list.add(runtimeObj);
 		}
 
 		return list;
 	}
 	
-	public static function JArrayToRuntimeObjArray(jArray:Array<Dynamic>, skipLast:Bool=false):Array<Object>
+	public static function JArrayToRuntimeObjArray(jArray:Array<Dynamic>, skipLast:Bool=false):Array<RObject>
 	{
 		var count:Int = jArray.length;
 		if (skipLast)
 			count--;
 
-		var list = new Array<Object>();  //jArray.Count
+		var list = new Array<RObject>();  //jArray.Count
 		
 		for (i in 0...count) {
 			var jTok = jArray[i];
-			var runtimeObj = LibUtil.as( JTokenToRuntimeObject (jTok), Object);
+			var runtimeObj = LibUtil.as( JTokenToRuntimeObject (jTok), RObject);
 	
 			list.push(runtimeObj);
 		}
@@ -69,12 +69,12 @@ class Json
 	
 	
 	
-	 public static function DictionaryRuntimeObjsToJObject(dictionary:Map<String, Object>):Dynamic
+	 public static function DictionaryRuntimeObjsToJObject(dictionary:Map<String, RObject>):Dynamic
 	{
 		var jsonObj = {};
 	
 		for (k in dictionary.keys()) {
-			var runtimeObj = LibUtil.as( dictionary.get(k), Object);
+			var runtimeObj = LibUtil.as( dictionary.get(k), RObject);
 			if (runtimeObj != null) {
 				//jsonObj.set( k,  RuntimeObjectToJToken(runtimeObj) );
 				Reflect.setField(jsonObj, k, RuntimeObjectToJToken(runtimeObj));
@@ -84,9 +84,9 @@ class Json
 		return jsonObj;
 	}
 	
-	 public static function JObjectToDictionaryRuntimeObjs(jObject:Dynamic):Map<String, Object>
+	 public static function JObjectToDictionaryRuntimeObjs(jObject:Dynamic):Map<String, RObject>
 	{
-		var dict = new Map<String, Object>();  //jObject.Count
+		var dict = new Map<String, RObject>();  //jObject.Count
 		
 		for (k in Reflect.fields(jObject)) {
 			dict.set(k, JTokenToRuntimeObject(Reflect.field(jObject, k)));
@@ -158,7 +158,7 @@ class Json
         //
         // Choice:         Nothing too clever, it's only used in the save state,
         //       
-	public static function JTokenToRuntimeObject(token:Dynamic):Object {
+	public static function JTokenToRuntimeObject(token:Dynamic):RObject {
 		
 		
 		// why is JS so wierd to think of \n as a number?!?? Let it slide?
@@ -343,7 +343,7 @@ class Json
 	}
 	
 	
-	public static function RuntimeObjectToJToken(obj:Object):Dynamic
+	public static function RuntimeObjectToJToken(obj:RObject):Dynamic
 	{
 		var container = LibUtil.as(obj, Container);
 		if (container != null) {
@@ -559,7 +559,7 @@ class Json
 			
             if (terminatingObj != null) {
 
-                var namedOnlyContent = new Map<String, Object>();  //terminatingObj.Count
+                var namedOnlyContent = new Map<String, RObject>();  //terminatingObj.Count
 
                 for (k in Reflect.fields(terminatingObj)) {
 		
