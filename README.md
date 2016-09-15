@@ -8,10 +8,6 @@ However, here are the differences:
 - Package name is `ink.runtime`, not `Ink.Runtime`. So, you call something like `new ink.runtime.Story(...)`.
 - BindExternalFunction has no method overloading because Haxe doesn't support it, so you must explicitly use the required function for the stipulated number of parameters, such as `BindExternalFunction0(...)`,`BindExternalFunction1(...)`,`BindExternalFunction2(...)`,`BindExternalFunction3(...)`  or use `BindExternalFunctionGeneral()` for more than 3 parameters.
 
-Some additions:
-	
-- `ReflectExternalBindings(array:Array=null):Array` is a useful method to trace all required external functions from a given Story instance at runtime. It returns a new  array (or existing array in the parameter) with all external function name strings included in the array. So, you can iterate through the array to faciliate automating the process of binding to any required external functions.
-
 Target demo platforms that have been tested and proven to work:
 - Javascript
 
