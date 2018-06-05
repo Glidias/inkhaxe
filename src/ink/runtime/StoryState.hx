@@ -55,8 +55,7 @@ class StoryState
 	/// the specific knot or stitch.</param>
 	public function VisitCountAtPathString( pathString:String):Int
 	{
-		var visitCountOut:Int;
-		visitCountOut = visitCounts.get(pathString);  // tocheck:, StringMap for int... does return null for Flash target
+		var visitCountOut = visitCounts.get(pathString);  // tocheck:, StringMap for int... does return null for Flash target
 		if ( LibUtil.validInt(visitCountOut)  ) //visitCounts.TryGetValue (pathString, out visitCountOut))  //visitCountOut != null
 			return visitCountOut;
 

@@ -339,7 +339,7 @@ class Story extends RObject
 
             var count:Int = 0;
             var containerPathStr = container.path.toString();
-            var tryCount:Int = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
+            var tryCount = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
 			if ( LibUtil.validInt(tryCount) ) {
 				count = tryCount;
 			}
@@ -350,7 +350,7 @@ class Story extends RObject
         {
             var count = 0;
             var containerPathStr = container.path.toString();
-			 var tryCount:Int = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
+			 var tryCount = state.visitCounts.get(containerPathStr);  //TryGetValue (containerPathStr, out count);
 			if ( LibUtil.validInt(tryCount) ) {
 				count = tryCount;
 			}
@@ -371,9 +371,8 @@ class Story extends RObject
                 ErrorThrow ("TURNS_SINCE() for target ("+container.name+" - on "+container.debugMetadata+") unknown. The story may need to be compiled with countAllVisits flag (-c).");
             }
 
-            var index:Int = 0;
             var containerPathStr = container.path.toString();
-			index = state.turnIndices.get(containerPathStr);  //state.turnIndices.TryGetValue (containerPathStr, out index)
+			var index = state.turnIndices.get(containerPathStr);  //state.turnIndices.TryGetValue (containerPathStr, out index)
             if ( LibUtil.validInt(index) ) {
                 return state.currentTurnIndex - index;
             } else {

@@ -188,8 +188,7 @@ class Path extends RObject implements IEquatable//<Path>
 
 		var componentStrings = componentsStr.split('.');
 		for (str in componentStrings) {
-			var index:Int;
-			index = Std.parseInt(str);
+			var index = Std.parseInt(str);
 			if ( LibUtil.validInt(index) ) {  //int.TryParse (str , out index)
 				components.push ( Component.createFromIndex(index));
 			} else {
