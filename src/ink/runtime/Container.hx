@@ -1,5 +1,5 @@
 package ink.runtime;
-import ink.runtime.Path;
+import ink.runtime.Path.Component;
 import ink.runtime.Value.StringValue;
 
 /**
