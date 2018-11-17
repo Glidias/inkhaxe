@@ -25,9 +25,9 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 };
-var InkleRuntime = function() { };
-InkleRuntime.__name__ = ["InkleRuntime"];
-InkleRuntime.main = function() {
+var InkRuntime = function() { };
+InkRuntime.__name__ = ["InkRuntime"];
+InkRuntime.main = function() {
 };
 var List = function() {
 	this.length = 0;
@@ -5372,5 +5372,5 @@ ink_runtime_Story.inkVersionMinimumCompatible = 12;
 ink_runtime_StoryState.kInkSaveStateVersion = 4;
 ink_runtime_StoryState.kMinCompatibleLoadVersion = 4;
 js_Boot.__toStr = { }.toString;
-InkleRuntime.main();
+InkRuntime.main();
 })(typeof exports != "undefined" ? exports : typeof window != "undefined" ? window : typeof self != "undefined" ? self : this, typeof window != "undefined" ? window : typeof global != "undefined" ? global : typeof self != "undefined" ? self : this);

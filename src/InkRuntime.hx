@@ -10,7 +10,7 @@ import ink.runtime.ControlCommand;
  * ...
  * @author Glidias
  */
-class InkleRuntime 
+class InkRuntime 
 {
 	
 	static function main() 
