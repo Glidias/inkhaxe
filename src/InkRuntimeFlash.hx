@@ -11,7 +11,7 @@ import ink.runtime.Story;
  * ...
  * @author Glidias
  */
-class InkleRuntimeFlash extends Sprite
+class InkRuntimeFlash extends Sprite
 {
 
 	public function new() 
@@ -27,7 +27,7 @@ class InkleRuntimeFlash extends Sprite
 	static function main() 
 	{
 		
-		Lib.current.addChild( new InkleRuntimeFlash() );
+		Lib.current.addChild( new InkRuntimeFlash() );
 	}
 	
 	
